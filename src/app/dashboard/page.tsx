@@ -182,8 +182,8 @@ export default function DashboardMetrics() {
         .eq('id', profile.id);
       
       if (error) throw error;
-    } catch (err) {
-      alert('Erro ao atualizar status de disponibilidade.');
+    } catch (err: any) {
+      alert('Erro ao atualizar status de disponibilidade: ' + (err?.message || err));
       setIsAvailable(!nextState); // Reverte
     }
   };

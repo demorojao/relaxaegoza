@@ -347,8 +347,8 @@ export default function ProfileEditor() {
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      alert('Erro ao salvar alterações do perfil.');
+    } catch (err: any) {
+      alert('Erro ao salvar alterações do perfil: ' + (err?.message || err));
     } finally {
       setSaving(false);
     }
