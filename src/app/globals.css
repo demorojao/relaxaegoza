@@ -1,26 +1,177 @@
 @import "tailwindcss";
 
+@theme {
+  --color-gold-primary: #C5A880;
+  --color-gold-light: #DFCDAA;
+  --color-gold-dark: #A88F69;
+  
+  --color-wine-primary: #9B2C2C;
+  --color-wine-light: #C53030;
+  --color-wine-dark: #5C1D1D;
+  
+  --color-dark-bg: #07080A;
+  --color-dark-card: #111319;
+  --color-dark-border: #1F222C;
+  
+  --color-neon-green: #10B981; /* Verde esmeralda elegante para disponível agora */
+  --color-neon-green-glow: rgba(16, 185, 129, 0.4);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #07080A;
+  --foreground: #F3F4F6;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-plus-jakarta), sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
+
+.font-serif {
+  font-family: var(--font-cormorant), serif;
+}
+
+/* Custom Scrollbar for premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #07080A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F222C;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C5A880;
+}
+
+/* Premium glassmorphism effects */
+.glass-effect {
+  background: rgba(17, 19, 25, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.glass-effect-gold {
+  background: rgba(17, 19, 25, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(197, 168, 128, 0.35); /* Borda dourada mais brilhante e perceptível */
+  box-shadow: 0 0 30px rgba(197, 168, 128, 0.12); /* Brilho dourado premium no card Gold */
+}
+
+.glass-effect-wine {
+  background: rgba(17, 19, 25, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(197, 48, 48, 0.35); /* Borda vinho mais brilhante e perceptível */
+  box-shadow: 0 0 25px rgba(155, 44, 44, 0.08); /* Brilho vinho sutil no card Pro */
+}
+
+/* Floating Glow Blobs Keyframes */
+@keyframes float1 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(80px, -100px) scale(1.2); }
+}
+@keyframes float2 {
+  0%, 100% { transform: translate(0px, 0px) scale(1.15); }
+  50% { transform: translate(-100px, 80px) scale(0.85); }
+}
+@keyframes float3 {
+  0%, 100% { transform: translate(0px, 0px) scale(0.9); }
+  50% { transform: translate(90px, 90px) scale(1.1); }
+}
+.animate-float-1 { animation: float1 22s infinite ease-in-out; }
+.animate-float-2 { animation: float2 28s infinite ease-in-out; }
+.animate-float-3 { animation: float3 32s infinite ease-in-out; }
+
+/* Glowing Animations for Live Availability */
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 0 4px #10B981, inset 0 0 2px #10B981;
+    border-color: #10B981;
+  }
+  50% {
+    box-shadow: 0 0 12px #10B981, 0 0 4px #10B981, inset 0 0 4px #10B981;
+    border-color: #34D399;
+  }
+}
+
+.neon-ring-active {
+  animation: neonPulse 2s infinite ease-in-out;
+}
+
+/* Card image zoom effect */
+.hover-zoom img {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-zoom:hover img {
+  transform: scale(1.05);
+}
+
+/* Leaflet dark custom tiles mapping layout */
+.leaflet-container {
+  background: #07080A !important;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #1F222C;
+}
+
+/* Custom styles for dark map markers */
+.leaflet-popup-content-wrapper {
+  background: #111319 !important;
+  color: #F3F4F6 !important;
+  border: 1px solid #1F222C !important;
+  border-radius: 8px !important;
+  font-family: inherit;
+}
+
+.leaflet-popup-tip {
+  background: #111319 !important;
+  border: 1px solid #1F222C !important;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-slideLeft {
+  animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Prevenir impressão da página (Ctrl+P / PDF) */
+@media print {
+  body {
+    display: none !important;
+  }
+}
+

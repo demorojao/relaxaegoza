@@ -1,65 +1,49 @@
-import Image from "next/image";
+import React from 'react';
+import { cacheLife } from 'next/cache';
+import { supabase } from '../lib/supabase';
+import VitrineClient from '../components/VitrineClient';
+import { Profile } from '../types';
 
-export default function Home() {
+export const metadata = {
+  title: 'Relaxa & Goza | Vitrine Premium',
+  description: 'O portal de encontros mais exclusivo do Brasil. Encontre acompanhantes e massagistas de luxo.',
+};
+
+export default async function Home() {
+  'use cache';
+  cacheLife('minutes');
+  
+  // 1. Fetch Profiles para SSR usando RPC altamente otimizado
+  const { data: profilesData, error: profilesError } = await supabase.rpc('get_premium_profiles');
+
+  if (profilesError) {
+    console.error('Erro ao buscar perfis iniciais via RPC:', profilesError);
+  }
+
+  const initialProfiles = (profilesData as unknown as Profile[]) || [];
+
+  // 2. Fetch Profiles com Stories Ativos para SSR
+  const { data: activeStories } = await supabase.from('stories')
+    .select('profile_id, profiles:profiles(id, name, avatar_url, subscription_tier, is_available_now, whatsapp, category)')
+    .gt('expires_at', new Date().toISOString());
+
+  const profileMap = new Map<string, Profile>();
+  activeStories?.forEach((item: any) => {
+    if (item.profiles) {
+      profileMap.set(item.profiles.id, item.profiles as Profile);
+    }
+  });
+  
+  let initialStories = Array.from(profileMap.values());
+  initialStories.sort((a, b) => {
+    const getScore = (p: Profile) => (p.subscription_tier === 'gold' ? 2 : p.subscription_tier === 'pro' ? 1 : 0);
+    return getScore(b) - getScore(a);
+  });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <VitrineClient 
+      initialProfiles={initialProfiles} 
+      initialStories={initialStories} 
+    />
   );
 }
