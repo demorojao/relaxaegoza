@@ -564,10 +564,10 @@ export default function VitrineClient({
           }
           return p;
         });
-
-        // Reordenar por proximidade como critério secundário
-        filteredData = sortProfiles(filteredData, userCoords);
       }
+
+      // Reordenar por tier, boost e proximidade (se houver)
+      filteredData = sortProfiles(filteredData, userCoords);
 
       setProfiles(filteredData);
     } catch (e) {

@@ -110,6 +110,22 @@ body {
   animation: neonPulse 2s infinite ease-in-out;
 }
 
+/* Glowing Gold Animations for Premium Gold Tier */
+@keyframes goldNeonPulse {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(197, 168, 128, 0.35), inset 0 0 2px rgba(197, 168, 128, 0.2);
+    border-color: rgba(197, 168, 128, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(197, 168, 128, 0.65), 0 0 6px rgba(197, 168, 128, 0.3), inset 0 0 4px rgba(197, 168, 128, 0.3);
+    border-color: rgba(197, 168, 128, 0.65);
+  }
+}
+
+.gold-ring-active {
+  animation: goldNeonPulse 2.5s infinite ease-in-out;
+}
+
 /* Card image zoom effect */
 .hover-zoom img {
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);

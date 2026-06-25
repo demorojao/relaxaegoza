@@ -29,7 +29,11 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
         variant={isGold ? 'glass-gold' : isPro ? 'glass-wine' : 'glass'}
         className={cn(
           "relative w-full aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer transition-all duration-300",
-          isAvailable ? 'border-[2px] border-emerald-500/80 neon-ring-active' : ''
+          isGold 
+            ? 'border-[2px] border-gold-primary/70 gold-ring-active' 
+            : isAvailable 
+              ? 'border-[2px] border-emerald-500/80 neon-ring-active' 
+              : ''
         )}
       >
         {/* Imagem de Fundo com next/image */}
@@ -87,6 +91,9 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
           <div className="flex items-baseline justify-between flex-wrap gap-x-1">
             <h3 className="text-xs sm:text-base font-bold text-white tracking-tight drop-shadow-md flex items-center gap-1">
               {profile.name}
+              {isGold && (
+                <span className="text-[10px] sm:text-xs text-gold-primary animate-bounce shrink-0" title="Gold VIP">👑</span>
+              )}
               <span className="font-light text-white/70 text-[10px] sm:text-xs">{profile.age}</span>
             </h3>
             

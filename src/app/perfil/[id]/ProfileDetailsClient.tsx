@@ -219,8 +219,12 @@ export default function ProfileDetailsClient({
       <div className="flex-1 w-full space-y-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight">
-              {profile.name}, <span className="font-light text-gray-400">{profile.age}</span>
+            <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight flex items-center gap-2">
+              {profile.name}
+              {profile.subscription_tier === 'gold' && (
+                <span className="text-2xl animate-bounce" title="Gold VIP">👑</span>
+              )}
+              , <span className="font-light text-gray-400">{profile.age}</span>
             </h1>
             
             {profile.verification_status === 'verified' && (
