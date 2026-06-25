@@ -165,7 +165,11 @@ export default function MediaManager() {
         return;
       }
     } else {
-      const videoLimit = tier === 'free' ? 0 : tier === 'pro' ? 10 : 9999;
+      const videoLimit = tier === 'free' ? 0 : tier === 'pro' ? 0 : 9999;
+      if (videoLimit === 0) {
+        alert('Limite atingido! Apenas anunciantes GOLD Premium podem publicar vídeos na galeria.');
+        return;
+      }
       if (videosList.length >= videoLimit) {
         alert(`Limite atingido! O plano ${tier.toUpperCase()} permite no máximo ${videoLimit} vídeos.`);
         return;
@@ -265,10 +269,10 @@ export default function MediaManager() {
 
   // Configurações de limite
   const photoLimitText = tier === 'free' ? '3' : tier === 'pro' ? '10' : 'Ilimitado';
-  const videoLimitText = tier === 'free' ? 'Bloqueado (0)' : tier === 'pro' ? '10' : 'Ilimitado';
+  const videoLimitText = tier === 'free' ? 'Bloqueado (0)' : tier === 'pro' ? 'Bloqueado (0)' : 'Ilimitado';
   
   const canUploadPhoto = tier === 'gold' || (tier === 'pro' && photos.length < 10) || (tier === 'free' && photos.length < 3);
-  const canUploadVideo = tier === 'gold' || (tier === 'pro' && videos.length < 10);
+  const canUploadVideo = tier === 'gold';
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 relative z-20 pb-16 selection:bg-gold-primary selection:text-dark-bg">

@@ -38,11 +38,18 @@ async function AdminDashboardPageContent({ searchParams }: PageProps) {
     .select('*, profiles(name, role)')
     .order('created_at', { ascending: false });
 
+  // Buscar todos os IPs banidos
+  const { data: bannedIps } = await supabase
+    .from('ip_bans')
+    .select('*')
+    .order('created_at', { ascending: false });
+
   return (
     <AdminDashboardClient 
       initialProfiles={profiles || []} 
       initialRooms={rooms || []}
       initialPhotos={photos || []}
+      initialBannedIps={bannedIps || []}
       adminSecret={secret}
     />
   );

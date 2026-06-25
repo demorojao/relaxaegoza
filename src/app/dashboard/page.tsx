@@ -84,6 +84,18 @@ export default function DashboardMetrics() {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      // Registrar IP de forma assíncrona
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        fetch('/api/log-ip', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        }).catch(err => console.error('Erro ao logar IP:', err));
+      }
+
       const { data } = await supabase
         .from('profiles')
         .select('*')
@@ -413,24 +425,24 @@ export default function DashboardMetrics() {
 
       {/* Seção de Estatísticas e Tráfego */}
       <div className="relative">
-        {tier === 'free' && (
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-[5px] rounded-2xl z-30 flex flex-col items-center justify-center p-6 text-center border border-white/5 shadow-2xl">
+        {tier !== 'gold' && (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[5px] rounded-2xl z-30 flex flex-col items-center justify-center p-6 text-center border border-white/5 shadow-2xl animate-fadeIn">
             <div className="p-3 bg-gold-primary/10 rounded-full text-gold-primary mb-3">
               <Lock className="w-6 h-6 animate-pulse" />
             </div>
             <h3 className="text-base font-bold text-white tracking-wide">Estatísticas de Tráfego Bloqueadas</h3>
             <p className="text-[11px] text-gray-400 font-light max-w-sm mt-1.5 leading-relaxed mb-5">
-              Descubra quantas pessoas visualizaram seu anúncio e clicaram no seu WhatsApp em tempo real. Faça um upgrade para o plano **Pro** ou **Gold**.
+              Descubra quantas pessoas visualizaram seu anúncio e clicaram no seu WhatsApp em tempo real. Recurso disponível exclusivamente no plano **Gold Premium**.
             </p>
             <Link href="/planos">
               <button className="px-6 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-gold-primary/20">
-                Fazer Upgrade do Anúncio
+                Fazer Upgrade para Gold
               </button>
             </Link>
           </div>
         )}
 
-        <div className={`space-y-8 ${tier === 'free' ? 'select-none pointer-events-none' : ''}`}>
+        <div className={`space-y-8 ${tier !== 'gold' ? 'select-none pointer-events-none' : ''}`}>
           {/* Grid containing Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {/* Views */}

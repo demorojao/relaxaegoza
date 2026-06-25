@@ -171,6 +171,11 @@ export default function StoriesManager() {
     }
 
     // Enforced Pro check
+    if (tier === 'pro' && mediaType === 'video') {
+      alert('Recurso exclusivo! Apenas anunciantes GOLD Premium podem publicar vídeos nos stories.');
+      return;
+    }
+
     if (tier === 'pro' && storiesInLast24h >= 3) {
       alert('Limite atingido! Profissionais no plano Pro podem postar no máximo 3 stories a cada 24 horas.');
       return;

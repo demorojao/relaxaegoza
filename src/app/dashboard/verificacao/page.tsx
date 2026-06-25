@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
-import { Shield, ShieldCheck, ShieldAlert, Upload, Sparkles, Building2, HelpCircle, Check, Clock } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldAlert, Upload, Sparkles, Building2, HelpCircle, Check, Clock, Lock } from 'lucide-react';
+import Link from 'next/link';
 
 export default function VerificationPanel() {
   const [user, setUser] = useState<any>(null);
@@ -335,7 +336,23 @@ export default function VerificationPanel() {
         </div>
 
         {/* Lado Direito: Selo de Ambiente Validado (Espaço Físico) */}
-        <div className="glass-effect rounded-2xl border border-dark-border/60 p-6 flex flex-col justify-between space-y-6">
+        <div className="glass-effect rounded-2xl border border-dark-border/60 p-6 flex flex-col justify-between space-y-6 relative overflow-hidden">
+          {profile?.subscription_tier !== 'gold' && (
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-[5px] z-30 flex flex-col items-center justify-center p-6 text-center border border-white/5">
+              <div className="p-3 bg-gold-primary/10 rounded-full text-gold-primary mb-3">
+                <Lock className="w-5 h-5 animate-pulse" />
+              </div>
+              <h4 className="text-xs font-bold text-white tracking-wide">Espaço Validado (Exclusivo GOLD)</h4>
+              <p className="text-[10px] text-gray-400 font-light max-w-[220px] mt-1.5 leading-relaxed mb-4">
+                O selo de auditoria de espaço e ambiente físico de atendimento está disponível apenas para parceiras **Gold Premium**.
+              </p>
+              <Link href="/planos">
+                <button className="px-4 py-2 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-gold-primary/20">
+                  Fazer Upgrade para Gold
+                </button>
+              </Link>
+            </div>
+          )}
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">

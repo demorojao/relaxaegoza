@@ -38,13 +38,46 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Acesso negado. Apenas administradores podem executar esta ação.' }, { status: 403 });
     }
 
-    const { profileId, status, isSpace, roomId, isRoom, isPhoto, photoId, isProfileUpdate, updateFields } = await req.json();
+    const { 
+      profileId, 
+      status, 
+      isSpace, 
+      roomId, 
+      isRoom, 
+      isPhoto, 
+      photoId, 
+      isProfileUpdate, 
+      updateFields,
+      isBan,
+      isUnban,
+      ipAddress,
+      reason
+    } = await req.json();
 
-    if (!isRoom && !isPhoto && !profileId) {
+    if (!isRoom && !isPhoto && !isBan && !isUnban && !profileId) {
       return NextResponse.json({ error: 'ID de perfil inválido.' }, { status: 400 });
     }
 
-    if (isRoom) {
+    if (isBan) {
+      if (!ipAddress) {
+        return NextResponse.json({ error: 'Endereço IP inválido.' }, { status: 400 });
+      }
+      const { error: banError } = await supabaseService
+        .from('ip_bans')
+        .insert({ ip_address: ipAddress, reason: reason || 'Violação dos termos de uso' });
+
+      if (banError) throw banError;
+    } else if (isUnban) {
+      if (!ipAddress) {
+        return NextResponse.json({ error: 'Endereço IP inválido.' }, { status: 400 });
+      }
+      const { error: unbanError } = await supabaseService
+        .from('ip_bans')
+        .delete()
+        .eq('ip_address', ipAddress);
+
+      if (unbanError) throw unbanError;
+    } else if (isRoom) {
       // Moderação de Salas
       if (!roomId) {
         return NextResponse.json({ error: 'ID de sala inválido.' }, { status: 400 });

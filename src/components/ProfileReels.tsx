@@ -262,98 +262,66 @@ export default function ProfileReels({
         )}
       </AnimatePresence>
 
-      {/* Floating Header Switcher and Category Filters for Mobile Reels */}
-      {setViewMode && (
-        <div className="absolute top-0 inset-x-0 z-30 bg-gradient-to-b from-black/90 via-black/60 to-transparent pt-4 pb-8 px-4 flex flex-col gap-3 md:hidden shadow-lg">
-          {/* Row 1: Mode Switcher & Filters */}
-          <div className="flex items-center justify-between w-full">
-            <span className="text-xs font-bold text-white tracking-wider uppercase flex items-center gap-1">
-              <Play className="w-3.5 h-3.5 text-gold-primary fill-current animate-pulse" />
-              Reels
-            </span>
-            
-            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm p-0.5 rounded-full border border-white/5">
-              <button
-                onClick={() => setViewMode('reels')}
-                className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-gold-primary text-dark-bg transition-all"
-              >
-                Reels
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className="px-2.5 py-1 rounded-full text-[10px] font-semibold text-gray-300 hover:text-white transition-all"
-              >
-                Lista
-              </button>
-              <button
-                onClick={() => setViewMode('map')}
-                className="px-2.5 py-1 rounded-full text-[10px] font-semibold text-gray-300 hover:text-white transition-all"
-              >
-                Mapa
-              </button>
-            </div>
-
-            {onOpenFilters && (
-              <button
-                onClick={onOpenFilters}
-                className="p-2 rounded-full bg-black/40 border border-white/10 text-gray-300 hover:text-white relative active:scale-95 transition-transform"
-                title="Abrir Filtros"
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-gold-primary" />
-                {activeFiltersCount !== undefined && activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gold-primary text-dark-bg text-[7px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </button>
-            )}
-          </div>
-
-          {/* Row 2: Category Filter Tabs */}
-          {setCategoryFilter && setSpaceFilter && (
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5 w-full">
-              <button
-                onClick={() => { setCategoryFilter(''); setSpaceFilter(false); }}
-                className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
-                  categoryFilter === '' && !spaceFilter
-                    ? 'bg-gradient-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md'
-                    : 'bg-black/55 border-white/5 text-gray-400'
-                }`}
-              >
-                Todos
-              </button>
-              <button
-                onClick={() => { setCategoryFilter('escort'); setSpaceFilter(false); }}
-                className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
-                  categoryFilter === 'escort' && !spaceFilter
-                    ? 'bg-gradient-to-r from-wine-primary to-wine-dark border-wine-primary text-white shadow-md'
-                    : 'bg-black/55 border-white/5 text-gray-400'
-                }`}
-              >
-                🔥 Acompanhantes
-              </button>
-              <button
-                onClick={() => { setCategoryFilter('massage'); setSpaceFilter(false); }}
-                className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
-                  categoryFilter === 'massage' && !spaceFilter
-                    ? 'bg-gradient-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md'
-                    : 'bg-black/55 border-white/5 text-gray-400'
-                }`}
-              >
-                🧘 Massagens
-              </button>
-              <button
-                onClick={() => { setSpaceFilter(true); }}
-                className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
-                  spaceFilter
-                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-800 border-emerald-600 text-white shadow-md'
-                    : 'bg-black/55 border-white/5 text-gray-400'
-                }`}
-              >
-                🏠 Com Espaço
-              </button>
-            </div>
+      {/* Floating Category Filters for Mobile Reels */}
+      {setCategoryFilter && setSpaceFilter && (
+        <div className="absolute top-16 inset-x-0 z-30 pt-2 pb-6 px-4 flex items-center gap-2 md:hidden">
+          {onOpenFilters && (
+            <button
+              onClick={onOpenFilters}
+              className="p-2.5 rounded-xl bg-black/55 border border-white/10 text-gray-300 hover:text-white relative active:scale-95 transition-transform flex-shrink-0"
+              title="Abrir Filtros"
+            >
+              <SlidersHorizontal className="w-4 h-4 text-gold-primary" />
+              {activeFiltersCount !== undefined && activeFiltersCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-gold-primary text-dark-bg text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
           )}
+
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-1">
+            <button
+              onClick={() => { setCategoryFilter(''); setSpaceFilter(false); }}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+                categoryFilter === '' && !spaceFilter
+                  ? 'bg-gradient-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md'
+                  : 'bg-black/55 border-white/5 text-gray-400'
+              }`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => { setCategoryFilter('escort'); setSpaceFilter(false); }}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+                categoryFilter === 'escort' && !spaceFilter
+                  ? 'bg-gradient-to-r from-wine-primary to-wine-dark border-wine-primary text-white shadow-md'
+                  : 'bg-black/55 border-white/5 text-gray-400'
+              }`}
+            >
+              🔥 Acompanhantes
+            </button>
+            <button
+              onClick={() => { setCategoryFilter('massage'); setSpaceFilter(false); }}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+                categoryFilter === 'massage' && !spaceFilter
+                  ? 'bg-gradient-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md'
+                  : 'bg-black/55 border-white/5 text-gray-400'
+              }`}
+            >
+              🧘 Massagens
+            </button>
+            <button
+              onClick={() => { setSpaceFilter(true); }}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+                spaceFilter
+                  ? 'bg-gradient-to-r from-emerald-600 to-emerald-800 border-emerald-600 text-white shadow-md'
+                  : 'bg-black/55 border-white/5 text-gray-400'
+              }`}
+            >
+              🏠 Com Espaço
+            </button>
+          </div>
         </div>
       )}
 
@@ -610,7 +578,7 @@ export default function ProfileReels({
               </div>
 
               {/* Bottom Info Overlay */}
-              <div className="absolute left-4 bottom-5 right-20 z-20 flex flex-col gap-2.5">
+              <div className="absolute left-4 bottom-24 md:bottom-5 right-20 z-20 flex flex-col gap-2.5">
                 {/* Badges */}
                 <div className="flex flex-wrap gap-1.5 items-center">
                   {profile.is_available_now && (

@@ -30,6 +30,7 @@ interface AdminDashboardClientProps {
   initialProfiles: any[];
   initialRooms: any[];
   initialPhotos: any[];
+  initialBannedIps: any[];
   adminSecret: string;
 }
 
@@ -37,15 +38,19 @@ export default function AdminDashboardClient({
   initialProfiles,
   initialRooms,
   initialPhotos,
+  initialBannedIps,
   adminSecret
 }: AdminDashboardClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'pending' | 'rooms' | 'all' | 'photos'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'rooms' | 'all' | 'photos' | 'banned'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'provider' | 'client' | 'host'>('all');
   const [profiles, setProfiles] = useState<any[]>(initialProfiles);
   const [rooms, setRooms] = useState<any[]>(initialRooms);
   const [photos, setPhotos] = useState<any[]>(initialPhotos);
+  const [bannedIps, setBannedIps] = useState<any[]>(initialBannedIps || []);
+  const [newBanIp, setNewBanIp] = useState('');
+  const [newBanReason, setNewBanReason] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
@@ -196,6 +201,64 @@ export default function AdminDashboardClient({
     }
   };
 
+  const handleBanIp = async (ipAddress: string, reason: string) => {
+    setActionLoading(`${ipAddress}-ban`);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/internal-ops/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'x-admin-secret': adminSecret
+        },
+        body: JSON.stringify({ isBan: true, ipAddress, reason })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Erro ao banir IP.');
+
+      // Atualizar localmente
+      setBannedIps(prev => [...prev, { ip_address: ipAddress, reason, created_at: new Date().toISOString() }]);
+      alert('Endereço IP banido com sucesso!');
+    } catch (err: any) {
+      alert(err.message || 'Erro ao banir IP.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUnbanIp = async (ipAddress: string) => {
+    setActionLoading(`${ipAddress}-unban`);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/internal-ops/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'x-admin-secret': adminSecret
+        },
+        body: JSON.stringify({ isUnban: true, ipAddress })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Erro ao desbanir IP.');
+
+      // Atualizar localmente
+      setBannedIps(prev => prev.filter(item => item.ip_address !== ipAddress));
+      alert('Endereço IP desbanido com sucesso!');
+    } catch (err: any) {
+      alert(err.message || 'Erro ao desbanir IP.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Filtragem dos dados
   const pendingProfiles = profiles.filter(p => 
     p.verification_status === 'pending' || 
@@ -323,6 +386,16 @@ export default function AdminDashboardClient({
               }`}
             >
               Gerenciar Todos ({profiles.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('banned')}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
+                activeTab === 'banned' 
+                  ? 'bg-gold-primary text-dark-bg font-bold shadow' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              IPs Banidos ({bannedIps.length})
             </button>
           </div>
 
@@ -701,6 +774,70 @@ export default function AdminDashboardClient({
             </div>
           );
         })()
+      ) : activeTab === 'banned' ? (
+        /* Aba de IPs Banidos */
+        <div className="space-y-6">
+          <Card variant="glass" className="p-6 border-white/5 bg-black/25 space-y-4">
+            <h3 className="text-sm font-semibold text-white">Banir Novo Endereço IP</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                placeholder="Ex: 186.230.122.4"
+                value={newBanIp}
+                onChange={(e) => setNewBanIp(e.target.value)}
+                className="flex-1 bg-dark-bg/85 border border-white/10 text-xs text-white rounded-lg px-3 py-2.5 focus:border-gold-primary/50 focus:outline-none transition-colors font-mono"
+              />
+              <input
+                type="text"
+                placeholder="Motivo (opcional)"
+                value={newBanReason}
+                onChange={(e) => setNewBanReason(e.target.value)}
+                className="flex-1 bg-dark-bg/85 border border-white/10 text-xs text-white rounded-lg px-3 py-2.5 focus:border-gold-primary/50 focus:outline-none transition-colors"
+              />
+              <Button
+                variant="gold"
+                onClick={() => {
+                  if (!newBanIp) return alert('Por favor, informe o IP.');
+                  handleBanIp(newBanIp, newBanReason);
+                  setNewBanIp('');
+                  setNewBanReason('');
+                }}
+                className="py-2.5 text-xs font-semibold px-6 cursor-pointer"
+              >
+                Bloquear IP
+              </Button>
+            </div>
+          </Card>
+
+          {bannedIps.length === 0 ? (
+            <Card variant="glass" className="p-16 border-dashed border-white/10 text-center bg-black/10">
+              <ShieldCheck className="w-12 h-12 text-emerald-500/80 mx-auto mb-3" />
+              <h3 className="text-sm font-semibold text-white">Nenhum IP banido!</h3>
+              <p className="text-xs text-gray-500 font-light mt-1 max-w-sm mx-auto">
+                A plataforma está limpa. Não há endereços IP listados na lista negra neste momento.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {bannedIps.map((ban) => (
+                <Card key={ban.id || ban.ip_address} variant="glass" className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-white/5 bg-black/25">
+                  <div className="space-y-1 w-full sm:w-auto">
+                    <span className="text-sm font-mono font-bold text-red-400 block">{ban.ip_address}</span>
+                    <span className="text-xs text-gray-400 block font-light">Motivo: {ban.reason || 'Não informado'}</span>
+                    <span className="text-[9px] text-gray-600 block">Banido em: {new Date(ban.created_at).toLocaleString('pt-BR')}</span>
+                  </div>
+                  <Button
+                    variant="dark"
+                    onClick={() => handleUnbanIp(ban.ip_address)}
+                    className="border border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400 py-2 text-[10px] w-full sm:w-auto cursor-pointer"
+                  >
+                    Desbanir IP
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       ) : (
         /* Gerenciar Todos os Anunciantes/Clientes/Hosts */
         <div className="grid grid-cols-1 gap-4">
@@ -789,7 +926,9 @@ export default function AdminDashboardClient({
                             price_per_hour: p.price_per_hour || 0,
                             category: p.category || 'massage',
                             gender: p.gender || 'Feminino',
-                            is_available_now: p.is_available_now || false
+                            is_available_now: p.is_available_now || false,
+                            verification_title: p.verification_title || '',
+                            last_ip: p.last_ip || ''
                           });
                         }
                       }}
@@ -902,6 +1041,41 @@ export default function AdminDashboardClient({
                           />
                         </div>
                       )}
+
+                      {/* Título de Verificação Personalizado */}
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-400 font-bold uppercase block">Título de Verificação Personalizado</label>
+                        <input
+                          type="text"
+                          value={editFields.verification_title || ''}
+                          onChange={(e) => setEditFields({ ...editFields, verification_title: e.target.value })}
+                          placeholder="Ex: Foto Real, Elite, VIP"
+                          className="w-full bg-dark-bg/85 border border-white/10 text-xs text-white rounded-lg px-3 py-2 focus:border-gold-primary/50 focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      {/* Exibição e Ação de IP */}
+                      <div className="space-y-1.5 col-span-full border-t border-white/5 pt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                          <label className="text-[10px] text-gray-500 font-bold uppercase block">Último IP de Acesso</label>
+                          <span className="text-xs font-mono text-white mt-1 block">{p.last_ip || 'Nenhum IP registrado'}</span>
+                        </div>
+                        {p.last_ip && (
+                          <Button
+                            variant="dark"
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Tem certeza que deseja banir o IP ${p.last_ip}?`)) {
+                                handleBanIp(p.last_ip, `Banido a partir do perfil de ${p.name}`);
+                              }
+                            }}
+                            className="border border-red-500/30 hover:bg-red-500/10 text-red-400 py-2 text-[10px] cursor-pointer"
+                          >
+                            <ShieldAlert className="w-3.5 h-3.5 mr-1" />
+                            Banir IP do Usuário
+                          </Button>
+                        )}
+                      </div>
 
                       {/* Availability (Boost) */}
                       {!isClient && (

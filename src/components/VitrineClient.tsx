@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types';
-import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal } from 'lucide-react';
+import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon } from 'lucide-react';
 import Link from 'next/link';
 import ProfileGrid from '../components/ProfileGrid';
 import ProfileReels from '../components/ProfileReels';
@@ -713,7 +713,7 @@ export default function VitrineClient({
   };
 
   return (
-    <main className={`w-full bg-dark-bg flex flex-col relative overflow-hidden selection:bg-gold-primary selection:text-dark-bg ${viewMode === 'reels' ? "h-[100dvh]" : "min-h-screen"}`}>
+    <main className={`w-full bg-dark-bg flex flex-col relative overflow-hidden selection:bg-gold-primary selection:text-dark-bg ${viewMode === 'reels' ? "h-[100dvh]" : "min-h-screen pb-24 md:pb-0"}`}>
       {/* Ambient Aurora Glow Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[5%] left-[-15%] w-[600px] h-[600px] bg-wine-primary/15 blur-[140px] rounded-full animate-float-1" />
@@ -723,8 +723,10 @@ export default function VitrineClient({
 
       {/* Navigation Header */}
       <header className={cn(
-        "sticky top-0 z-40 bg-black/60 backdrop-blur-lg border-b border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between",
-        viewMode === 'reels' && "hidden md:flex"
+        "z-40 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-all duration-300",
+        viewMode === 'reels' 
+          ? "absolute top-0 inset-x-0 bg-gradient-to-b from-black/90 to-transparent border-none" 
+          : "sticky top-0 bg-black/60 backdrop-blur-lg border-b border-white/5"
       )}>
         <Logo />
         
@@ -1193,6 +1195,68 @@ export default function VitrineClient({
           </div>
         </footer>
       )}
+
+      {/* Mobile Floating Bottom Navigation Bar */}
+      <div className="fixed bottom-5 inset-x-4 z-40 md:hidden flex justify-center">
+        <div className="w-full max-w-sm glass-effect rounded-2xl border border-white/10 p-2 flex items-center justify-around shadow-2xl bg-black/85 backdrop-blur-md">
+          {/* Reels Tab */}
+          <button
+            onClick={() => setViewMode('reels')}
+            className={cn(
+              "flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all cursor-pointer",
+              viewMode === 'reels' ? "text-gold-primary font-bold scale-105" : "text-gray-400"
+            )}
+          >
+            <Play className={cn("w-5 h-5", viewMode === 'reels' ? "fill-gold-primary" : "")} />
+            <span className="text-[9px] uppercase tracking-wider">Reels</span>
+          </button>
+
+          {/* Vitrine (Grid) Tab */}
+          <button
+            onClick={() => setViewMode('grid')}
+            className={cn(
+              "flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all cursor-pointer",
+              viewMode === 'grid' ? "text-gold-primary font-bold scale-105" : "text-gray-400"
+            )}
+          >
+            <Grid className="w-5 h-5" />
+            <span className="text-[9px] uppercase tracking-wider">Vitrine</span>
+          </button>
+
+          {/* Map Tab */}
+          <button
+            onClick={() => setViewMode('map')}
+            className={cn(
+              "flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all cursor-pointer",
+              viewMode === 'map' ? "text-gold-primary font-bold scale-105" : "text-gray-400"
+            )}
+          >
+            <MapIcon className="w-5 h-5" />
+            <span className="text-[9px] uppercase tracking-wider">Mapa</span>
+          </button>
+
+          {/* Anunciar / Painel Tab */}
+          {user ? (
+            <Link
+              href={userRole === 'provider' ? '/dashboard' : '/client-dashboard'}
+              className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-gray-400 hover:text-white transition-all cursor-pointer"
+            >
+              <LayoutDashboard className="w-5 h-5 text-gold-light" />
+              <span className="text-[9px] uppercase tracking-wider">Meu Painel</span>
+            </Link>
+          ) : (
+            <Link
+              href="/cadastro"
+              className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-gold-light hover:text-white transition-all cursor-pointer"
+            >
+              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-gold-primary to-gold-dark flex items-center justify-center text-dark-bg font-extrabold text-xs shadow-md shadow-gold-primary/20">
+                +
+              </div>
+              <span className="text-[9px] uppercase tracking-wider font-semibold">Anunciar</span>
+            </Link>
+          )}
+        </div>
+      </div>
 
     </main>
   );

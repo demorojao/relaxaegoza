@@ -224,8 +224,9 @@ export default function ProfileDetailsClient({
             </h1>
             
             {profile.verification_status === 'verified' && (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-1.5 rounded-full" title="Identidade Verificada">
-                <ShieldCheck className="w-5 h-5" />
+              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1" title={profile.verification_title || 'Identidade Verificada'}>
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span>{profile.verification_title || 'Verificado'}</span>
               </div>
             )}
             {profile.is_space_verified && (
@@ -263,7 +264,7 @@ export default function ProfileDetailsClient({
               )}
               {profile.verification_status === 'verified' && (
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Identidade Verificada
+                  <ShieldCheck className="w-3.5 h-3.5" /> {profile.verification_title || 'Identidade Verificada'}
                 </span>
               )}
               {profile.is_space_verified && (
