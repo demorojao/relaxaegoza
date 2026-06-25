@@ -1199,7 +1199,7 @@ export default function VitrineClient({
       {/* Mobile Floating Bottom Navigation Bar */}
       <div className="fixed bottom-5 inset-x-4 z-40 md:hidden flex justify-center">
         <div className="w-full max-w-sm glass-effect rounded-2xl border border-white/10 p-2 flex items-center justify-around shadow-2xl bg-black/85 backdrop-blur-md">
-          {/* Reels Tab */}
+          {/* Drops Tab */}
           <button
             onClick={() => setViewMode('reels')}
             className={cn(
@@ -1208,7 +1208,7 @@ export default function VitrineClient({
             )}
           >
             <Play className={cn("w-5 h-5", viewMode === 'reels' ? "fill-gold-primary" : "")} />
-            <span className="text-[9px] uppercase tracking-wider">Reels</span>
+            <span className="text-[9px] uppercase tracking-wider">Drops</span>
           </button>
 
           {/* Vitrine (Grid) Tab */}

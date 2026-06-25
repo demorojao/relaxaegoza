@@ -132,7 +132,7 @@ export default function FilterBar({
 
         {/* Linha secundária de controles no mobile, inline no desktop */}
         <div className="flex gap-2 items-center w-full sm:w-auto">
-          {/* Selector Reels vs Grid vs Map */}
+          {/* Selector Drops vs Grid vs Map */}
           <div className="flex flex-1 sm:flex-initial bg-black/40 border border-white/5 rounded-xl p-1 justify-around sm:justify-start">
             <button
               onClick={() => setViewMode('reels')}
@@ -143,7 +143,7 @@ export default function FilterBar({
               }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
-              <span className="hidden sm:inline">Reels</span>
+              <span className="hidden sm:inline">Drops</span>
             </button>
             <button
               onClick={() => setViewMode('grid')}
