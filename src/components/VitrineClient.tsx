@@ -57,6 +57,18 @@ export default function VitrineClient({
   const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'reels' | 'grid' | 'map'>('reels');
+
+  // Forçar modo Vitrine (grid) no desktop e bloquear modo Drops (reels)
+  useEffect(() => {
+    const checkViewport = () => {
+      if (window.innerWidth >= 768) {
+        setViewMode(prev => prev === 'reels' ? 'grid' : prev);
+      }
+    };
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
   const [userCoords, setUserCoords] = useState<[number, number] | null>(null);
   const [detectedCity, setDetectedCity] = useState('');
   const [reelsPhotos, setReelsPhotos] = useState<Record<string, { url: string; type: 'photo' | 'video' }[]>>({});
