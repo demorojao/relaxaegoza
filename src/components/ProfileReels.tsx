@@ -264,16 +264,16 @@ export default function ProfileReels({
 
       {/* Floating Category Filters for Mobile Reels */}
       {setCategoryFilter && setSpaceFilter && (
-        <div className="absolute top-16 inset-x-0 z-30 pt-2 pb-6 px-4 flex items-center gap-2 md:hidden">
+        <div className="absolute top-14 inset-x-0 z-30 pt-2 pb-6 px-4 flex items-center gap-2 md:hidden">
           {onOpenFilters && (
             <button
               onClick={onOpenFilters}
-              className="p-2.5 rounded-xl bg-black/55 border border-white/10 text-gray-300 hover:text-white relative active:scale-95 transition-transform flex-shrink-0"
+              className="p-2 rounded-xl bg-black/35 backdrop-blur-sm border border-white/5 text-gray-300 hover:text-white relative active:scale-95 transition-transform flex-shrink-0"
               title="Abrir Filtros"
             >
-              <SlidersHorizontal className="w-4 h-4 text-gold-primary" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-gold-primary" />
               {activeFiltersCount !== undefined && activeFiltersCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-gold-primary text-dark-bg text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-gold-primary text-dark-bg text-[7px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
                   {activeFiltersCount}
                 </span>
               )}
@@ -283,43 +283,43 @@ export default function ProfileReels({
           <div className="flex gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-1">
             <button
               onClick={() => { setCategoryFilter(''); setSpaceFilter(false); }}
-              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 categoryFilter === '' && !spaceFilter
-                  ? 'bg-gradient-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md'
-                  : 'bg-black/55 border-white/5 text-gray-400'
+                  ? 'bg-gradient-to-r from-gold-primary/80 to-gold-dark/80 border-gold-primary/20 text-dark-bg shadow-md'
+                  : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
               }`}
             >
               Todos
             </button>
             <button
               onClick={() => { setCategoryFilter('escort'); setSpaceFilter(false); }}
-              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 categoryFilter === 'escort' && !spaceFilter
-                  ? 'bg-gradient-to-r from-wine-primary to-wine-dark border-wine-primary text-white shadow-md'
-                  : 'bg-black/55 border-white/5 text-gray-400'
+                  ? 'bg-gradient-to-r from-wine-primary/80 to-wine-dark/80 border-wine-primary/20 text-white shadow-md'
+                  : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
               }`}
             >
-              🔥 Acompanhantes
+              Acompanhantes
             </button>
             <button
               onClick={() => { setCategoryFilter('massage'); setSpaceFilter(false); }}
-              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 categoryFilter === 'massage' && !spaceFilter
-                  ? 'bg-gradient-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md'
-                  : 'bg-black/55 border-white/5 text-gray-400'
+                  ? 'bg-gradient-to-r from-gold-primary/80 to-gold-dark/80 border-gold-primary/20 text-dark-bg shadow-md'
+                  : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
               }`}
             >
-              🧘 Massagens
+              Massagens
             </button>
             <button
               onClick={() => { setSpaceFilter(true); }}
-              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 spaceFilter
-                  ? 'bg-gradient-to-r from-emerald-600 to-emerald-800 border-emerald-600 text-white shadow-md'
-                  : 'bg-black/55 border-white/5 text-gray-400'
+                  ? 'bg-gradient-to-r from-emerald-600/80 to-emerald-800/80 border-emerald-600/20 text-white shadow-md'
+                  : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
               }`}
             >
-              🏠 Com Espaço
+              Com Espaço
             </button>
           </div>
         </div>

@@ -737,7 +737,7 @@ export default function VitrineClient({
           </Link>
           
           {user ? (
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className={cn("flex items-center gap-2 sm:gap-3", viewMode === 'reels' && "hidden md:flex")}>
               <Link href={userRole === 'provider' ? '/dashboard' : '/client-dashboard'}>
                 <Button variant="dark" size="sm">
                   <LayoutDashboard className="w-3.5 h-3.5" />
@@ -753,7 +753,7 @@ export default function VitrineClient({
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className={cn("flex items-center gap-1 sm:gap-2", viewMode === 'reels' && "hidden md:flex")}>
               <Link href="/login">
                 <Button variant="ghost" size="sm" title="Entrar">
                   <LogIn className="w-3.5 h-3.5" />
