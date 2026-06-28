@@ -17,15 +17,77 @@ interface AdEditorModalProps {
 
 export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess }: AdEditorModalProps) {
   const [loading, setLoading] = useState(false);
-  const [fetchingAd, setFetchingAd] = useState(true);
-  const [gallery, setGallery] = useState<any[]>([]);
+  const [fetchingAd, setFetchingAd] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [price, setPrice] = useState(0);
+  const [price, setPrice] = useState<number | ''>('');
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
+  const [gallery, setGallery] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
+  // Boost states
+  const [boostTimeLeft, setBoostTimeLeft] = useState<string | null>(null);
+  const [boostingCheckout, setBoostingCheckout] = useState(false);
+
+  useEffect(() => {
+    if (!profile?.boost_expires_at) {
+      setBoostTimeLeft(null);
+      return;
+    }
+
+    const updateCountdown = () => {
+      const expireTime = new Date(profile.boost_expires_at).getTime();
+      const now = Date.now();
+      const diff = expireTime - now;
+
+      if (diff <= 0) {
+        setBoostTimeLeft(null);
+      } else {
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        const hStr = hours > 0 ? `${hours}h ` : '';
+        const mStr = minutes > 0 || hours > 0 ? `${minutes}m ` : '';
+        setBoostTimeLeft(`${hStr}${mStr}${seconds}s`);
+      }
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [profile?.boost_expires_at]);
+
+  const handleBuyBoost = async () => {
+    setBoostingCheckout(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isBoost: true })
+      });
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.error) {
+        alert(data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao iniciar o checkout do Boost.');
+    } finally {
+      setBoostingCheckout(false);
+    }
+  };
 
   const tier = profile?.subscription_tier || 'free';
   const tierName = tier === 'free' ? 'Bronze (Grátis)' : tier === 'pro' ? 'Pro (Silver)' : 'Gold (Premium)';
@@ -341,6 +403,46 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
                   })}
                 </div>
               )}
+            </div>
+
+            {/* Boost Card */}
+            <div className="p-4 bg-gradient-to-br from-gold-primary/[0.08] to-transparent border border-gold-primary/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-gold-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 animate-pulse" />
+                  Destaque no Topo (Boost)
+                </span>
+                <p className="text-[10px] text-gray-400 leading-relaxed max-w-md">
+                  Fique no topo absoluto das buscas e da vitrine por 24 horas. Atraia até 5x mais cliques e visualizações no seu anúncio.
+                </p>
+              </div>
+              
+              <div>
+                {boostTimeLeft ? (
+                  <div className="flex flex-col items-center sm:items-end gap-0.5 bg-gold-primary/10 border border-gold-primary/20 px-4 py-2 rounded-xl shrink-0">
+                    <span className="text-[9px] text-gold-primary uppercase font-bold animate-pulse">🚀 Boost Ativo</span>
+                    <span className="text-sm font-bold text-white font-mono">{boostTimeLeft}</span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleBuyBoost}
+                    disabled={boostingCheckout}
+                    className="px-4 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-gold-primary/20 disabled:opacity-50 flex items-center gap-1.5 hover:scale-[1.02] shrink-0"
+                  >
+                    {boostingCheckout ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-dark-bg/30 border-t-dark-bg rounded-full animate-spin" />
+                        Aguarde...
+                      </>
+                    ) : (
+                      <>
+                        Impulsionar (R$ 15)
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Is Active Toggle */}
