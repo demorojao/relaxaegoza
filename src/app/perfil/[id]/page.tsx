@@ -53,6 +53,18 @@ async function getCachedReviews(providerId: string) {
   return data || [];
 }
 
+async function getCachedAd(profileId: string) {
+  'use cache';
+  cacheLife('seconds');
+  const supabase = getSupabaseServerClient();
+  const { data } = await supabase
+    .from('ads')
+    .select('*')
+    .eq('profile_id', profileId)
+    .maybeSingle();
+  return data;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const profile = await getCachedProfile(id);
@@ -93,6 +105,9 @@ async function ProfilePageContent({ params }: Props) {
 
   // 3. Buscar avaliações no servidor
   const reviews = await getCachedReviews(id);
+
+  // 4. Buscar anúncio no servidor
+  const ad = await getCachedAd(id);
 
   const location = profile.neighborhood ? `${profile.neighborhood}, ${profile.city}` : profile.city;
   const description = `${profile.name} - Atendimento de luxo em ${location}. Veja fotos reais, comodidades, avaliações e entre em contato direto pelo WhatsApp.`;
@@ -139,6 +154,7 @@ async function ProfilePageContent({ params }: Props) {
           initialProfile={profile}
           initialPhotos={photos}
           initialReviews={reviews}
+          initialAd={ad}
         />
       </div>
 

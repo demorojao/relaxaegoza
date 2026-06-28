@@ -126,9 +126,27 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
             </div>
           </div>
 
+          {/* Categoria e Público Alvo */}
+          {(profile.target_audience || profile.category) && (
+            <div className="flex items-center justify-between border-t border-white/5 pt-1.5 mt-0.5 text-[8px] sm:text-[9px] text-gray-400 font-medium font-sans">
+              <span className="truncate text-gray-300">
+                {profile.category === 'massage' 
+                  ? '🧘 Massagens' 
+                  : profile.category === 'escort' 
+                    ? '🔥 Acompanhante' 
+                    : '✨ Ambos'}
+              </span>
+              {profile.target_audience && profile.target_audience.length > 0 && (
+                <span className="text-[8px] bg-wine-primary/20 border border-wine-primary/30 text-wine-light px-1 py-0.2 rounded shrink-0">
+                  👥 {profile.target_audience.join(', ')}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Primeira Especialidade */}
           {specialtyNames.length > 0 && (
-            <div className="text-[9px] sm:text-[10px] text-gray-400 truncate border-t border-white/5 pt-1 mt-0.5 font-light">
+            <div className="text-[8px] sm:text-[9px] text-gray-500 truncate pt-1 font-light">
               {specialtyNames.slice(0, 1).join(' • ')}
             </div>
           )}

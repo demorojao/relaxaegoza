@@ -13,17 +13,30 @@ import {
   Save,
   Check,
   Upload,
-  Camera
+  Camera,
+  Trash2,
+  Eye,
+  EyeOff,
+  Lock,
+  Play,
+  Video,
+  FileImage
 } from 'lucide-react';
 import ImageBlurSelector from '@/components/ImageBlurSelector';
+import { getCDNUrl } from '@/lib/mediaHelper';
+import { Badge } from '@/components/ui/Badge';
 
 export default function ProfileEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
 
-  // Estados do Formulário
+  // Tabs state
+  const [activeTab, setActiveTab] = useState<'profile' | 'ad'>('profile');
+
+  // Estados do Formulário do Perfil
   const [stageName, setStageName] = useState('');
   const [age, setAge] = useState(18);
   const [whatsapp, setWhatsapp] = useState('');
@@ -45,13 +58,24 @@ export default function ProfileEditor() {
   const [targetAudience, setTargetAudience] = useState<string[]>([]);
   const [gender, setGender] = useState<'Feminino' | 'Masculino' | 'Trans'>('Feminino');
 
-  // Blocos Estruturados de Copywriting (USP do estruturador de perfil)
+  // Blocos Estruturados de Copywriting
   const [specialties, setSpecialties] = useState('');
   const [whatsIncluded, setWhatsIncluded] = useState('');
   const [rules, setRules] = useState('');
 
   // Comodidades selecionadas
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+
+  // Estados do Anúncio
+  const [ad, setAd] = useState<any>(null);
+  const [adTitle, setAdTitle] = useState('');
+  const [adDescription, setAdDescription] = useState('');
+  const [adPrice, setAdPrice] = useState(0);
+  const [adPhotos, setAdPhotos] = useState<string[]>([]);
+  const [adVideos, setAdVideos] = useState<string[]>([]);
+  const [adIsActive, setAdIsActive] = useState(true);
+  const [profilePhotosList, setProfilePhotosList] = useState<any[]>([]);
+  const [uploadingAdMedia, setUploadingAdMedia] = useState(false);
 
   const massageAmenities = ['Maca Profissional', 'Óleos Essenciais Importados', 'Música de Relaxamento', 'Chuveiro Aquecido'];
   const escortAmenities = ['Ar Condicionado', 'Estacionamento Discreto', 'Drinks Cortesia', 'Wi-Fi de Alta Velocidade'];
@@ -66,6 +90,8 @@ export default function ProfileEditor() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       setUser(user);
+      
+      // 1. Buscar Perfil
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -73,6 +99,7 @@ export default function ProfileEditor() {
         .single();
       
       if (data) {
+        setProfile(data);
         setStageName(data.name || '');
         setAge(data.age || 18);
         setWhatsapp(data.whatsapp || '');
@@ -89,7 +116,7 @@ export default function ProfileEditor() {
         setAvatarUrl(data.avatar_url || '');
         setAvatarPreview(data.avatar_url || null);
         
-        // Parsing bio to extract structured copywriting blocks if formatted
+        // Parsing bio
         const bioText = data.bio || '';
         if (bioText.includes('=== ESPECIALIDADES ===')) {
           const parts = bioText.split('\n\n=== ');
@@ -102,6 +129,41 @@ export default function ProfileEditor() {
         } else {
           setSpecialties(bioText);
         }
+
+        // 2. Buscar Anúncio
+        const { data: adData } = await supabase
+          .from('ads')
+          .select('*')
+          .eq('profile_id', user.id)
+          .maybeSingle();
+
+        if (adData) {
+          setAd(adData);
+          setAdTitle(adData.title || '');
+          setAdDescription(adData.description || '');
+          setAdPrice(Number(adData.price) || 0);
+          setAdPhotos(adData.photos || []);
+          setAdVideos(adData.videos || []);
+          setAdIsActive(adData.is_active ?? true);
+        } else {
+          // Valores padrão baseados no perfil
+          setAdTitle(`Atendimento com ${data.name || ''}`);
+          setAdDescription(data.bio || '');
+          setAdPrice(Number(data.price_per_hour) || 0);
+          setAdPhotos(data.avatar_url ? [data.avatar_url] : []);
+          setAdVideos([]);
+          setAdIsActive(true);
+        }
+      }
+
+      // 3. Buscar fotos da galeria para seleção
+      const { data: mediaData } = await supabase
+        .from('profile_photos')
+        .select('*')
+        .eq('profile_id', user.id);
+      
+      if (mediaData) {
+        setProfilePhotosList(mediaData);
       }
     }
     setLoading(false);
@@ -354,6 +416,203 @@ export default function ProfileEditor() {
     }
   };
 
+  const handleSaveAd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setSaving(true);
+    setSuccess(false);
+
+    try {
+      const tier = profile?.subscription_tier || 'free';
+      const limitPhotos = tier === 'free' ? 3 : tier === 'pro' ? 10 : 20;
+      const limitVideos = tier === 'free' ? 0 : tier === 'pro' ? 10 : 15;
+
+      if (adPhotos.length > limitPhotos) {
+        alert(`Seu plano ${tier.toUpperCase()} permite selecionar no máximo ${limitPhotos} fotos no anúncio.`);
+        setSaving(false);
+        return;
+      }
+      if (adVideos.length > limitVideos) {
+        alert(`Seu plano ${tier.toUpperCase()} permite selecionar no máximo ${limitVideos} vídeos no anúncio.`);
+        setSaving(false);
+        return;
+      }
+
+      // 1. Salvar ou atualizar na tabela ads
+      const { error: adError } = await supabase
+        .from('ads')
+        .upsert({
+          profile_id: user.id,
+          title: adTitle,
+          description: adDescription,
+          price: Number(adPrice),
+          photos: adPhotos,
+          videos: adVideos,
+          is_active: adIsActive
+        }, { onConflict: 'profile_id' });
+
+      if (adError) throw adError;
+
+      // 2. Sincronizar categoria e target_audience na tabela profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          category,
+          target_audience: targetAudience
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Atualizar estado local do profile
+      setProfile((prev: any) => ({ ...prev, category, target_audience: targetAudience }));
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      alert('Erro ao salvar anúncio: ' + (err?.message || err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUploadAdMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isImage = file.type.startsWith('image/');
+    const typeKey = isImage ? 'photo' : 'video';
+    const maxSize = isImage ? 5 * 1024 * 1024 : 15 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      alert(`O arquivo é muito grande. O limite máximo é ${isImage ? '5MB' : '15MB'}.`);
+      return;
+    }
+
+    const tier = profile?.subscription_tier || 'free';
+    const limitPhotos = tier === 'free' ? 3 : tier === 'pro' ? 10 : 20;
+    const limitVideos = tier === 'free' ? 0 : tier === 'pro' ? 10 : 15;
+
+    if (typeKey === 'photo' && adPhotos.length >= limitPhotos) {
+      alert(`Limite atingido! Seu plano ${tier.toUpperCase()} permite apenas ${limitPhotos} fotos.`);
+      return;
+    }
+    if (typeKey === 'video' && adVideos.length >= limitVideos) {
+      alert(`Limite atingido! Seu plano ${tier.toUpperCase()} permite apenas ${limitVideos} vídeos.`);
+      return;
+    }
+
+    setUploadingAdMedia(true);
+
+    try {
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${user.id}/${Date.now()}_ad_media.${fileExt}`;
+      
+      let fileToUpload = file;
+      if (isImage) {
+        try {
+          const { applyWatermark } = await import('@/lib/watermark');
+          const watermarkText = `Relaxa & Goza - ${stageName || ''}`;
+          fileToUpload = await applyWatermark(file, watermarkText);
+        } catch (watermarkErr) {
+          console.error("Erro ao aplicar marca d'água:", watermarkErr);
+        }
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile_media')
+        .upload(fileName, fileToUpload, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile_media')
+        .getPublicUrl(fileName);
+
+      // Inserir no banco de dados profile_photos
+      const { data: dbData, error: dbError } = await supabase
+        .from('profile_photos')
+        .insert({
+          profile_id: user.id,
+          photo_url: publicUrl,
+          media_type: typeKey,
+          is_verified: false
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      // Adicionar no array do anúncio
+      if (typeKey === 'photo') {
+        setAdPhotos(prev => [...prev, publicUrl]);
+      } else {
+        // Disparar transcodificação
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          fetch('/api/media/transcode', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+              videoUrl: publicUrl,
+              photoId: dbData.id,
+              tableType: 'profile_photos'
+            })
+          }).catch(e => console.error('Erro ao transcodificar:', e));
+        }
+        setAdVideos(prev => [...prev, publicUrl]);
+      }
+
+      // Adicionar na lista local
+      setProfilePhotosList(prev => [...prev, dbData]);
+    } catch (err: any) {
+      alert('Erro ao carregar mídia do anúncio: ' + (err?.message || err));
+    } finally {
+      setUploadingAdMedia(false);
+    }
+  };
+
+  const toggleAdPhoto = (photoUrl: string) => {
+    const tier = profile?.subscription_tier || 'free';
+    const limitPhotos = tier === 'free' ? 3 : tier === 'pro' ? 10 : 20;
+
+    if (adPhotos.includes(photoUrl)) {
+      setAdPhotos(prev => prev.filter(p => p !== photoUrl));
+    } else {
+      if (adPhotos.length >= limitPhotos) {
+        alert(`Seu plano ${tier.toUpperCase()} permite selecionar no máximo ${limitPhotos} fotos.`);
+        return;
+      }
+      setAdPhotos(prev => [...prev, photoUrl]);
+    }
+  };
+
+  const toggleAdVideo = (videoUrl: string) => {
+    const tier = profile?.subscription_tier || 'free';
+    const limitVideos = tier === 'free' ? 0 : tier === 'pro' ? 10 : 15;
+
+    if (limitVideos === 0) {
+      alert('Seu plano Bronze não permite vídeos no anúncio.');
+      return;
+    }
+
+    if (adVideos.includes(videoUrl)) {
+      setAdVideos(prev => prev.filter(v => v !== videoUrl));
+    } else {
+      if (adVideos.length >= limitVideos) {
+        alert(`Seu plano ${tier.toUpperCase()} permite selecionar no máximo ${limitVideos} vídeos.`);
+        return;
+      }
+      setAdVideos(prev => [...prev, videoUrl]);
+    }
+  };
+
   if (loading) {
     return (
       <div className="w-full flex justify-center py-20">
@@ -369,10 +628,10 @@ export default function ProfileEditor() {
       <div className="border-b border-dark-border/20 pb-5 flex justify-between items-end">
         <div>
           <h1 className="text-2xl md:text-3xl font-light text-white tracking-tight">
-            Estruturador de <span className="font-semibold text-gold-primary">Perfil Profissional</span>
+            Estruturador de <span className="font-semibold text-gold-primary">Perfil & Anúncio</span>
           </h1>
           <p className="text-xs md:text-sm text-gray-400 font-light mt-1.5">
-            Nosso estruturador divide as informações em blocos focados em conversão, eliminando textos livres genéricos.
+            Configure seu perfil de profissional e gerencie seu anúncio ativo na vitrine do portal.
           </p>
         </div>
 
@@ -383,7 +642,35 @@ export default function ProfileEditor() {
         )}
       </div>
 
-      <form onSubmit={handleSave} className="space-y-8">
+      {/* Tabs */}
+      <div className="flex gap-4 border-b border-dark-border/20 pb-0.5">
+        <button
+          type="button"
+          onClick={() => setActiveTab('profile')}
+          className={`pb-3 text-sm font-semibold tracking-wide transition-all border-b-2 cursor-pointer ${
+            activeTab === 'profile'
+              ? 'border-gold-primary text-gold-light'
+              : 'border-transparent text-gray-400 hover:text-white'
+          }`}
+        >
+          Dados do Perfil
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('ad')}
+          className={`pb-3 text-sm font-semibold tracking-wide transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
+            activeTab === 'ad'
+              ? 'border-gold-primary text-gold-light'
+              : 'border-transparent text-gray-400 hover:text-white'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-gold-primary" />
+          Configuração de Anúncio
+        </button>
+      </div>
+
+      {activeTab === 'profile' ? (
+        <form onSubmit={handleSave} className="space-y-8">
         
         {/* Bloco 0: Foto de Perfil (Avatar) com Borrão Opcional */}
         <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 flex flex-col sm:flex-row items-center gap-6">
@@ -837,18 +1124,362 @@ export default function ProfileEditor() {
             className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gold-primary text-dark-bg hover:bg-gold-light text-xs font-semibold tracking-wide transition-all shadow-[0_4px_12px_rgba(197,168,128,0.2)] disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             <Save className="w-4 h-4" />
-            {saving ? 'Salvando...' : 'Salvar e Atualizar Anúncio'}
+            {saving ? 'Salvando...' : 'Salvar Dados do Perfil'}
           </button>
         </div>
       </form>
+    ) : (
+      <form onSubmit={handleSaveAd} className="space-y-8">
+        {/* Bloco 0: Placa do Plano & Ativação do Anúncio */}
+        <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Seu Plano de Divulgação</span>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant={profile?.subscription_tier === 'gold' ? 'gold' : profile?.subscription_tier === 'pro' ? 'wine' : 'outline'}>
+                  {profile?.subscription_tier?.toUpperCase() || 'BRONZE'}
+                </Badge>
+                <span className="text-xs text-gray-400">
+                  Mídias permitidas: {profile?.subscription_tier === 'gold' ? '25 Fotos & 15 Vídeos' : profile?.subscription_tier === 'pro' ? '10 Fotos & 10 Vídeos' : '3 Fotos & 0 Vídeos'}
+                </span>
+              </div>
+            </div>
+            
+            {/* Status do Anúncio */}
+            <div className="flex items-center gap-3 bg-black/40 border border-white/5 p-3 rounded-xl">
+              <span className="text-xs text-gray-400 font-medium">Status do Anúncio:</span>
+              <button
+                type="button"
+                onClick={() => setAdIsActive(!adIsActive)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all ${
+                  adIsActive 
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                }`}
+              >
+                {adIsActive ? (
+                  <>
+                    <Eye className="w-3.5 h-3.5" />
+                    Ativo
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="w-3.5 h-3.5" />
+                    Inativo (Pausado)
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
 
-      {blurImageSrc && (
-        <ImageBlurSelector
-          imageSrc={blurImageSrc}
-          onConfirm={handleBlurConfirm}
-          onCancel={() => setBlurImageSrc(null)}
-        />
-      )}
-    </div>
-  );
+        {/* Bloco 1: Textos do Anúncio */}
+        <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-5">
+          <div className="flex items-center gap-2 text-white font-medium text-sm">
+            <FileText className="w-4 h-4 text-gold-primary" />
+            <span>Textos de Atração do Anúncio</span>
+          </div>
+
+          <div className="space-y-4">
+            {/* Título */}
+            <div className="space-y-1.5">
+              <label className="text-xs text-gray-400 font-medium">Título Curto do Anúncio (Tagline)</label>
+              <input
+                type="text"
+                value={adTitle}
+                onChange={(e) => setAdTitle(e.target.value)}
+                className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
+                placeholder="Ex: Massagem Sensorial Exclusiva com Óleos Essenciais"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Preço do anúncio */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-gray-400 font-medium">Valor do Atendimento do Anúncio (R$ / Hora)</label>
+                <input
+                  type="number"
+                  value={adPrice}
+                  onChange={(e) => setAdPrice(Number(e.target.value))}
+                  className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
+                  required
+                />
+              </div>
+
+              {/* Opção de Trabalho */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-gray-400 font-medium">Opção de Trabalho (Categoria)</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as any)}
+                  className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
+                >
+                  <option value="massage">Massagem & Terapias</option>
+                  <option value="escort">Acompanhante Adulto</option>
+                  <option value="both">Ambos os Serviços</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Descrição */}
+            <div className="space-y-1.5">
+              <label className="text-xs text-gray-400 font-medium">Descrição Personalizada para Divulgação</label>
+              <textarea
+                value={adDescription}
+                onChange={(e) => setAdDescription(e.target.value)}
+                rows={4}
+                className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors resize-none leading-relaxed"
+                placeholder="Descreva seu serviço de forma atraente para os clientes. Evite clichês."
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Bloco 2: Público-Alvo do Anúncio */}
+        <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-4">
+          <div className="flex items-center gap-2 text-white font-medium text-sm">
+            <UserSquare2 className="w-4 h-4 text-gold-primary" />
+            <span>Público para Quem Você Trabalha (Atendo a)</span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {['Homens', 'Mulheres', 'Casais', 'Trans'].map(aud => {
+              const isSelected = targetAudience.includes(aud);
+              return (
+                <button
+                  key={aud}
+                  type="button"
+                  onClick={() => {
+                    if (isSelected) {
+                      setTargetAudience(prev => prev.filter(a => a !== aud));
+                    } else {
+                      setTargetAudience(prev => [...prev, aud]);
+                    }
+                  }}
+                  className={`text-xs px-4 py-2 rounded-xl border transition-all cursor-pointer ${
+                    isSelected 
+                      ? 'bg-gold-primary/20 border-gold-primary text-gold-light font-medium' 
+                      : 'bg-dark-bg/60 border-dark-border text-gray-400 hover:border-gray-600'
+                  }`}
+                >
+                  {aud}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bloco 3: Mídias do Anúncio (Seleção e Upload Rápido) */}
+        <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-dark-border/20 pb-4">
+            <div className="flex items-center gap-2 text-white font-medium text-sm">
+              <Camera className="w-4 h-4 text-gold-primary" />
+              <span>Fotos e Vídeos em Destaque do Anúncio</span>
+            </div>
+
+            {/* Direct Media Upload */}
+            <label className="px-4 py-2 rounded-xl bg-gold-primary text-dark-bg hover:bg-gold-light text-xs font-bold uppercase tracking-wider cursor-pointer transition-all flex items-center gap-1.5 shadow-[0_4px_12px_rgba(197,168,128,0.2)]">
+              <Upload className="w-3.5 h-3.5" />
+              {uploadingAdMedia ? 'Fazendo Upload...' : 'Carregar Nova Foto / Vídeo'}
+              <input
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleUploadAdMedia}
+                disabled={uploadingAdMedia}
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          <div className="space-y-6">
+            {/* Photos selection section */}
+            <div>
+              <div className="flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <span>Fotos Selecionadas para o Anúncio ({adPhotos.length})</span>
+                <span className="text-[10px] text-gray-500 font-normal normal-case">
+                  Limite: {profile?.subscription_tier === 'gold' ? '20' : profile?.subscription_tier === 'pro' ? '10' : '3'} fotos
+                </span>
+              </div>
+
+              {profilePhotosList.filter(m => m.media_type === 'photo' || !m.media_type).length === 0 ? (
+                <div className="text-center py-8 text-xs text-gray-500 font-light border border-dashed border-dark-border/40 rounded-xl">
+                  Nenhuma foto na sua galeria. Clique em "Carregar Nova Foto / Vídeo" acima para enviar.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                  {profilePhotosList.filter(m => m.media_type === 'photo' || !m.media_type).map(photo => {
+                    const isSelected = adPhotos.includes(photo.photo_url);
+                    return (
+                      <div 
+                        key={photo.id}
+                        className={`relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all group ${
+                          isSelected ? 'border-gold-primary shadow-[0_0_15px_rgba(197,168,128,0.2)]' : 'border-dark-border hover:border-gray-700'
+                        }`}
+                      >
+                        <img 
+                          src={getCDNUrl(photo.photo_url)} 
+                          alt="Galeria" 
+                          className="w-full h-full object-cover" 
+                        />
+                        
+                        {/* Toggle overlay click */}
+                        <div 
+                          onClick={() => toggleAdPhoto(photo.photo_url)}
+                          className="absolute inset-0 bg-black/45 hover:bg-black/15 transition-colors cursor-pointer flex items-center justify-center"
+                        >
+                          {isSelected ? (
+                            <span className="bg-gold-primary text-dark-bg text-[10px] font-bold px-2 py-0.5 rounded-full">
+                              No Anúncio
+                            </span>
+                          ) : (
+                            <span className="bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">
+                              Adicionar
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Permanent deletion */}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (confirm('Tem certeza de que deseja apagar permanentemente esta foto da sua galeria e do servidor?')) {
+                              try {
+                                const { error } = await supabase.from('profile_photos').delete().eq('id', photo.id);
+                                if (error) throw error;
+
+                                const urlParts = photo.photo_url.split('/profile_media/');
+                                if (urlParts.length > 1) {
+                                  const storagePath = decodeURIComponent(urlParts[1]);
+                                  await supabase.storage.from('profile_media').remove([storagePath]);
+                                }
+
+                                setAdPhotos(prev => prev.filter(p => p !== photo.photo_url));
+                                setProfilePhotosList(prev => prev.filter(p => p.id !== photo.id));
+                              } catch (err) {
+                                alert('Erro ao excluir foto permanentemente.');
+                              }
+                            }
+                          }}
+                          className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 p-1.5 rounded-lg text-white transition-colors shadow z-10 opacity-0 group-hover:opacity-100"
+                          title="Apagar permanentemente"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Videos selection section */}
+            <div className="pt-4 border-t border-dark-border/20">
+              <div className="flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <span>Vídeos Selecionados para o Anúncio ({adVideos.length})</span>
+                <span className="text-[10px] text-gray-500 font-normal normal-case">
+                  Limite: {profile?.subscription_tier === 'gold' ? '15' : profile?.subscription_tier === 'pro' ? '10' : '0'} vídeos
+                </span>
+              </div>
+
+              {profile?.subscription_tier === 'free' || !profile?.subscription_tier ? (
+                <div className="text-center py-6 text-xs text-gray-500 font-light border border-dashed border-dark-border/40 rounded-xl bg-black/20">
+                  Seu plano Bronze não permite vídeos. Faça upgrade para <span className="text-wine-light font-bold">PRO</span> ou <span className="text-gold-primary font-bold">GOLD</span> para postar vídeos.
+                </div>
+              ) : profilePhotosList.filter(m => m.media_type === 'video').length === 0 ? (
+                <div className="text-center py-8 text-xs text-gray-500 font-light border border-dashed border-dark-border/40 rounded-xl">
+                  Nenhum vídeo na sua galeria. Clique em "Carregar Nova Foto / Vídeo" acima para enviar.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                  {profilePhotosList.filter(m => m.media_type === 'video').map(video => {
+                    const isSelected = adVideos.includes(video.photo_url);
+                    return (
+                      <div 
+                        key={video.id}
+                        className={`relative aspect-[3/4] rounded-xl overflow-hidden border-2 bg-black/60 flex flex-col justify-center items-center group transition-all ${
+                          isSelected ? 'border-gold-primary shadow-[0_0_15px_rgba(197,168,128,0.2)]' : 'border-dark-border hover:border-gray-700'
+                        }`}
+                      >
+                        <Video className="w-10 h-10 text-gray-500 animate-pulse" />
+                        <span className="text-[9px] text-gray-400 mt-2 font-mono truncate max-w-[80%]">
+                          Vídeo Galeria
+                        </span>
+                        
+                        {/* Toggle overlay click */}
+                        <div 
+                          onClick={() => toggleAdVideo(video.photo_url)}
+                          className="absolute inset-0 bg-black/45 hover:bg-black/15 transition-colors cursor-pointer flex items-center justify-center"
+                        >
+                          {isSelected ? (
+                            <span className="bg-gold-primary text-dark-bg text-[10px] font-bold px-2 py-0.5 rounded-full">
+                              No Anúncio
+                            </span>
+                          ) : (
+                            <span className="bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">
+                              Adicionar
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Permanent deletion */}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (confirm('Tem certeza de que deseja apagar permanentemente este vídeo da sua galeria e do servidor?')) {
+                              try {
+                                const { error } = await supabase.from('profile_photos').delete().eq('id', video.id);
+                                if (error) throw error;
+
+                                const urlParts = video.photo_url.split('/profile_media/');
+                                if (urlParts.length > 1) {
+                                  const storagePath = decodeURIComponent(urlParts[1]);
+                                  await supabase.storage.from('profile_media').remove([storagePath]);
+                                }
+
+                                setAdVideos(prev => prev.filter(v => v !== video.photo_url));
+                                setProfilePhotosList(prev => prev.filter(v => v.id !== video.id));
+                              } catch (err) {
+                                alert('Erro ao excluir vídeo permanentemente.');
+                              }
+                            }
+                          }}
+                          className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 p-1.5 rounded-lg text-white transition-colors shadow z-10 opacity-0 group-hover:opacity-100"
+                          title="Apagar permanentemente"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Submit */}
+        <div className="flex justify-end gap-4">
+          <button 
+            type="submit" 
+            disabled={saving}
+            className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gold-primary text-dark-bg hover:bg-gold-light text-xs font-semibold tracking-wide transition-all shadow-[0_4px_12px_rgba(197,168,128,0.2)] disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? 'Salvando Anúncio...' : 'Salvar Configurações de Anúncio'}
+          </button>
+        </div>
+      </form>
+    )}
+
+    {blurImageSrc && (
+      <ImageBlurSelector
+        imageSrc={blurImageSrc}
+        onConfirm={handleBlurConfirm}
+        onCancel={() => setBlurImageSrc(null)}
+      />
+    )}
+  </div>
+);
 }

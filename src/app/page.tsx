@@ -24,13 +24,22 @@ export default async function Home() {
 
   // 2. Fetch Profiles com Stories Ativos para SSR
   const { data: activeStories } = await supabase.from('stories')
-    .select('profile_id, profiles:profiles(id, name, avatar_url, subscription_tier, is_available_now, whatsapp, category)')
+    .select(`
+      profile_id,
+      profiles:profiles(
+        id, name, avatar_url, subscription_tier, is_available_now, whatsapp, category,
+        ads:ads(is_active)
+      )
+    `)
     .gt('expires_at', new Date().toISOString());
 
   const profileMap = new Map<string, Profile>();
   activeStories?.forEach((item: any) => {
     if (item.profiles && item.profiles.avatar_url) {
-      profileMap.set(item.profiles.id, item.profiles as Profile);
+      const activeAd = (item.profiles as any).ads?.find((a: any) => a.is_active);
+      if (activeAd) {
+        profileMap.set(item.profiles.id, item.profiles as Profile);
+      }
     }
   });
   

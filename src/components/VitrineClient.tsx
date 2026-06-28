@@ -81,36 +81,29 @@ export default function VitrineClient({
     const fetchReelsPhotos = async () => {
       setLoadingReelsPhotos(true);
       try {
-        const profileIds = profiles.map(p => p.id);
-        const { data } = await supabase
-          .from('profile_photos')
-          .select('profile_id, photo_url, media_type')
-          .in('profile_id', profileIds)
-          .order('created_at', { ascending: true });
+        const photosMap: Record<string, { url: string; type: 'photo' | 'video' }[]> = {};
 
-        if (data) {
-          const photosMap: Record<string, { url: string; type: 'photo' | 'video' }[]> = {};
+        profiles.forEach(p => {
+          photosMap[p.id] = [];
+          if (p.avatar_url) {
+            photosMap[p.id].push({ url: p.avatar_url, type: 'photo' });
+          }
 
-          profiles.forEach(p => {
-            photosMap[p.id] = [];
-            if (p.avatar_url) {
-              photosMap[p.id].push({ url: p.avatar_url, type: 'photo' });
-            }
+          // Add ad selected photos & videos
+          const adPhotos = (p as any).ad_photos || [];
+          const adVideos = (p as any).ad_videos || [];
+
+          adPhotos.forEach((url: string) => {
+            photosMap[p.id].push({ url, type: 'photo' });
           });
-
-          data.forEach(item => {
-            if (photosMap[item.profile_id]) {
-              photosMap[item.profile_id].push({
-                url: item.photo_url,
-                type: (item.media_type || 'photo') as 'photo' | 'video'
-              });
-            }
+          adVideos.forEach((url: string) => {
+            photosMap[p.id].push({ url, type: 'video' });
           });
+        });
 
-          setReelsPhotos(photosMap);
-        }
+        setReelsPhotos(photosMap);
       } catch (err) {
-        console.error('Erro ao buscar fotos dos reels:', err);
+        console.error('Erro ao processar fotos dos reels:', err);
       } finally {
         setLoadingReelsPhotos(false);
       }
@@ -443,7 +436,13 @@ export default function VitrineClient({
 
   const fetchStories = async () => {
     let query = supabase.from('stories')
-      .select('profile_id, profiles:profiles(id, name, avatar_url, subscription_tier, is_available_now, whatsapp, category, city)')
+      .select(`
+        profile_id,
+        profiles:profiles(
+          id, name, avatar_url, subscription_tier, is_available_now, whatsapp, category, city,
+          ads:ads(is_active)
+        )
+      `)
       .gt('expires_at', new Date().toISOString());
       
     const { data } = await query;
@@ -453,6 +452,10 @@ export default function VitrineClient({
         if (item.profiles) {
           const p = item.profiles as Profile;
           if (!p.avatar_url) return; // ignora se não tiver foto de capa
+
+          const activeAd = (p as any).ads?.find((a: any) => a.is_active);
+          if (!activeAd) return; // ignora se não tiver anúncio ativo
+
           if (categoryFilter) {
             const cat = p.category;
             if (categoryFilter === 'massage' && cat !== 'massage' && cat !== 'both') return;

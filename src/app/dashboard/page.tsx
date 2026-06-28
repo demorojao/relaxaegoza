@@ -21,6 +21,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import HostDashboardView from '@/components/HostDashboardView';
+import AdEditorModal from '@/components/AdEditorModal';
 
 export default function DashboardMetrics() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function DashboardMetrics() {
   const [isAvailable, setIsAvailable] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [checkoutStatus, setCheckoutStatus] = useState<string | null>(null);
+  const [isAdModalOpen, setIsAdModalOpen] = useState(false);
   const [boostingCheckout, setBoostingCheckout] = useState(false);
   const [boostTimeLeft, setBoostTimeLeft] = useState<string | null>(null);
   const [realTrafficData, setRealTrafficData] = useState<any[]>([
@@ -760,6 +762,29 @@ export default function DashboardMetrics() {
         </div>
 
       </div>
+
+      {/* Floating Quick Action Button for Ads */}
+      {profile && profile.role === 'provider' && (
+        <>
+          <button
+            onClick={() => setIsAdModalOpen(true)}
+            className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-gold-primary to-gold-light text-dark-bg font-bold py-3.5 px-6 rounded-full shadow-[0_4px_20px_rgba(197,168,128,0.3)] hover:shadow-[0_4px_25px_rgba(197,168,128,0.5)] hover:scale-105 transition-all flex items-center gap-2 group cursor-pointer border border-gold-light/20"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-dark-bg opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-dark-bg"></span>
+            </span>
+            <span className="text-xs uppercase tracking-wider">📢 Gerenciar Anúncio</span>
+          </button>
+          
+          <AdEditorModal
+            isOpen={isAdModalOpen}
+            onClose={() => setIsAdModalOpen(false)}
+            profile={profile}
+            onSaveSuccess={fetchProfile}
+          />
+        </>
+      )}
 
     </div>
   );

@@ -6,15 +6,15 @@ const nextConfig: NextConfig = {
     instantNavigationDevToolsToggle: true,
   },
   images: {
-    formats: ['image/avif', 'image/webp'],
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
+        hostname: '**',
       },
       {
-        protocol: 'https',
-        hostname: 'ivlaeilkomqhqwerojny.supabase.co',
+        protocol: 'http',
+        hostname: '**',
       },
     ],
   },

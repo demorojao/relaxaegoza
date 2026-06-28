@@ -24,6 +24,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { formatWhatsAppLink } from '@/lib/utils';
+import { getCDNUrl } from '@/lib/mediaHelper';
 
 
 interface ProfileDetailsClientProps {
@@ -31,17 +32,20 @@ interface ProfileDetailsClientProps {
   initialProfile: any;
   initialPhotos: any[];
   initialReviews: any[];
+  initialAd?: any;
 }
 
 export default function ProfileDetailsClient({
   id,
   initialProfile,
   initialPhotos,
-  initialReviews
+  initialReviews,
+  initialAd
 }: ProfileDetailsClientProps) {
   const [profile, setProfile] = useState<any>(initialProfile);
   const [photos, setPhotos] = useState<any[]>(initialPhotos);
   const [reviews, setReviews] = useState<any[]>(initialReviews);
+  const [ad, setAd] = useState<any>(initialAd);
 
   // Auth States for leaving reviews
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -192,14 +196,72 @@ export default function ProfileDetailsClient({
   const avgService = count > 0 ? (reviews.reduce((acc, curr) => acc + curr.rating_service, 0) / count).toFixed(1) : '4.9';
   const avgEnvironment = count > 0 ? (reviews.reduce((acc, curr) => acc + curr.rating_environment, 0) / count).toFixed(1) : '4.8';
 
+  // Ad-specific details resolver
+  const adTitle = ad?.title || `Atendimento com ${profile.name}`;
+  const adDescription = ad?.description || profile.bio || '';
+  const adPrice = ad ? ad.price : (profile.price_per_hour || 0);
+
+  const adMediaList = ad 
+    ? [
+        ...((ad.photos || []).map((url: string) => {
+          const dbPhoto = photos.find(p => p.photo_url === url);
+          return { url, type: 'photo', is_verified: dbPhoto?.is_verified || false };
+        })),
+        ...((ad.videos || []).map((url: string) => {
+          const dbVideo = photos.find(p => p.photo_url === url);
+          return { url, type: 'video', is_verified: dbVideo?.is_verified || false };
+        }))
+      ]
+    : [];
+
+  const mediaToRender = adMediaList.length > 0 
+    ? adMediaList 
+    : photos.map(p => ({ url: p.photo_url, type: 'photo', is_verified: p.is_verified }));
+
+  const isOwner = currentUser?.id === profile.id;
+
+  // If there is no active ad, block public visitors but let the owner/admin preview
+  if (!ad || !ad.is_active) {
+    if (!isOwner && userRole !== 'admin') {
+      return (
+        <div className="w-full flex flex-col items-center justify-center py-20 text-center space-y-4 bg-black/40 border border-white/5 rounded-3xl p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-wine-primary/10 blur-[50px] pointer-events-none" />
+          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+            <span className="text-3xl">📴</span>
+          </div>
+          <h2 className="text-xl font-bold text-white">Anúncio Indisponível</h2>
+          <p className="text-gray-400 text-sm max-w-md font-light leading-relaxed">
+            Esta profissional está temporariamente indisponível no momento. Por favor, volte mais tarde ou visite outros perfis ativos na nossa vitrine.
+          </p>
+          <Link href="/" className="mt-4 px-6 py-2.5 bg-wine-primary text-white text-xs font-semibold rounded-xl hover:bg-wine-primary/90 transition-colors uppercase tracking-wider">
+            Ver Outros Perfis
+          </Link>
+        </div>
+      );
+    }
+  }
+
   return (
-    <div className="flex flex-col md:flex-row gap-8 items-start">
+    <div className="w-full space-y-6">
+      {isOwner && (!ad || !ad.is_active) && (
+        <div className="w-full bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs px-4 py-3 rounded-2xl flex items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-base animate-bounce">📢</span>
+            <span>Seu perfil não tem um anúncio ativo no momento. Use o Painel para criar ou reativar seu anúncio.</span>
+          </div>
+          <Link href="/dashboard" className="px-3.5 py-1.5 bg-gold-primary text-dark-bg text-[10px] font-bold rounded-lg hover:bg-gold-light transition-colors uppercase tracking-wider">
+            Painel
+          </Link>
+        </div>
+      )}
+
+      <div className="flex flex-col md:flex-row gap-8 items-start">
       {/* Avatar Principal */}
       <div className={`w-full md:w-1/3 aspect-[4/5] sm:aspect-[3/4] max-h-[360px] md:max-h-none rounded-2xl overflow-hidden shadow-2xl relative flex-shrink-0 border-2 ${
         isAvailable ? 'border-emerald-500 neon-ring-active' : profile.subscription_tier === 'gold' ? 'border-gold-primary' : 'border-white/5'
       }`}>
         <Image 
-          src={profile.avatar_url || '/avatar-placeholder.svg'} 
+          src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'} 
           alt={profile.name}
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
@@ -209,16 +271,18 @@ export default function ProfileDetailsClient({
           priority
         />
         {/* Tag Foto 100% */}
-        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 z-10">
-          <CheckCircle className="w-4 h-4 text-emerald-400" />
-          <span className="text-[10px] font-semibold tracking-wide uppercase text-white">Foto Real</span>
-        </div>
+        {profile.verification_status === 'verified' && (
+          <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 z-10">
+            <CheckCircle className="w-4 h-4 text-emerald-400" />
+            <span className="text-[10px] font-semibold tracking-wide uppercase text-white">Foto Real</span>
+          </div>
+        )}
       </div>
 
       {/* Dados */}
       <div className="flex-1 w-full space-y-6">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight flex items-center gap-2">
               {profile.name}
               {profile.subscription_tier === 'gold' && (
@@ -239,6 +303,12 @@ export default function ProfileDetailsClient({
               </div>
             )}
           </div>
+
+          {adTitle && (
+            <h2 className="text-base sm:text-lg font-medium text-gold-light tracking-wide mt-1.5">
+              {adTitle}
+            </h2>
+          )}
 
           <div className="flex flex-col gap-2.5 mt-2">
             <div className="flex items-center gap-1 text-sm text-gray-400">
@@ -277,6 +347,20 @@ export default function ProfileDetailsClient({
                 </span>
               )}
             </div>
+
+            {/* Opções de Atendimento (Público-alvo) */}
+            {profile.target_audience && profile.target_audience.length > 0 && (
+              <div className="flex items-center gap-2 text-xs text-gray-400 mt-2 bg-white/[0.02] border border-white/5 p-3 rounded-xl w-fit">
+                <span className="font-semibold text-gray-300">Atende:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {profile.target_audience.map((audience: string) => (
+                    <span key={audience} className="px-2.5 py-0.5 rounded-md bg-wine-primary/10 border border-wine-primary/20 text-wine-light text-[10px] font-semibold">
+                      {audience}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -319,7 +403,7 @@ export default function ProfileDetailsClient({
             <span className="text-xs text-gray-500 uppercase font-semibold">Valor da Hora</span>
             <div className="flex items-center gap-1.5 text-gold-light">
               <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 -mr-1" />
-              <span className="text-2xl sm:text-3xl font-bold">{profile.price_per_hour}</span>
+              <span className="text-2xl sm:text-3xl font-bold">{adPrice}</span>
               <span className="text-gray-500 text-xs font-light">/ hr</span>
             </div>
           </div>
@@ -362,10 +446,10 @@ export default function ProfileDetailsClient({
         )}
 
         {/* Descrição / Bio Estruturada */}
-        {profile.bio && (
+        {adDescription && (
           <div className="pt-6 border-t border-white/10 space-y-6">
             {(() => {
-              const parsed = parseBio(profile.bio);
+              const parsed = parseBio(adDescription);
               if (parsed.included || parsed.rules) {
                 return (
                   <div className="space-y-6">
@@ -404,29 +488,38 @@ export default function ProfileDetailsClient({
           </div>
         )}
 
-        {/* Galeria de Fotos */}
+        {/* Galeria de Fotos e Vídeos do Anúncio */}
         <div className="space-y-4 pt-6 border-t border-white/5">
           <h3 className="text-sm font-semibold text-white uppercase tracking-widest flex items-center gap-2">
             <Star className="w-4 h-4 text-wine-light" />
-            Galeria de Fotos
+            Galeria do Anúncio
           </h3>
           
-          {photos.length === 0 ? (
-            <p className="text-gray-500 text-xs font-light">Nenhuma foto adicional cadastrada.</p>
+          {mediaToRender.length === 0 ? (
+            <p className="text-gray-500 text-xs font-light">Nenhuma foto ou vídeo cadastrado neste anúncio.</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {photos.map(photo => (
-                <div key={photo.id} className="relative aspect-[3/4] rounded-xl overflow-hidden group cursor-pointer border border-white/5">
-                  <Image 
-                    src={photo.photo_url} 
-                    alt="Galeria" 
-                    fill
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
-                    onContextMenu={(e) => e.preventDefault()}
-                    onDragStart={(e) => e.preventDefault()}
-                  />
-                  {photo.is_verified && (
+              {mediaToRender.map((media: any, index: number) => (
+                <div key={index} className="relative aspect-[3/4] rounded-xl overflow-hidden group cursor-pointer border border-white/5">
+                  {media.type === 'video' ? (
+                    <video 
+                      src={getCDNUrl(media.url)} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      controls
+                      playsInline
+                    />
+                  ) : (
+                    <Image 
+                      src={getCDNUrl(media.url)} 
+                      alt={`Foto do Anúncio ${index + 1}`} 
+                      fill
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
+                      onContextMenu={(e) => e.preventDefault()}
+                      onDragStart={(e) => e.preventDefault()}
+                    />
+                  )}
+                  {media.is_verified && (
                     <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-emerald-500/20 text-emerald-400 z-10">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
@@ -587,6 +680,7 @@ export default function ProfileDetailsClient({
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

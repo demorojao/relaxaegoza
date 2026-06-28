@@ -129,9 +129,12 @@ export default function MediaManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza de que deseja deletar este arquivo de mídia?')) return;
+    if (!confirm('Tem certeza de que deseja deletar este arquivo de mídia permanentemente?')) return;
 
     try {
+      const itemToDelete = media.find(m => m.id === id);
+
+      // Deletar do banco de dados primeiro
       const { error } = await supabase
         .from('profile_photos')
         .delete()
@@ -139,9 +142,46 @@ export default function MediaManager() {
 
       if (error) throw error;
 
+      // Deletar o arquivo físico do Supabase Storage
+      if (itemToDelete?.photo_url) {
+        const urlParts = itemToDelete.photo_url.split('/profile_media/');
+        if (urlParts.length > 1) {
+          const storagePath = decodeURIComponent(urlParts[1]);
+          const { error: storageError } = await supabase.storage
+            .from('profile_media')
+            .remove([storagePath]);
+          if (storageError) {
+            console.error('Erro ao deletar arquivo do storage:', storageError);
+          }
+        }
+
+        // Remover referências a essa mídia na tabela de anúncios
+        if (user) {
+          const { data: activeAd } = await supabase
+            .from('ads')
+            .select('*')
+            .eq('profile_id', user.id)
+            .maybeSingle();
+
+          if (activeAd) {
+            const updatedPhotos = (activeAd.photos || []).filter((p: string) => p !== itemToDelete.photo_url);
+            const updatedVideos = (activeAd.videos || []).filter((v: string) => v !== itemToDelete.photo_url);
+
+            await supabase
+              .from('ads')
+              .update({
+                photos: updatedPhotos,
+                videos: updatedVideos
+              })
+              .eq('profile_id', user.id);
+          }
+        }
+      }
+
       setMedia(prev => prev.filter(m => m.id !== id));
     } catch (err) {
-      alert('Erro ao excluir mídia.');
+      console.error(err);
+      alert('Erro ao excluir mídia permanentemente.');
     }
   };
 
