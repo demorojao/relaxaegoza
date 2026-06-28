@@ -6,6 +6,7 @@ import { Image as ImageIcon, Video, Trash2, Sparkles, Upload, Lock, AlertTriangl
 import Link from 'next/link';
 import ImageBlurSelector from '@/components/ImageBlurSelector';
 import { applyWatermark } from '@/lib/watermark';
+import { triggerRevalidate } from '@/lib/revalidate';
 
 export default function MediaManager() {
   const [user, setUser] = useState<any>(null);
@@ -179,6 +180,9 @@ export default function MediaManager() {
       }
 
       setMedia(prev => prev.filter(m => m.id !== id));
+      if (profile) {
+        await triggerRevalidate(profile.city, profile.neighborhood);
+      }
     } catch (err) {
       console.error(err);
       alert('Erro ao excluir mídia permanentemente.');

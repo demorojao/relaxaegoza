@@ -25,6 +25,7 @@ import {
 import ImageBlurSelector from '@/components/ImageBlurSelector';
 import { getCDNUrl } from '@/lib/mediaHelper';
 import { Badge } from '@/components/ui/Badge';
+import { triggerRevalidate } from '@/lib/revalidate';
 
 export default function ProfileEditor() {
   const [loading, setLoading] = useState(true);
@@ -405,6 +406,8 @@ export default function ProfileEditor() {
         setAvatarFile(null); // limpar arquivo selecionado
         if (updatedProfile.latitude) setLatitude(Number(updatedProfile.latitude));
         if (updatedProfile.longitude) setLongitude(Number(updatedProfile.longitude));
+        
+        await triggerRevalidate(updatedProfile.city, updatedProfile.neighborhood);
       }
 
       setSuccess(true);
@@ -466,6 +469,10 @@ export default function ProfileEditor() {
 
       // Atualizar estado local do profile
       setProfile((prev: any) => ({ ...prev, category, target_audience: targetAudience }));
+
+      if (profile) {
+        await triggerRevalidate(profile.city, profile.neighborhood);
+      }
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

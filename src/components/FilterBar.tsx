@@ -15,6 +15,8 @@ interface FilterBarProps {
   availableLocations: Record<string, string[]>;
   getActiveFilterCount: () => number;
   onOpenFilters: () => void;
+  currentTab: 'ads' | 'models';
+  setCurrentTab: (v: 'ads' | 'models') => void;
 }
 
 export default function FilterBar({
@@ -30,10 +32,38 @@ export default function FilterBar({
   setNeighborhoodFilter,
   availableLocations,
   getActiveFilterCount,
-  onOpenFilters
+  onOpenFilters,
+  currentTab,
+  setCurrentTab
 }: FilterBarProps) {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 relative z-10 space-y-3">
+      {/* Abas Principais: Anúncios vs Modelos */}
+      <div className="w-full border-b border-white/5 pb-2 mb-1">
+        <div className="inline-flex bg-black/50 border border-white/5 p-1 rounded-xl gap-1">
+          <button
+            onClick={() => setCurrentTab('ads')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
+              currentTab === 'ads'
+                ? 'bg-gradient-to-r from-gold-primary to-gold-dark text-dark-bg shadow-md'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <span>📢 Anúncios</span>
+          </button>
+          <button
+            onClick={() => setCurrentTab('models')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
+              currentTab === 'models'
+                ? 'bg-gradient-to-r from-gold-primary to-gold-dark text-dark-bg shadow-md'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <span>👤 Modelos</span>
+          </button>
+        </div>
+      </div>
+
       {/* Abas de Categoria (Flex-wrap para evitar corte em qualquer tela) */}
       <div className="w-full">
         <div className="flex flex-wrap gap-1.5 sm:gap-2">

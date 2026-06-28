@@ -21,13 +21,14 @@ interface ProfileGridProps {
   profiles: Profile[];
   viewMode: 'grid' | 'map';
   userCoords: [number, number] | null;
+  showAdInfo?: boolean;
 }
 
-export default function ProfileGrid({ loading, profiles, viewMode, userCoords }: ProfileGridProps) {
+export default function ProfileGrid({ loading, profiles, viewMode, userCoords, showAdInfo = true }: ProfileGridProps) {
   // Conversão de Profile[] para o formato esperado pelo componente Map
   const mapAdvertisers = profiles.map(p => ({
     id: p.id,
-    stage_name: p.name,
+    stage_name: (showAdInfo && p.ad_title) ? p.ad_title : p.name,
     age: p.age,
     gender: 'Feminino',
     description: p.bio || '',
@@ -41,8 +42,8 @@ export default function ProfileGrid({ loading, profiles, viewMode, userCoords }:
     longitude: Number(p.longitude) || -46.6560,
     neighborhood: p.neighborhood || 'Jardins',
     city: p.city,
-    rate: Number(p.price_per_hour) || 0,
-    photos: [p.avatar_url || '/avatar-placeholder.svg'],
+    rate: Number((showAdInfo && p.ad_price !== undefined && p.ad_price !== null) ? p.ad_price : p.price_per_hour) || 0,
+    photos: [(showAdInfo && p.ad_photos && p.ad_photos.length > 0) ? p.ad_photos[0] : (p.avatar_url || '/avatar-placeholder.svg')],
     amenities: p.amenities || []
   }));
 
@@ -86,7 +87,7 @@ export default function ProfileGrid({ loading, profiles, viewMode, userCoords }:
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                 {profiles.map(profile => (
-                  <ProfileCard key={profile.id} profile={profile} />
+                  <ProfileCard key={profile.id} profile={profile} showAdInfo={showAdInfo} />
                 ))}
               </div>
             ) : (

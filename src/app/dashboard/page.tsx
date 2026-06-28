@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import HostDashboardView from '@/components/HostDashboardView';
 import AdEditorModal from '@/components/AdEditorModal';
+import { triggerRevalidate } from '@/lib/revalidate';
 
 export default function DashboardMetrics() {
   const router = useRouter();
@@ -88,6 +89,7 @@ export default function DashboardMetrics() {
       if (updateError) throw updateError;
 
       setProfile((prev: any) => ({ ...prev, avatar_url: publicUrl }));
+      await triggerRevalidate(profile.city, profile.neighborhood);
       alert('Foto de perfil salva com sucesso! Agora, por favor, envie seus documentos para verificação de identidade.');
     } catch (err: any) {
       alert('Erro ao enviar foto: ' + (err.message || err));
@@ -240,6 +242,7 @@ export default function DashboardMetrics() {
         .eq('id', profile.id);
       
       if (error) throw error;
+      await triggerRevalidate(profile.city, profile.neighborhood);
     } catch (err: any) {
       alert('Erro ao atualizar status de disponibilidade: ' + (err?.message || err));
       setIsAvailable(!nextState); // Reverte

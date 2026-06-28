@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { Shield, ShieldCheck, ShieldAlert, Upload, Sparkles, Building2, HelpCircle, Check, Clock, Lock } from 'lucide-react';
 import Link from 'next/link';
+import { triggerRevalidate } from '@/lib/revalidate';
 
 export default function VerificationPanel() {
   const [user, setUser] = useState<any>(null);
@@ -99,6 +100,10 @@ export default function VerificationPanel() {
 
       if (savePreError) throw savePreError;
 
+      if (profile) {
+        await triggerRevalidate(profile.city, profile.neighborhood);
+      }
+
       // 3. Finalizar o fluxo para análise humana
       setProfile((prev: any) => ({
         ...prev,
@@ -150,6 +155,10 @@ export default function VerificationPanel() {
         .eq('id', user.id);
 
       if (error) throw error;
+
+      if (profile) {
+        await triggerRevalidate(profile.city, profile.neighborhood);
+      }
 
       setAuditingRequested(true);
       setProfile((prev: any) => ({

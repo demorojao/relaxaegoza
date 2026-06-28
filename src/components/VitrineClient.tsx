@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { cn, formatWhatsAppLink } from '@/lib/utils';
 import Logo from './Logo';
+import AdEditorModal from './AdEditorModal';
+import { triggerRevalidate } from '../lib/revalidate';
 
 
 // Removido MapComponent dinâmico que agora está em ProfileGrid
@@ -57,6 +59,9 @@ export default function VitrineClient({
   const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'reels' | 'grid' | 'map'>('reels');
+  const [currentTab, setCurrentTab] = useState<'ads' | 'models'>('ads');
+  const [userProfile, setUserProfile] = useState<any | null>(null);
+  const [isAdModalOpen, setIsAdModalOpen] = useState(false);
 
   // Forçar modo Vitrine (grid) no desktop e bloquear modo Drops (reels)
   useEffect(() => {
@@ -400,13 +405,13 @@ export default function VitrineClient({
   };
 
   useEffect(() => {
-    const hasActiveFilters = cityFilter || neighborhoodFilter || categoryFilter || ageFilter || priceFilter || selectedSpecialties.length > 0 || spaceFilter || genderFilter;
+    const hasActiveFilters = cityFilter || neighborhoodFilter || categoryFilter || ageFilter || priceFilter || selectedSpecialties.length > 0 || spaceFilter || genderFilter || currentTab !== 'ads';
     if (hasActiveFilters) {
       fetchProfiles();
     } else {
       setProfiles(sortProfiles(initialProfiles, userCoords));
     }
-  }, [cityFilter, neighborhoodFilter, categoryFilter, ageFilter, priceFilter, selectedSpecialties, spaceFilter, genderFilter, initialProfiles, userCoords]);
+  }, [cityFilter, neighborhoodFilter, categoryFilter, ageFilter, priceFilter, selectedSpecialties, spaceFilter, genderFilter, initialProfiles, userCoords, currentTab]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -414,11 +419,12 @@ export default function VitrineClient({
       setUser(user);
       const { data } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', user.id)
         .single();
       if (data) {
         setUserRole(data.role);
+        setUserProfile(data);
       }
     }
   };
@@ -484,7 +490,8 @@ export default function VitrineClient({
       // 1. Chamar o RPC otimizado get_premium_profiles para carregar os registros da localização
       const { data, error } = await supabase.rpc('get_premium_profiles', {
         p_city_slug: citySlug,
-        p_neighborhood_slug: neighborhoodSlug
+        p_neighborhood_slug: neighborhoodSlug,
+        p_only_ads: currentTab === 'ads'
       });
 
       if (error) {
@@ -754,6 +761,17 @@ export default function VitrineClient({
           
           {user ? (
             <div className={cn("flex items-center gap-2 sm:gap-3", viewMode === 'reels' && "hidden md:flex")}>
+              {userRole === 'provider' && (
+                <Button 
+                  variant="gold" 
+                  size="sm"
+                  onClick={() => setIsAdModalOpen(true)}
+                  className="shadow-md shadow-gold-primary/10 hover:scale-[1.02] transition-transform"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-dark-bg" />
+                  <span>Gerenciar Anúncio</span>
+                </Button>
+              )}
               <Link href={userRole === 'provider' ? '/dashboard' : '/client-dashboard'}>
                 <Button variant="dark" size="sm">
                   <LayoutDashboard className="w-3.5 h-3.5" />
@@ -812,6 +830,8 @@ export default function VitrineClient({
           availableLocations={availableLocations}
           getActiveFilterCount={getActiveFilterCount}
           onOpenFilters={() => setIsFilterDrawerOpen(true)}
+          currentTab={currentTab}
+          setCurrentTab={setCurrentTab}
         />
       </div>
 
@@ -870,6 +890,7 @@ export default function VitrineClient({
             profiles={profiles} 
             viewMode={viewMode === 'map' ? 'map' : 'grid'} 
             userCoords={userCoords} 
+            showAdInfo={currentTab === 'ads'}
           />
         </>
       )}
@@ -1253,13 +1274,24 @@ export default function VitrineClient({
 
           {/* Anunciar / Painel Tab */}
           {user ? (
-            <Link
-              href={userRole === 'provider' ? '/dashboard' : '/client-dashboard'}
-              className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-gray-400 hover:text-white transition-all cursor-pointer"
-            >
-              <LayoutDashboard className="w-5 h-5 text-gold-light" />
-              <span className="text-[9px] uppercase tracking-wider">Meu Painel</span>
-            </Link>
+            <>
+              {userRole === 'provider' && (
+                <button
+                  onClick={() => setIsAdModalOpen(true)}
+                  className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-gold-light hover:text-white transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span className="text-[9px] uppercase tracking-wider font-semibold">Anúncio</span>
+                </button>
+              )}
+              <Link
+                href={userRole === 'provider' ? '/dashboard' : '/client-dashboard'}
+                className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-gray-400 hover:text-white transition-all cursor-pointer"
+              >
+                <LayoutDashboard className="w-5 h-5 text-gold-light" />
+                <span className="text-[9px] uppercase tracking-wider">Painel</span>
+              </Link>
+            </>
           ) : (
             <Link
               href="/cadastro"
@@ -1274,6 +1306,18 @@ export default function VitrineClient({
         </div>
       </div>
 
+      {userProfile && userRole === 'provider' && (
+        <AdEditorModal
+          isOpen={isAdModalOpen}
+          onClose={() => setIsAdModalOpen(false)}
+          profile={userProfile}
+          onSaveSuccess={async () => {
+            await triggerRevalidate(userProfile.city, userProfile.neighborhood);
+            fetchProfiles();
+            checkUser();
+          }}
+        />
+      )}
     </main>
   );
 }

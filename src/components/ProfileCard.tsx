@@ -13,14 +13,19 @@ import { getCDNUrl } from '../lib/mediaHelper';
 
 interface ProfileCardProps {
   profile: Profile;
+  showAdInfo?: boolean;
 }
 
-export default function ProfileCard({ profile }: ProfileCardProps) {
+export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardProps) {
   const specialtyNames = profile.specialties?.map(s => s.specialties?.name).filter(Boolean) || [];
 
   const isGold = profile.subscription_tier === 'gold';
   const isPro = profile.subscription_tier === 'pro';
   const isAvailable = profile.is_available_now && (!profile.available_until || new Date(profile.available_until) > new Date());
+
+  const displayName = (showAdInfo && profile.ad_title) ? profile.ad_title : profile.name;
+  const displayPrice = (showAdInfo && profile.ad_price !== undefined && profile.ad_price !== null) ? profile.ad_price : profile.price_per_hour;
+  const displayAvatar = (showAdInfo && profile.ad_photos && profile.ad_photos.length > 0) ? profile.ad_photos[0] : profile.avatar_url;
 
   return (
     <Link href={`/perfil/${profile.id}`} className="block w-full">
@@ -38,8 +43,8 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
       >
         {/* Imagem de Fundo com next/image */}
         <Image
-          src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'}
-          alt={profile.name}
+          src={getCDNUrl(displayAvatar) || '/avatar-placeholder.svg'}
+          alt={displayName}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover transition-transform duration-700 group-hover:scale-105 select-none pointer-events-none"
@@ -89,18 +94,18 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
           
           {/* Nome e Idade */}
           <div className="flex items-baseline justify-between flex-wrap gap-x-1">
-            <h3 className="text-xs sm:text-base font-bold text-white tracking-tight drop-shadow-md flex items-center gap-1">
-              {profile.name}
+            <h3 className="text-xs sm:text-base font-bold text-white tracking-tight drop-shadow-md flex items-center gap-1 truncate max-w-[70%]">
+              {displayName}
               {isGold && (
                 <span className="text-[10px] sm:text-xs text-gold-primary animate-bounce shrink-0" title="Gold VIP">👑</span>
               )}
-              <span className="font-light text-white/70 text-[10px] sm:text-xs">{profile.age}</span>
+              <span className="font-light text-white/70 text-[10px] sm:text-xs shrink-0">{profile.age}</span>
             </h3>
             
             {/* Preço */}
             <div className="flex items-center text-gold-light font-semibold">
               <DollarSign className="w-2.5 sm:w-3 h-2.5 sm:h-3 -mr-0.5" />
-              <span className="text-xs sm:text-sm">{profile.price_per_hour}</span>
+              <span className="text-xs sm:text-sm">{displayPrice}</span>
               <span className="text-[9px] text-white/50 font-normal ml-0.5">/h</span>
             </div>
           </div>

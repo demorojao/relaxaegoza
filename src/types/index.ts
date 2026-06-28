@@ -32,6 +32,11 @@ export interface Profile {
   boost_expires_at?: string | null;
   available_until?: string | null;
   created_at?: string;
+  ad_title?: string;
+  ad_description?: string;
+  ad_price?: number;
+  ad_photos?: string[];
+  ad_videos?: string[];
 }
 
 export interface Story {

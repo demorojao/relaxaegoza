@@ -6,6 +6,7 @@ import { X, Sparkles, AlertCircle, Check, Camera, Video, HelpCircle } from 'luci
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { getCDNUrl } from '../lib/mediaHelper';
+import { triggerRevalidate } from '../lib/revalidate';
 
 interface AdEditorModalProps {
   isOpen: boolean;
@@ -139,6 +140,10 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
         .upsert(payload, { onConflict: 'profile_id' });
 
       if (error) throw error;
+
+      if (profile) {
+        await triggerRevalidate(profile.city, profile.neighborhood);
+      }
 
       alert('Anúncio atualizado com sucesso!');
       if (onSaveSuccess) onSaveSuccess();
