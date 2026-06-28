@@ -76,6 +76,7 @@ export default function ProfileEditor() {
   const [adIsActive, setAdIsActive] = useState(true);
   const [profilePhotosList, setProfilePhotosList] = useState<any[]>([]);
   const [uploadingAdMedia, setUploadingAdMedia] = useState(false);
+  const [uploadingProfileMedia, setUploadingProfileMedia] = useState(false);
 
   const massageAmenities = ['Maca Profissional', 'Óleos Essenciais Importados', 'Música de Relaxamento', 'Chuveiro Aquecido'];
   const escortAmenities = ['Ar Condicionado', 'Estacionamento Discreto', 'Drinks Cortesia', 'Wi-Fi de Alta Velocidade'];
@@ -221,6 +222,25 @@ export default function ProfileEditor() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // Se o perfil é verificado e o usuário mudou nome, idade ou avatar, avisar antes
+    const isVerified = profile?.verification_status === 'verified';
+    const changedSensitive = isVerified && (
+      stageName !== profile?.name ||
+      Number(age) !== profile?.age ||
+      (avatarFile !== null) // novo avatar selecionado
+    );
+
+    if (changedSensitive) {
+      const confirmed = confirm(
+        '⚠️ Atenção: Você é uma profissional verificada.\n\n' +
+        'Ao alterar seu Nome, Idade ou Foto de Perfil, seu selo de verificação será removido ' +
+        'e precisará ser re-aprovado pela equipe administrativa.\n\n' +
+        'Deseja continuar?'
+      );
+      if (!confirmed) return;
+    }
+
     setSaving(true);
     setSuccess(false);
 
@@ -353,59 +373,39 @@ export default function ProfileEditor() {
         avatar_url: finalAvatarUrl
       };
 
-      // Tenta atualizar com o campo de gênero e a mensagem personalizada de whatsapp; se falhar porque as colunas não existem (code 42703), salva com fallbacks adequados.
-      try {
-        const { error } = await supabase
+      // Helper: tenta atualizar com todos os campos; se alguma coluna não existir (42703), faz fallback
+      const tryUpdate = async (payload: any): Promise<any> => {
+        const { data, error } = await supabase
           .from('profiles')
-          .update({ ...updatePayload, gender, whatsapp_custom_message: whatsappCustomMessage })
-          .eq('id', user.id);
-        
-        if (error) {
-          if (error.code === '42703') {
-            const { error: fallbackError1 } = await supabase
-              .from('profiles')
-              .update({ ...updatePayload, gender })
-              .eq('id', user.id);
-            if (fallbackError1) {
-              if (fallbackError1.code === '42703') {
-                const { error: fallbackError2 } = await supabase
-                  .from('profiles')
-                  .update(updatePayload)
-                  .eq('id', user.id);
-                if (fallbackError2) throw fallbackError2;
-              } else {
-                throw fallbackError1;
-              }
-            }
-          } else {
-            throw error;
-          }
-        }
-      } catch (e: any) {
-        if (e.code === '42703') {
-          const { error: fallbackError1 } = await supabase
-            .from('profiles')
-            .update({ ...updatePayload, gender })
-            .eq('id', user.id);
-          if (fallbackError1) {
-            if (fallbackError1.code === '42703') {
-              const { error: fallbackError2 } = await supabase
-                .from('profiles')
-                .update(updatePayload)
-                .eq('id', user.id);
-              if (fallbackError2) throw fallbackError2;
-            } else {
-              throw fallbackError1;
-            }
-          }
-        } else {
-          throw e;
-        }
+          .update(payload)
+          .eq('id', user.id)
+          .select()
+          .single();
+        return { data, error };
+      };
+
+      let result = await tryUpdate({ ...updatePayload, gender, whatsapp_custom_message: whatsappCustomMessage });
+      
+      if (result.error?.code === '42703') {
+        result = await tryUpdate({ ...updatePayload, gender });
       }
+      if (result.error?.code === '42703') {
+        result = await tryUpdate(updatePayload);
+      }
+      if (result.error) throw result.error;
 
-
-      if (lat !== null) setLatitude(lat);
-      if (lon !== null) setLongitude(lon);
+      // Sincronizar estado local com a resposta real do banco (pós-trigger)
+      const updatedProfile = result.data;
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+        setStageName(updatedProfile.name || '');
+        setAge(updatedProfile.age || 18);
+        setAvatarUrl(updatedProfile.avatar_url || '');
+        setAvatarPreview(updatedProfile.avatar_url || null);
+        setAvatarFile(null); // limpar arquivo selecionado
+        if (updatedProfile.latitude) setLatitude(Number(updatedProfile.latitude));
+        if (updatedProfile.longitude) setLongitude(Number(updatedProfile.longitude));
+      }
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -578,6 +578,71 @@ export default function ProfileEditor() {
     }
   };
 
+  // Upload independente de mídia para a galeria do perfil (sem vincular ao anúncio automaticamente)
+  const handleUploadProfileMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isImage = file.type.startsWith('image/');
+    const typeKey = isImage ? 'photo' : 'video';
+    const maxSize = isImage ? 5 * 1024 * 1024 : 15 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      alert(`O arquivo é muito grande. O limite máximo é ${isImage ? '5MB' : '15MB'}.`);
+      return;
+    }
+
+    setUploadingProfileMedia(true);
+
+    try {
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${user.id}/${Date.now()}_media.${fileExt}`;
+
+      let fileToUpload = file;
+      if (isImage) {
+        try {
+          const { applyWatermark } = await import('@/lib/watermark');
+          const watermarkText = `Relaxa & Goza - ${stageName || ''}`;
+          fileToUpload = await applyWatermark(file, watermarkText);
+        } catch (watermarkErr) {
+          console.error("Erro ao aplicar marca d'água:", watermarkErr);
+        }
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile_media')
+        .upload(fileName, fileToUpload, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile_media')
+        .getPublicUrl(fileName);
+
+      const { data: dbData, error: dbError } = await supabase
+        .from('profile_photos')
+        .insert({
+          profile_id: user.id,
+          photo_url: publicUrl,
+          media_type: typeKey,
+          is_verified: false
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      setProfilePhotosList(prev => [...prev, dbData]);
+    } catch (err: any) {
+      alert('Erro ao carregar mídia do perfil: ' + (err?.message || err));
+    } finally {
+      setUploadingProfileMedia(false);
+    }
+  };
+
   const toggleAdPhoto = (photoUrl: string) => {
     const tier = profile?.subscription_tier || 'free';
     const limitPhotos = tier === 'free' ? 3 : tier === 'pro' ? 10 : 20;
@@ -671,6 +736,26 @@ export default function ProfileEditor() {
 
       {activeTab === 'profile' ? (
         <form onSubmit={handleSave} className="space-y-8">
+
+        {/* Banner de aviso para profissionais verificadas */}
+        {profile?.verification_status === 'verified' && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-200 text-xs px-5 py-3 rounded-xl flex items-start gap-3 animate-fadeIn">
+            <ShieldAlert className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold text-yellow-300">Perfil Verificado</span>
+              <p className="text-yellow-200/80 mt-0.5 leading-relaxed">
+                Alterações no <strong>Nome Artístico</strong>, <strong>Idade</strong> ou <strong>Foto de Perfil</strong> irão resetar seu selo de verificação para análise administrativa.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {profile?.verification_status === 'pending' && (
+          <div className="bg-orange-500/10 border border-orange-500/30 text-orange-200 text-xs px-5 py-3 rounded-xl flex items-center gap-3 animate-fadeIn">
+            <Lock className="w-4 h-4 text-orange-400 shrink-0" />
+            <span>Seu perfil está <strong>Pendente de Verificação</strong> pelo time administrativo. Aguarde a aprovação.</span>
+          </div>
+        )}
         
         {/* Bloco 0: Foto de Perfil (Avatar) com Borrão Opcional */}
         <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 flex flex-col sm:flex-row items-center gap-6">
@@ -1114,6 +1199,124 @@ export default function ProfileEditor() {
               <span className="text-[10px] text-gray-500 font-light block">Defina limites claros de comportamento e etiqueta para blindar seu tempo.</span>
             </div>
           </div>
+        </div>
+
+        {/* Bloco 5: Galeria Geral do Perfil (fotos independentes do anúncio) */}
+        <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-dark-border/20 pb-4">
+            <div className="flex items-center gap-2 text-white font-medium text-sm">
+              <FileImage className="w-4 h-4 text-gold-primary" />
+              <span>Galeria Geral do Perfil</span>
+            </div>
+
+            <label className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white hover:bg-white/10 cursor-pointer transition-all flex items-center gap-1.5">
+              <Upload className="w-3.5 h-3.5 text-gold-primary" />
+              {uploadingProfileMedia ? 'Enviando...' : 'Enviar Foto / Vídeo'}
+              <input
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleUploadProfileMedia}
+                disabled={uploadingProfileMedia}
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          <p className="text-[11px] text-gray-500 font-light leading-relaxed">
+            Estas fotos ficam salvas no seu perfil. Você pode usá-las na aba <strong className="text-gray-300">Configuração de Anúncio</strong> para selecionar quais fotos aparecerão no seu anúncio ativo.
+          </p>
+
+          {profilePhotosList.filter(m => m.media_type === 'photo' || !m.media_type).length === 0 ? (
+            <div className="text-center py-8 text-xs text-gray-500 font-light border border-dashed border-dark-border/40 rounded-xl">
+              Nenhuma foto na sua galeria. Clique em "Enviar Foto / Vídeo" acima para começar.
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+              {profilePhotosList.filter(m => m.media_type === 'photo' || !m.media_type).map(photo => (
+                <div 
+                  key={photo.id}
+                  className="relative aspect-[3/4] rounded-xl overflow-hidden border border-dark-border group"
+                >
+                  <img 
+                    src={getCDNUrl(photo.photo_url)} 
+                    alt="Galeria" 
+                    className="w-full h-full object-cover" 
+                  />
+                  
+                  {photo.is_verified && (
+                    <div className="absolute top-2 left-2 bg-emerald-500/20 border border-emerald-500/30 p-1 rounded-full">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (confirm('Tem certeza que deseja apagar permanentemente esta foto?')) {
+                        try {
+                          const { error } = await supabase.from('profile_photos').delete().eq('id', photo.id);
+                          if (error) throw error;
+
+                          const urlParts = photo.photo_url.split('/profile_media/');
+                          if (urlParts.length > 1) {
+                            const storagePath = decodeURIComponent(urlParts[1]);
+                            await supabase.storage.from('profile_media').remove([storagePath]);
+                          }
+
+                          setAdPhotos(prev => prev.filter(p => p !== photo.photo_url));
+                          setProfilePhotosList(prev => prev.filter(p => p.id !== photo.id));
+                        } catch (err) {
+                          alert('Erro ao excluir foto.');
+                        }
+                      }
+                    }}
+                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 p-1.5 rounded-lg text-white transition-colors shadow z-10 opacity-0 group-hover:opacity-100"
+                    title="Apagar permanentemente"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Vídeos da galeria */}
+          {profilePhotosList.filter(m => m.media_type === 'video').length > 0 && (
+            <div className="pt-4 border-t border-dark-border/20">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Vídeos ({profilePhotosList.filter(m => m.media_type === 'video').length})</span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {profilePhotosList.filter(m => m.media_type === 'video').map(video => (
+                  <div key={video.id} className="relative aspect-video rounded-xl overflow-hidden border border-dark-border group">
+                    <video src={getCDNUrl(video.photo_url)} className="w-full h-full object-cover" controls playsInline />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (confirm('Tem certeza que deseja apagar permanentemente este vídeo?')) {
+                          try {
+                            const { error } = await supabase.from('profile_photos').delete().eq('id', video.id);
+                            if (error) throw error;
+                            const urlParts = video.photo_url.split('/profile_media/');
+                            if (urlParts.length > 1) {
+                              const storagePath = decodeURIComponent(urlParts[1]);
+                              await supabase.storage.from('profile_media').remove([storagePath]);
+                            }
+                            setAdVideos(prev => prev.filter(v => v !== video.photo_url));
+                            setProfilePhotosList(prev => prev.filter(p => p.id !== video.id));
+                          } catch (err) {
+                            alert('Erro ao excluir vídeo.');
+                          }
+                        }
+                      }}
+                      className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 p-1.5 rounded-lg text-white transition-colors shadow z-10 opacity-0 group-hover:opacity-100"
+                      title="Apagar permanentemente"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Submit */}
