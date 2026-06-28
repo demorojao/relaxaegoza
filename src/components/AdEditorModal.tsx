@@ -413,7 +413,7 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
                   Destaque no Topo (Boost)
                 </span>
                 <p className="text-[10px] text-gray-400 leading-relaxed max-w-md">
-                  Fique no topo absoluto das buscas e da vitrine por 24 horas. Atraia até 5x mais cliques e visualizações no seu anúncio.
+                  Fique no topo absoluto das buscas e da vitrine por 2 horas. Atraia até 5x mais cliques e visualizações no seu anúncio.
                 </p>
               </div>
               
