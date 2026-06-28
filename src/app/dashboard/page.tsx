@@ -9,11 +9,14 @@ import {
   Percent, 
   Clock, 
   ShieldCheck, 
+  ShieldAlert,
   Sparkles,
   ChevronRight,
   Award,
   Lock,
-  Building2
+  Building2,
+  Camera,
+  Upload
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -37,6 +40,59 @@ export default function DashboardMetrics() {
     { day: 'Sex', views: 0, clicks: 0 },
     { day: 'Sáb', views: 0, clicks: 0 }
   ]);
+
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAvatarPreview(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadAvatar = async () => {
+    if (!avatarFile || !profile) return;
+    setUploading(true);
+
+    try {
+      const fileExt = avatarFile.name.split('.').pop() || 'jpg';
+      const fileName = `${profile.id}/avatar_${Date.now()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('profile_media')
+        .upload(fileName, avatarFile, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile_media')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', profile.id);
+
+      if (updateError) throw updateError;
+
+      setProfile((prev: any) => ({ ...prev, avatar_url: publicUrl }));
+      alert('Foto de perfil salva com sucesso! Agora, por favor, envie seus documentos para verificação de identidade.');
+    } catch (err: any) {
+      alert('Erro ao enviar foto: ' + (err.message || err));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -253,6 +309,86 @@ export default function DashboardMetrics() {
     );
   }
 
+  if (profile && !profile.avatar_url) {
+    return (
+      <div className="max-w-md mx-auto py-16 px-4 relative z-20 selection:bg-gold-primary selection:text-dark-bg animate-fadeIn">
+        <div className="glass-effect rounded-3xl border border-dark-border/80 p-8 text-center space-y-6 bg-gradient-to-b from-dark-bg via-dark-bg/95 to-dark-bg/90 relative overflow-hidden shadow-2xl">
+          {/* Luz de fundo dourada sutil */}
+          <div className="absolute -right-16 -top-16 w-36 h-36 bg-gold-primary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -left-16 -bottom-16 w-36 h-36 bg-wine-primary/15 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-primary/20 to-wine-primary/20 border border-gold-primary/30 flex items-center justify-center text-gold-primary animate-pulse">
+            <Camera className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-white tracking-wide">
+              Foto de Capa Obrigatória
+            </h2>
+            <p className="text-xs text-gray-400 font-light leading-relaxed text-left">
+              Para ativar o seu anúncio e começar a usar o portal, você precisa enviar uma **Foto de Capa Real** (de rosto ou corpo). 
+              Esta imagem será a primeira impressão dos clientes na vitrine pública.
+            </p>
+          </div>
+
+          {/* Área de Visualização e Upload */}
+          <div className="space-y-4 pt-2">
+            <div className="relative mx-auto w-40 h-40 rounded-full border border-dark-border overflow-hidden bg-black/40 flex items-center justify-center group shrink-0 shadow-[0_0_20px_rgba(197,168,128,0.08)]">
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="Preview do Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-gray-600 flex flex-col items-center gap-1">
+                  <Upload className="w-8 h-8 opacity-40" />
+                  <span className="text-[10px] uppercase tracking-wider font-semibold opacity-50">Sem Imagem</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <label className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white hover:bg-white/10 hover:border-gold-primary/40 cursor-pointer transition-all flex items-center justify-center gap-2">
+                <Upload className="w-4 h-4 text-gold-primary" />
+                {avatarPreview ? 'Substituir Imagem' : 'Selecionar Foto'}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleAvatarChange} 
+                  className="hidden" 
+                />
+              </label>
+
+              {avatarPreview && (
+                <button
+                  onClick={handleUploadAvatar}
+                  disabled={uploading}
+                  className="w-full py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-gold-primary/20"
+                >
+                  {uploading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-dark-bg/30 border-t-dark-bg rounded-full animate-spin" />
+                      Salvando foto...
+                    </>
+                  ) : (
+                    'Confirmar e Salvar Foto'
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Alerta de Verificação Crucial */}
+          <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-4 text-left">
+            <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider flex items-center gap-1.5 mb-1">
+              <ShieldAlert className="w-4 h-4" /> Passo Seguinte: Verificação de Identidade
+            </span>
+            <p className="text-[10px] text-gray-400 font-light leading-relaxed">
+              Após salvar sua foto de capa, você será alertada a realizar a verificação de identidade enviando seus documentos (selfie + documento). A verificação é **crucial e obrigatória** para que o seu anúncio seja ativado e exibido na vitrine pública.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const name = profile?.name || 'Profissional';
   const tier = profile?.subscription_tier || 'free';
   const profileIdShort = profile?.id ? `#${profile.id.slice(0, 6)}` : '#---';
@@ -263,6 +399,57 @@ export default function DashboardMetrics() {
   return (
     <div className="max-w-5xl mx-auto space-y-8 relative z-20 selection:bg-gold-primary selection:text-dark-bg">
       
+      {/* Alertas Críticos de Ativação do Anúncio (Foto e Verificação) */}
+      {profile && (!profile.avatar_url || profile.verification_status !== 'verified') && (
+        <div className="space-y-4">
+          {/* Alerta de Foto de Capa Ausente */}
+          {!profile.avatar_url && (
+            <div className="bg-gradient-to-r from-red-500/10 to-transparent border border-red-500/20 text-red-200 text-xs px-4 py-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fadeIn">
+              <div className="space-y-1">
+                <span className="font-semibold block text-white text-sm flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 text-red-400 shrink-0" />
+                  Perfil Inativo / Ocultado da Vitrine
+                </span>
+                <p className="text-gray-400 font-light leading-relaxed">
+                  Seu perfil está oculto e não aparecerá nas buscas públicas porque você ainda não enviou uma **Foto de Capa Real**. É obrigatório enviar uma imagem real de rosto ou corpo no seu perfil para que seu anúncio seja ativado no portal.
+                </p>
+              </div>
+              <Link href="/dashboard/perfil">
+                <button className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all flex-shrink-0 cursor-pointer shadow-lg shadow-red-600/15">
+                  Enviar Foto de Capa
+                </button>
+              </Link>
+            </div>
+          )}
+
+          {/* Alerta de Verificação de Identidade Obrigatória */}
+          {profile.avatar_url && profile.verification_status !== 'verified' && (
+            <div className="bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 text-amber-200 text-xs px-4 py-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fadeIn">
+              <div className="space-y-1">
+                <span className="font-semibold block text-white text-sm flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 animate-pulse" />
+                  Verificação de Identidade Crucial
+                </span>
+                <p className="text-gray-400 font-light leading-relaxed">
+                  {profile.verification_status === 'pending' ? (
+                    'Seus documentos de identificação foram enviados e estão sob análise manual da nossa equipe. Em breve seu perfil será ativado com o selo verificado.'
+                  ) : (
+                    'Para a segurança do portal e para começar a anunciar, você precisa verificar sua identidade. Envie uma foto do seu documento de identidade e uma selfie rápida para validar sua conta.'
+                  )}
+                </p>
+              </div>
+              {profile.verification_status !== 'pending' && (
+                <Link href="/dashboard/verificacao">
+                  <button className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-dark-bg text-xs font-bold transition-all flex-shrink-0 cursor-pointer shadow-lg shadow-amber-500/15">
+                    Verificar Identidade
+                  </button>
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {checkoutStatus === 'success' && (
         <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs px-4 py-3.5 rounded-2xl flex items-center gap-3.5 animate-fadeIn">
           <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 animate-pulse" />

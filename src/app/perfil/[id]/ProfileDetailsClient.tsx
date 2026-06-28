@@ -199,7 +199,7 @@ export default function ProfileDetailsClient({
         isAvailable ? 'border-emerald-500 neon-ring-active' : profile.subscription_tier === 'gold' ? 'border-gold-primary' : 'border-white/5'
       }`}>
         <Image 
-          src={profile.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400'} 
+          src={profile.avatar_url || '/avatar-placeholder.svg'} 
           alt={profile.name}
           fill
           sizes="(max-width: 768px) 100vw, 33vw"

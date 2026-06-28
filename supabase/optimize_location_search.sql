@@ -90,6 +90,7 @@ BEGIN
       ) AS specialties
     FROM public.profiles p
     WHERE p.role = 'provider'
+      AND p.avatar_url IS NOT NULL AND p.avatar_url <> ''
       AND (p_city_slug IS NULL OR public.slugify(p.city) = p_city_slug)
       AND (p_neighborhood_slug IS NULL OR public.slugify(p.neighborhood) = p_neighborhood_slug)
     ORDER BY 

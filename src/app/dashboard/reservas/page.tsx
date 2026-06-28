@@ -222,7 +222,7 @@ export default function HostBookingsPage() {
                   <div className="flex items-start gap-4">
                     <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white/10 bg-black/40 shrink-0">
                       <img 
-                        src={profile?.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'}
+                        src={profile?.avatar_url || '/avatar-placeholder.svg'}
                         alt={profile?.name || 'Profissional'} 
                         className="w-full h-full object-cover"
                       />

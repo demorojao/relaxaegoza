@@ -38,7 +38,7 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
       >
         {/* Imagem de Fundo com next/image */}
         <Image
-          src={getCDNUrl(profile.avatar_url) || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400'}
+          src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'}
           alt={profile.name}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

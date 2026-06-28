@@ -458,7 +458,7 @@ export default function AdminDashboardClient({
                   {/* Avatar */}
                   <div className="relative w-24 h-32 md:w-32 md:h-44 rounded-xl overflow-hidden border border-white/10 shrink-0 bg-black/40">
                     <Image 
-                      src={p.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'}
+                      src={p.avatar_url || '/avatar-placeholder.svg'}
                       alt={p.name}
                       fill
                       sizes="128px"
@@ -494,10 +494,10 @@ export default function AdminDashboardClient({
                           <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Selfie de Validação</span>
                           <div 
                             className="relative aspect-video rounded-lg overflow-hidden border border-white/10 cursor-zoom-in group"
-                            onClick={() => setSelectedImage(p.verification_selfie || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2')}
+                            onClick={() => setSelectedImage(p.verification_selfie || '/avatar-placeholder.svg')}
                           >
                             <Image 
-                              src={p.verification_selfie || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'}
+                              src={p.verification_selfie || '/avatar-placeholder.svg'}
                               alt="Selfie"
                               fill
                               sizes="(max-width: 768px) 100vw, 300px"
@@ -854,7 +854,7 @@ export default function AdminDashboardClient({
                   <div className="flex items-center gap-3.5 w-full sm:w-auto">
                     <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white/10 shrink-0 bg-black/40">
                       <Image 
-                        src={p.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'}
+                        src={p.avatar_url || '/avatar-placeholder.svg'}
                         alt={p.name}
                         fill
                         sizes="48px"

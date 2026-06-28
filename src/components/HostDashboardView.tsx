@@ -409,7 +409,7 @@ export default function HostDashboardView({ profile }: HostDashboardViewProps) {
                   <div className="flex items-center gap-3">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden border border-white/5 bg-black/30 shrink-0">
                       <img 
-                        src={profile?.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'}
+                        src={profile?.avatar_url || '/avatar-placeholder.svg'}
                         alt={profile?.name || 'Profissional'} 
                         className="w-full h-full object-cover"
                       />

@@ -70,7 +70,7 @@ export default function RankingsPage() {
           return {
             id: p.id,
             name: p.name,
-            avatar_url: p.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2',
+            avatar_url: p.avatar_url || '/avatar-placeholder.svg',
             city: p.city,
             neighborhood: p.neighborhood || 'Jardins',
             price_per_hour: Number(p.price_per_hour),

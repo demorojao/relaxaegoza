@@ -29,7 +29,7 @@ export default async function Home() {
 
   const profileMap = new Map<string, Profile>();
   activeStories?.forEach((item: any) => {
-    if (item.profiles) {
+    if (item.profiles && item.profiles.avatar_url) {
       profileMap.set(item.profiles.id, item.profiles as Profile);
     }
   });

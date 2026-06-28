@@ -42,7 +42,7 @@ export default function ProfileGrid({ loading, profiles, viewMode, userCoords }:
     neighborhood: p.neighborhood || 'Jardins',
     city: p.city,
     rate: Number(p.price_per_hour) || 0,
-    photos: [p.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400'],
+    photos: [p.avatar_url || '/avatar-placeholder.svg'],
     amenities: p.amenities || []
   }));
 

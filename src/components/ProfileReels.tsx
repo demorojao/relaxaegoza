@@ -502,7 +502,7 @@ export default function ProfileReels({
                 >
                   <div className="w-11 h-11 rounded-full border-[2px] border-gold-primary overflow-hidden relative shadow-lg shadow-gold-primary/20 group-hover:scale-105 transition-transform duration-300">
                     <Image
-                      src={getCDNUrl(profile.avatar_url) || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400'}
+                      src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'}
                       alt={profile.name}
                       fill
                       sizes="44px"
@@ -686,7 +686,7 @@ export default function ProfileReels({
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full border border-white/10 overflow-hidden relative bg-black/20 shrink-0">
                             <img 
-                              src={getCDNUrl(rev.client?.avatar_url) || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400'} 
+                              src={getCDNUrl(rev.client?.avatar_url) || '/avatar-placeholder.svg'} 
                               alt="Cliente"
                               className="w-full h-full object-cover"
                             />

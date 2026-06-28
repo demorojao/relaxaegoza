@@ -452,6 +452,7 @@ export default function VitrineClient({
       data.forEach((item: any) => {
         if (item.profiles) {
           const p = item.profiles as Profile;
+          if (!p.avatar_url) return; // ignora se não tiver foto de capa
           if (categoryFilter) {
             const cat = p.category;
             if (categoryFilter === 'massage' && cat !== 'massage' && cat !== 'both') return;
@@ -651,14 +652,14 @@ export default function VitrineClient({
         setActiveStoryPhotos(slides);
       } else {
         setActiveStoryPhotos([{
-          url: profile.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400',
+          url: profile.avatar_url || '/avatar-placeholder.svg',
           type: 'photo'
         }]);
       }
     } catch (err) {
       console.error('Erro ao buscar stories efêmeros:', err);
       setActiveStoryPhotos([{
-        url: profile.avatar_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400',
+        url: profile.avatar_url || '/avatar-placeholder.svg',
         type: 'photo'
       }]);
     } finally {
@@ -919,7 +920,7 @@ export default function VitrineClient({
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-full border border-gold-primary overflow-hidden relative">
                     <Image 
-                      src={getCDNUrl(activeStoryProfile.avatar_url) || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400'} 
+                      src={getCDNUrl(activeStoryProfile.avatar_url) || '/avatar-placeholder.svg'} 
                       alt={activeStoryProfile.name}
                       fill
                       sizes="36px"

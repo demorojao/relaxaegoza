@@ -61,7 +61,7 @@ export default function AuraStories({ storiesProfiles, handleOpenStory, overlay 
                 }`}>
                   <div className={`${avatarSize} rounded-full border-2 border-dark-bg overflow-hidden relative`}>
                     <Image 
-                      src={getCDNUrl(profile.avatar_url) || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400'} 
+                      src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'} 
                       alt={profile.name}
                       fill
                       sizes="(max-width: 640px) 48px, 56px"
