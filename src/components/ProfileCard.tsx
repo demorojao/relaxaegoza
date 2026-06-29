@@ -92,19 +92,26 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
         {/* Informações na Base (Bloco de Vidro Flutuante Inset) */}
         <div className="absolute bottom-3 left-3 right-3 p-3 bg-black/70 backdrop-blur-md border border-white/5 rounded-xl flex flex-col gap-1 sm:gap-1.5 z-10 group-hover:bg-black/80 transition-colors">
           
-          {/* Nome e Idade */}
-          <div className="flex items-baseline justify-between flex-wrap gap-x-1">
-            <h3 className="text-xs sm:text-base font-bold text-white tracking-tight drop-shadow-md flex items-center gap-1 truncate max-w-[70%]">
-              {displayName}
+          {/* Nome / Título do Anúncio (Ocupa a linha inteira, permitindo até 2 linhas para títulos longos de anúncios) */}
+          <div className="min-w-0">
+            <h3 className="text-sm sm:text-base font-bold text-white tracking-tight drop-shadow-md line-clamp-2 leading-tight flex items-center gap-1 flex-wrap">
+              <span>{displayName}</span>
               {isGold && (
-                <span className="text-[10px] sm:text-xs text-gold-primary animate-bounce shrink-0" title="Gold VIP">👑</span>
+                <span className="text-[10px] sm:text-xs text-gold-primary shrink-0 inline-block animate-bounce" title="Gold VIP">👑</span>
               )}
-              <span className="font-light text-white/70 text-[10px] sm:text-xs shrink-0">{profile.age}</span>
             </h3>
+          </div>
+          
+          {/* Idade e Preço (Alinhados na mesma linha abaixo do nome) */}
+          <div className="flex items-center justify-between text-xs font-semibold mt-0.5 border-b border-white/5 pb-1">
+            {/* Idade */}
+            <span className="font-light text-white/70 text-[10px] sm:text-xs">
+              {profile.age} anos
+            </span>
             
             {/* Preço */}
-            <div className="flex items-center text-gold-light font-semibold">
-              <DollarSign className="w-2.5 sm:w-3 h-2.5 sm:h-3 -mr-0.5" />
+            <div className="flex items-center text-gold-light">
+              <DollarSign className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 -mr-0.5 shrink-0" />
               <span className="text-xs sm:text-sm">{displayPrice}</span>
               <span className="text-[9px] text-white/50 font-normal ml-0.5">/h</span>
             </div>
