@@ -36,8 +36,12 @@ export default async function Home() {
   const profileMap = new Map<string, Profile>();
   activeStories?.forEach((item: any) => {
     if (item.profiles && item.profiles.avatar_url) {
-      const activeAd = (item.profiles as any).ads?.find((a: any) => a.is_active);
-      if (activeAd) {
+      const ads = (item.profiles as any).ads;
+      const isActive = Array.isArray(ads)
+        ? ads.some((a: any) => a.is_active)
+        : ads?.is_active;
+
+      if (isActive) {
         profileMap.set(item.profiles.id, item.profiles as Profile);
       }
     }

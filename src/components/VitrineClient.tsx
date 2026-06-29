@@ -459,8 +459,12 @@ export default function VitrineClient({
           const p = item.profiles as Profile;
           if (!p.avatar_url) return; // ignora se não tiver foto de capa
 
-          const activeAd = (p as any).ads?.find((a: any) => a.is_active);
-          if (!activeAd) return; // ignora se não tiver anúncio ativo
+          const ads = (p as any).ads;
+          const isActive = Array.isArray(ads)
+            ? ads.some((a: any) => a.is_active)
+            : ads?.is_active;
+
+          if (!isActive) return; // ignora se não tiver anúncio ativo
 
           if (categoryFilter) {
             const cat = p.category;
