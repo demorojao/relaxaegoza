@@ -156,11 +156,11 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
             </div>
           )}
 
-          {/* Primeira Especialidade */}
-          {specialtyNames.length > 0 && (
-            <div className="text-[8px] sm:text-[9px] text-gray-500 truncate pt-1 font-light">
-              {specialtyNames.slice(0, 1).join(' • ')}
-            </div>
+          {/* Descrição / Biografia do Anúncio */}
+          {(showAdInfo ? (profile.ad_description || profile.bio) : (profile.bio || profile.ad_description)) && (
+            <p className="text-[10px] sm:text-xs text-gray-400 line-clamp-2 leading-relaxed pt-1.5 border-t border-white/5 font-light">
+              {showAdInfo ? (profile.ad_description || profile.bio) : (profile.bio || profile.ad_description)}
+            </p>
           )}
 
         </div>
