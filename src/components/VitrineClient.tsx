@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types';
-import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon } from 'lucide-react';
+import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import ProfileGrid from '../components/ProfileGrid';
 import ProfileReels from '../components/ProfileReels';
@@ -147,7 +147,12 @@ export default function VitrineClient({
   // States do Aura Stories
   const [storiesProfiles, setStoriesProfiles] = useState<Profile[]>(initialStories);
   const [activeStoryProfile, setActiveStoryProfile] = useState<Profile | null>(null);
-  const [activeStoryPhotos, setActiveStoryPhotos] = useState<{ url: string; type: 'photo' | 'video' }[]>([]);
+  const [activeStoryPhotos, setActiveStoryPhotos] = useState<{ 
+    url: string; 
+    type: 'photo' | 'video'; 
+    textContent?: string | null; 
+    textStyle?: any; 
+  }[]>([]);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [storyProgress, setStoryProgress] = useState(0);
   const [isStoryLoading, setIsStoryLoading] = useState(false);
@@ -655,7 +660,7 @@ export default function VitrineClient({
     try {
       const { data, error } = await supabase
         .from('stories')
-        .select('media_url, media_type')
+        .select('media_url, media_type, text_content, text_style')
         .eq('profile_id', profile.id)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: true });
@@ -663,20 +668,26 @@ export default function VitrineClient({
       if (data && data.length > 0) {
         const slides = data.map((s: any) => ({
           url: s.media_url,
-          type: (s.media_type || 'photo') as 'photo' | 'video'
+          type: (s.media_type || 'photo') as 'photo' | 'video',
+          textContent: s.text_content,
+          textStyle: s.text_style
         }));
         setActiveStoryPhotos(slides);
       } else {
         setActiveStoryPhotos([{
           url: profile.avatar_url || '/avatar-placeholder.svg',
-          type: 'photo'
+          type: 'photo',
+          textContent: null,
+          textStyle: null
         }]);
       }
     } catch (err) {
       console.error('Erro ao buscar stories efêmeros:', err);
       setActiveStoryPhotos([{
         url: profile.avatar_url || '/avatar-placeholder.svg',
-        type: 'photo'
+        type: 'photo',
+        textContent: null,
+        textStyle: null
       }]);
     } finally {
       setIsStoryLoading(false);
@@ -917,6 +928,22 @@ export default function VitrineClient({
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md"
           >
+            {/* Desktop Navigation Arrows (hidden on mobile) */}
+            <button
+              onClick={handlePrevSlide}
+              className="hidden md:flex absolute left-4 lg:left-8 top-1/2 -translate-y-1/2 z-30 w-12 h-12 items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/80 hover:text-white hover:bg-white/15 transition-all duration-200 cursor-pointer active:scale-95 shadow-md backdrop-blur-sm"
+              title="Story Anterior"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <button
+              onClick={handleNextSlide}
+              className="hidden md:flex absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 z-30 w-12 h-12 items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/80 hover:text-white hover:bg-white/15 transition-all duration-200 cursor-pointer active:scale-95 shadow-md backdrop-blur-sm"
+              title="Próximo Story"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
             <motion.div 
               initial={{ scale: 0.9, y: 50, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -1018,6 +1045,40 @@ export default function VitrineClient({
                       onLoad={() => setMediaReady(true)}
                     />
                   )}
+
+                  {/* Styled Instagram-style Text Overlay */}
+                  {activeStoryPhotos[activeSlideIndex]?.textContent && (
+                    <div 
+                      className={cn(
+                        "absolute left-1/2 -translate-x-1/2 max-w-[80%] text-center text-xs sm:text-sm font-semibold z-20 break-words pointer-events-none transition-all duration-300",
+                        activeStoryPhotos[activeSlideIndex].textStyle?.position === 'top' 
+                          ? 'top-[22%]' 
+                          : activeStoryPhotos[activeSlideIndex].textStyle?.position === 'bottom' 
+                            ? 'bottom-[22%]' 
+                            : 'top-1/2 -translate-y-1/2',
+                        activeStoryPhotos[activeSlideIndex].textStyle?.color === 'gold' 
+                          ? 'text-gold-light' 
+                          : activeStoryPhotos[activeSlideIndex].textStyle?.color === 'wine' 
+                            ? 'text-red-400 font-bold' 
+                            : 'text-white',
+                        activeStoryPhotos[activeSlideIndex].textStyle?.bg === 'black-blur' 
+                          ? 'bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10' 
+                          : activeStoryPhotos[activeSlideIndex].textStyle?.bg === 'wine-solid' 
+                            ? 'bg-wine-primary/95 px-4 py-2 rounded-xl border border-wine-light/20 shadow-lg' 
+                            : 'px-2 py-0.5'
+                      )}
+                    >
+                      {activeStoryPhotos[activeSlideIndex].textContent}
+                    </div>
+                  )}
+
+                  {/* Subtle navigation overlays inside the slide (visible on all devices) */}
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none opacity-40">
+                    <ChevronLeft className="w-5 h-5 text-white drop-shadow-md" />
+                  </div>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none opacity-40">
+                    <ChevronRight className="w-5 h-5 text-white drop-shadow-md" />
+                  </div>
                 </div>
               ) : (
                 <div className="text-gray-500 text-xs">Carregando mídia...</div>

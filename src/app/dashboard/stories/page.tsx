@@ -19,6 +19,12 @@ export default function StoriesManager() {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   
+  // Text Overlay States
+  const [textContent, setTextContent] = useState('');
+  const [textPosition, setTextPosition] = useState<'top' | 'center' | 'bottom'>('center');
+  const [textColor, setTextColor] = useState<'white' | 'gold' | 'wine'>('white');
+  const [textBg, setTextBg] = useState<'black-blur' | 'wine-solid' | 'none'>('black-blur');
+  
   // Camera Refs
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +108,12 @@ export default function StoriesManager() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Reset text overlay when selecting a new file
+    setTextContent('');
+    setTextPosition('center');
+    setTextColor('white');
+    setTextBg('black-blur');
 
     // Detectar e atualizar o tipo de mídia automaticamente
     if (file.type.startsWith('video/')) {
@@ -217,7 +229,9 @@ export default function StoriesManager() {
         .insert({
           profile_id: user.id,
           media_url: publicUrl,
-          media_type: mediaType
+          media_type: mediaType,
+          text_content: textContent ? textContent.trim() : null,
+          text_style: textContent ? { position: textPosition, color: textColor, bg: textBg } : null
         })
         .select()
         .single();
@@ -250,6 +264,7 @@ export default function StoriesManager() {
         setStoriesInLast24h(prev => prev + 1);
         setSelectedFile(null);
         setFilePreview(null);
+        setTextContent('');
       }
     } catch (err: any) {
       alert('Erro ao publicar story: ' + (err.message || err));
@@ -404,31 +419,112 @@ export default function StoriesManager() {
                 />
 
                 {filePreview ? (
-                  /* Visualização do arquivo selecionado Estilo Instagram */
-                  <div className="relative rounded-2xl overflow-hidden bg-black border border-gold-primary/30 aspect-[3/4] max-w-sm mx-auto flex flex-col items-center justify-center group shadow-2xl">
-                    {mediaType === 'photo' ? (
-                      <img src={filePreview} alt="Story Preview" className="w-full h-full object-cover animate-fadeIn" />
-                    ) : (
-                      <video src={filePreview} autoPlay loop muted playsInline className="w-full h-full object-cover animate-fadeIn" />
-                    )}
-                    
-                    {/* Top overlay: Discard button */}
-                    <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
-                      <span className="text-[10px] bg-black/60 backdrop-blur-md text-white border border-white/10 px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">
-                        Pré-visualização
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => { setSelectedFile(null); setFilePreview(null); }}
-                        className="p-2 bg-black/60 hover:bg-red-600 border border-white/10 rounded-full text-white transition-all active:scale-90 cursor-pointer"
-                        title="Descartar e tirar outra"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                  <div className="space-y-4">
+                    {/* Visualização do arquivo selecionado Estilo Instagram */}
+                    <div className="relative rounded-2xl overflow-hidden bg-black border border-gold-primary/30 aspect-[3/4] max-w-sm mx-auto flex flex-col items-center justify-center group shadow-2xl">
+                      {mediaType === 'photo' ? (
+                        <img src={filePreview} alt="Story Preview" className="w-full h-full object-cover animate-fadeIn" />
+                      ) : (
+                        <video src={filePreview} autoPlay loop muted playsInline className="w-full h-full object-cover animate-fadeIn" />
+                      )}
+                      
+                      {/* Live Instagram Text Preview Overlay */}
+                      {textContent && (
+                        <div 
+                          className={`absolute left-1/2 -translate-x-1/2 max-w-[85%] text-center text-xs sm:text-sm font-semibold pointer-events-none z-10 transition-all duration-200 break-words ${
+                            textPosition === 'top' ? 'top-[20%]' : textPosition === 'center' ? 'top-1/2 -translate-y-1/2' : 'bottom-[20%]'
+                          } ${
+                            textColor === 'white' ? 'text-white' : textColor === 'gold' ? 'text-gold-light' : 'text-red-400'
+                          } ${
+                            textBg === 'black-blur' ? 'bg-black/60 backdrop-blur-md px-3 py-1 rounded-xl border border-white/10' :
+                            textBg === 'wine-solid' ? 'bg-wine-primary/95 px-3 py-1 rounded-xl border border-wine-light/20 shadow-lg' : 'px-2 py-0.5'
+                          }`}
+                        >
+                          {textContent}
+                        </div>
+                      )}
+                      
+                      {/* Top overlay: Discard button */}
+                      <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
+                        <span className="text-[10px] bg-black/60 backdrop-blur-md text-white border border-white/10 px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">
+                          Pré-visualização
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedFile(null); setFilePreview(null); setTextContent(''); }}
+                          className="p-2 bg-black/60 hover:bg-red-600 border border-white/10 rounded-full text-white transition-all active:scale-90 cursor-pointer"
+                          title="Descartar e tirar outra"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Controles de Customização do Texto (Instagram Style) */}
+                    <div className="bg-black/35 p-4 rounded-xl border border-white/5 space-y-3 max-w-sm mx-auto">
+                      <h4 className="text-[11px] font-bold text-white uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                        <Sparkles className="w-3.5 h-3.5 text-gold-primary animate-pulse" /> Adicionar Texto no Story (Opcional)
+                      </h4>
+                      
+                      <div className="space-y-2">
+                        <div>
+                          <input 
+                            type="text"
+                            value={textContent}
+                            onChange={(e) => setTextContent(e.target.value.slice(0, 80))}
+                            placeholder="Escreva algo sobre você ou serviço..."
+                            className="w-full px-3 py-2 text-xs rounded-lg bg-black/60 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-gold-primary transition-colors"
+                          />
+                          <span className="text-[8px] text-gray-500 mt-1 block text-right">
+                            {textContent.length}/80 caracteres
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <span className="text-[8px] text-gray-400 block mb-0.5">Posição</span>
+                            <select
+                              value={textPosition}
+                              onChange={(e) => setTextPosition(e.target.value as any)}
+                              className="w-full px-1.5 py-1 text-[10px] rounded bg-black/80 border border-white/10 text-white focus:outline-none focus:border-gold-primary cursor-pointer"
+                            >
+                              <option value="top">Topo</option>
+                              <option value="center">Centro</option>
+                              <option value="bottom">Baixo</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <span className="text-[8px] text-gray-400 block mb-0.5">Cor Texto</span>
+                            <select
+                              value={textColor}
+                              onChange={(e) => setTextColor(e.target.value as any)}
+                              className="w-full px-1.5 py-1 text-[10px] rounded bg-black/80 border border-white/10 text-white focus:outline-none focus:border-gold-primary cursor-pointer"
+                            >
+                              <option value="white">Branco</option>
+                              <option value="gold">Dourado</option>
+                              <option value="wine">Vinho</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <span className="text-[8px] text-gray-400 block mb-0.5">Estilo</span>
+                            <select
+                              value={textBg}
+                              onChange={(e) => setTextBg(e.target.value as any)}
+                              className="w-full px-1.5 py-1 text-[10px] rounded bg-black/80 border border-white/10 text-white focus:outline-none focus:border-gold-primary cursor-pointer"
+                            >
+                              <option value="black-blur">Escuro</option>
+                              <option value="wine-solid">Vinho</option>
+                              <option value="none">Sem Fundo</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Bottom overlay: Instagram Style Send bar */}
-                    <div className="absolute bottom-4 left-4 right-4 bg-black/65 backdrop-blur-md border border-white/10 p-3 rounded-xl flex items-center justify-between z-10">
+                    <div className="bg-black/65 backdrop-blur-md border border-white/10 p-3 rounded-xl flex items-center justify-between max-w-sm mx-auto">
                       <div className="flex items-center gap-2">
                         {profile?.avatar_url ? (
                           <div className="w-8 h-8 rounded-full border border-gold-primary overflow-hidden relative">
