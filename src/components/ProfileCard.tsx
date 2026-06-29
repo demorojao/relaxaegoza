@@ -21,7 +21,13 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
 
   const isGold = profile.subscription_tier === 'gold';
   const isPro = profile.subscription_tier === 'pro';
-  const isAvailable = profile.is_available_now && (!profile.available_until || new Date(profile.available_until) > new Date());
+  
+  const [isAvailable, setIsAvailable] = React.useState(false);
+
+  React.useEffect(() => {
+    const available = !!(profile.is_available_now && (!profile.available_until || new Date(profile.available_until) > new Date()));
+    setIsAvailable(available);
+  }, [profile.is_available_now, profile.available_until]);
 
   const displayName = (showAdInfo && profile.ad_title) ? profile.ad_title : profile.name;
   const displayPrice = (showAdInfo && profile.ad_price !== undefined && profile.ad_price !== null) ? profile.ad_price : profile.price_per_hour;
