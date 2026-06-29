@@ -90,20 +90,22 @@ export default function VitrineClient({
 
         profiles.forEach(p => {
           photosMap[p.id] = [];
-          if (p.avatar_url) {
-            photosMap[p.id].push({ url: p.avatar_url, type: 'photo' });
-          }
-
-          // Add ad selected photos & videos
+          
+          // Add ad selected photos & videos if available
           const adPhotos = (p as any).ad_photos || [];
           const adVideos = (p as any).ad_videos || [];
 
-          adPhotos.forEach((url: string) => {
-            photosMap[p.id].push({ url, type: 'photo' });
-          });
-          adVideos.forEach((url: string) => {
-            photosMap[p.id].push({ url, type: 'video' });
-          });
+          if (adPhotos.length > 0 || adVideos.length > 0) {
+            adPhotos.forEach((url: string) => {
+              photosMap[p.id].push({ url, type: 'photo' });
+            });
+            adVideos.forEach((url: string) => {
+              photosMap[p.id].push({ url, type: 'video' });
+            });
+          } else if (p.avatar_url) {
+            // Fallback to avatar if no ad media is present
+            photosMap[p.id].push({ url: p.avatar_url, type: 'photo' });
+          }
         });
 
         setReelsPhotos(photosMap);

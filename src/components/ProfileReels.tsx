@@ -371,7 +371,7 @@ export default function ProfileReels({
                   ) : (
                     <Image
                       src={getCDNUrl(currentMedia.url)}
-                      alt={profile.name}
+                      alt={profile.ad_title || profile.name}
                       fill
                       priority={isActive}
                       sizes="(max-width: 640px) 100vw, 450px"
@@ -503,7 +503,7 @@ export default function ProfileReels({
                   <div className="w-11 h-11 rounded-full border-[2px] border-gold-primary overflow-hidden relative shadow-lg shadow-gold-primary/20 group-hover:scale-105 transition-transform duration-300">
                     <Image
                       src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'}
-                      alt={profile.name}
+                      alt={profile.ad_title || profile.name}
                       fill
                       sizes="44px"
                       className="object-cover"
@@ -611,13 +611,13 @@ export default function ProfileReels({
 
                 {/* Name, Age and Price */}
                 <div>
-                  <h2 className="text-lg font-black text-white tracking-tight drop-shadow flex items-baseline gap-1.5">
-                    {profile.name}
-                    <span className="text-sm font-normal text-gray-300">{profile.age} anos</span>
+                  <h2 className="text-lg font-black text-white tracking-tight drop-shadow flex items-baseline gap-1.5 leading-tight line-clamp-2">
+                    {profile.ad_title || profile.name}
+                    <span className="text-sm font-normal text-gray-300 shrink-0">{profile.age} anos</span>
                   </h2>
                   <div className="flex items-center text-gold-light font-bold text-sm mt-0.5">
                     <DollarSign className="w-3.5 h-3.5 -mr-0.5 shrink-0" />
-                    <span>{profile.price_per_hour}</span>
+                    <span>{profile.ad_price !== undefined && profile.ad_price !== null ? profile.ad_price : profile.price_per_hour}</span>
                     <span className="text-[10px] text-gray-400 font-normal ml-0.5">/h</span>
                   </div>
                 </div>
@@ -629,9 +629,9 @@ export default function ProfileReels({
                 </div>
 
                 {/* Specialties or Bio snippet */}
-                {profile.bio && (
+                {(profile.ad_description || profile.bio) && (
                   <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed font-light drop-shadow-sm">
-                    {profile.bio}
+                    {profile.ad_description || profile.bio}
                   </p>
                 )}
               </div>
