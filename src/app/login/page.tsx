@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { Sparkles, Mail, Lock, ChevronRight, AlertCircle } from 'lucide-react';
+import { Sparkles, Mail, Lock, ChevronRight, AlertCircle, ArrowLeft, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -26,14 +26,98 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Password Recovery States
+  const [view, setView] = useState<'login' | 'forgot' | 'reset'>('login');
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema)
   });
 
-  // Limpar sessão antiga ao carregar a página para evitar race conditions no submit
+  // Limpar sessão antiga ao carregar a página (com bypass se for redefinição de senha)
   useEffect(() => {
-    supabase.auth.signOut().catch((err) => console.error('Erro ao deslogar no carregamento:', err));
+    const isRecovery = window.location.hash.includes('type=recovery') || 
+                       window.location.search.includes('type=recovery') ||
+                       window.location.hash.includes('access_token=') ||
+                       window.location.search.includes('access_token=');
+                       
+    if (!isRecovery) {
+      supabase.auth.signOut().catch((err) => console.error('Erro ao deslogar no carregamento:', err));
+    } else {
+      setView('reset');
+    }
   }, []);
+
+  // Ouvinte para capturar o evento de recuperação do Supabase Auth
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setView('reset');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!recoveryEmail) {
+      setErrorMessage('Por favor, informe seu e-mail.');
+      return;
+    }
+    setLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(recoveryEmail.trim(), {
+        redirectTo: `${window.location.origin}/login?type=recovery`,
+      });
+      if (error) throw error;
+      setSuccessMessage('E-mail de recuperação enviado com sucesso! Verifique sua caixa de entrada.');
+      setRecoveryEmail('');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Erro ao enviar e-mail de recuperação.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      setErrorMessage('A nova senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMessage('As senhas não coincidem.');
+      return;
+    }
+    setLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      if (error) throw error;
+      setSuccessMessage('Senha redefinida com sucesso! Redirecionando para o login...');
+      setTimeout(() => {
+        setView('login');
+        setSuccessMessage('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }, 3000);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Erro ao redefinir a senha.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onSubmit = async (values: LoginFormValues) => {
     setLoading(true);
@@ -142,33 +226,37 @@ export default function LoginPage() {
 
           <CardContent className="p-6 md:p-8">
             {/* Toggle Role Selector */}
-            <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5 mb-8">
-              <button
-                type="button"
-                onClick={() => setRole('client')}
-                className={`py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
-                  role === 'client' 
-                    ? 'bg-gold-primary text-dark-bg font-bold shadow' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Sou Cliente
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('provider')}
-                className={`py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
-                  role === 'provider' 
-                    ? 'bg-wine-primary text-white font-bold shadow' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Sou Profissional
-              </button>
-            </div>
+            {view === 'login' && (
+              <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5 mb-8">
+                <button
+                  type="button"
+                  onClick={() => setRole('client')}
+                  className={`py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
+                    role === 'client' 
+                      ? 'bg-gold-primary text-dark-bg font-bold shadow' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Sou Cliente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('provider')}
+                  className={`py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
+                    role === 'provider' 
+                      ? 'bg-wine-primary text-white font-bold shadow' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Sou Profissional
+                </button>
+              </div>
+            )}
 
             <h2 className="text-xl font-semibold text-white tracking-wide mb-6">
-              Entrar como {role === 'client' ? 'Cliente' : 'Profissional'}
+              {view === 'login' && `Entrar como ${role === 'client' ? 'Cliente' : 'Profissional'}`}
+              {view === 'forgot' && 'Recuperar Senha'}
+              {view === 'reset' && 'Nova Senha'}
             </h2>
 
             {errorMessage && (
@@ -178,45 +266,149 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              {/* Email */}
-              <Input
-                label="E-mail"
-                type="email"
-                placeholder="seu@email.com"
-                leftIcon={<Mail className="w-4 h-4" />}
-                themeVariant={role === 'provider' ? 'wine' : 'gold'}
-                error={errors.email?.message}
-                {...register('email')}
-              />
-
-              {/* Senha */}
-              <div className="relative">
-                <div className="absolute right-1 -top-6">
-                  <a href="#" className="text-[10px] text-gray-500 hover:text-white transition-colors">Esqueceu a senha?</a>
-                </div>
-                <Input
-                  label="Senha"
-                  type="password"
-                  placeholder="Sua senha secreta"
-                  leftIcon={<Lock className="w-4 h-4" />}
-                  themeVariant={role === 'provider' ? 'wine' : 'gold'}
-                  error={errors.password?.message}
-                  {...register('password')}
-                />
+            {successMessage && (
+              <div className="flex items-start gap-2.5 bg-green-500/10 border border-green-500/20 text-green-200 text-xs p-3.5 rounded-xl mb-6">
+                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                <span>{successMessage}</span>
               </div>
+            )}
 
-              {/* Botão Ação */}
-              <Button
-                type="submit"
-                isLoading={loading}
-                variant={role === 'provider' ? 'wine' : 'gold'}
-                className="w-full mt-2"
-              >
-                Entrar no Portal
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </form>
+            {view === 'login' && (
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                {/* Email */}
+                <Input
+                  label="E-mail"
+                  type="email"
+                  placeholder="seu@email.com"
+                  leftIcon={<Mail className="w-4 h-4" />}
+                  themeVariant={role === 'provider' ? 'wine' : 'gold'}
+                  error={errors.email?.message}
+                  {...register('email')}
+                />
+
+                {/* Senha */}
+                <div className="relative">
+                  <div className="absolute right-1 -top-6">
+                    <button
+                      type="button"
+                      onClick={() => { setView('forgot'); setErrorMessage(''); setSuccessMessage(''); }}
+                      className="text-[10px] text-gray-500 hover:text-white transition-colors cursor-pointer bg-transparent border-none"
+                    >
+                      Esqueceu a senha?
+                    </button>
+                  </div>
+                  <Input
+                    label="Senha"
+                    type="password"
+                    placeholder="Sua senha secreta"
+                    leftIcon={<Lock className="w-4 h-4" />}
+                    themeVariant={role === 'provider' ? 'wine' : 'gold'}
+                    error={errors.password?.message}
+                    {...register('password')}
+                  />
+                </div>
+
+                {/* Botão Ação */}
+                <Button
+                  type="submit"
+                  isLoading={loading}
+                  variant={role === 'provider' ? 'wine' : 'gold'}
+                  className="w-full mt-2"
+                >
+                  Entrar no Portal
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </form>
+            )}
+
+            {view === 'forgot' && (
+              <div className="space-y-5">
+                <p className="text-xs text-gray-400 font-light leading-relaxed">
+                  Digite seu e-mail de cadastro. Enviaremos um link seguro para você redefinir sua senha.
+                </p>
+
+                <form onSubmit={handleForgotPasswordSubmit} className="space-y-5">
+                  <Input
+                    label="E-mail"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={recoveryEmail}
+                    onChange={(e) => setRecoveryEmail(e.target.value)}
+                    leftIcon={<Mail className="w-4 h-4" />}
+                    themeVariant={role === 'provider' ? 'wine' : 'gold'}
+                    required
+                  />
+
+                  <Button
+                    type="submit"
+                    isLoading={loading}
+                    variant={role === 'provider' ? 'wine' : 'gold'}
+                    className="w-full mt-2"
+                  >
+                    Enviar Link de Recuperação
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </form>
+
+                <button
+                  type="button"
+                  onClick={() => { setView('login'); setErrorMessage(''); setSuccessMessage(''); }}
+                  className="flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors mt-4 mx-auto cursor-pointer bg-transparent border-none"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Voltar para o Login
+                </button>
+              </div>
+            )}
+
+            {view === 'reset' && (
+              <div className="space-y-5">
+                <p className="text-xs text-gray-400 font-light leading-relaxed">
+                  Escolha uma nova senha segura para acessar sua conta.
+                </p>
+
+                <form onSubmit={handleResetPasswordSubmit} className="space-y-5">
+                  <Input
+                    label="Nova Senha"
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    leftIcon={<Lock className="w-4 h-4" />}
+                    themeVariant={role === 'provider' ? 'wine' : 'gold'}
+                    required
+                  />
+
+                  <Input
+                    label="Confirmar Nova Senha"
+                    type="password"
+                    placeholder="Repita a nova senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    leftIcon={<Lock className="w-4 h-4" />}
+                    themeVariant={role === 'provider' ? 'wine' : 'gold'}
+                    required
+                  />
+
+                  <Button
+                    type="submit"
+                    isLoading={loading}
+                    variant={role === 'provider' ? 'wine' : 'gold'}
+                    className="w-full mt-2"
+                  >
+                    Salvar Nova Senha
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </form>
+
+                <button
+                  type="button"
+                  onClick={() => { setView('login'); setErrorMessage(''); setSuccessMessage(''); }}
+                  className="flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors mt-4 mx-auto cursor-pointer bg-transparent border-none"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Cancelar e ir para o Login
+                </button>
+              </div>
+            )}
 
             {/* Footer Card */}
             <div className="mt-8 text-center text-xs text-gray-400 border-t border-white/5 pt-5">
