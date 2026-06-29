@@ -44,9 +44,9 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
         className={cn(
           "flex flex-col w-full h-full rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border border-white/5",
           isGold 
-            ? 'border-[2px] border-gold-primary/70 gold-ring-active' 
+            ? 'border-2 border-gold-primary/70 gold-ring-active' 
             : isAvailable 
-              ? 'border-[2px] border-emerald-500/80 neon-ring-active' 
+              ? 'border-2 border-emerald-500/80 neon-ring-active' 
               : ''
         )}
       >
@@ -63,7 +63,7 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
           />
           
           {/* Overlay Degradê escuro sutil apenas na base da imagem */}
-          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent opacity-80" />
+          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/60 to-transparent opacity-80" />
 
           {/* Badges do Topo */}
           <div className="absolute top-3.5 left-3.5 right-3.5 flex justify-between items-center z-10 pointer-events-none">
