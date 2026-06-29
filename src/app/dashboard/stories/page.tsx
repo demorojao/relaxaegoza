@@ -52,6 +52,14 @@ export default function StoriesManager() {
     }
   }, [profile]);
 
+  useEffect(() => {
+    return () => {
+      if (filePreview && filePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(filePreview);
+      }
+    };
+  }, [filePreview]);
+
 
 
   const fetchStoriesData = async () => {
@@ -109,19 +117,49 @@ export default function StoriesManager() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Liberar URL de objeto anterior se existir para evitar vazamentos de memória (Memory Leaks)
+    if (filePreview && filePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(filePreview);
+    }
+
     // Reset text overlay when selecting a new file
     setTextContent('');
     setTextPosition('center');
     setTextColor('white');
     setTextBg('black-blur');
 
+    // Validação de Tamanho do Arquivo (Evitar crash de memória e erro de cota do Supabase)
+    const isVideoFile = file.type.startsWith('video/');
+    const isImageFile = file.type.startsWith('image/');
+    
+    if (isVideoFile) {
+      const maxVideoSize = 25 * 1024 * 1024; // 25MB
+      if (file.size > maxVideoSize) {
+        alert('O arquivo de vídeo é muito grande. O tamanho máximo permitido é de 25MB para evitar falhas de upload. Por favor, escolha um vídeo menor ou reduza a qualidade da gravação.');
+        setSelectedFile(null);
+        setFilePreview(null);
+        e.target.value = '';
+        return;
+      }
+    } else if (isImageFile) {
+      const maxPhotoSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxPhotoSize) {
+        alert('A imagem é muito grande. O tamanho máximo permitido é de 10MB. Por favor, escolha uma imagem menor.');
+        setSelectedFile(null);
+        setFilePreview(null);
+        e.target.value = '';
+        return;
+      }
+    }
+
     // Detectar e atualizar o tipo de mídia automaticamente
-    if (file.type.startsWith('video/')) {
+    if (isVideoFile) {
       setMediaType('video');
       const videoElement = document.createElement('video');
       videoElement.preload = 'metadata';
+      const tempUrl = URL.createObjectURL(file);
       videoElement.onloadedmetadata = () => {
-        window.URL.revokeObjectURL(videoElement.src);
+        URL.revokeObjectURL(tempUrl);
         if (videoElement.duration > 16) {
           alert('O vídeo de story deve ter no máximo 15 segundos.');
           setSelectedFile(null);
@@ -129,20 +167,20 @@ export default function StoriesManager() {
           e.target.value = ''; // Permite selecionar o mesmo arquivo corrigido
         }
       };
-      videoElement.src = URL.createObjectURL(file);
-    } else if (file.type.startsWith('image/')) {
+      videoElement.src = tempUrl;
+    } else if (isImageFile) {
       setMediaType('photo');
     }
 
     setSelectedFile(file);
 
-    if (file.type.startsWith('image/')) {
+    if (isImageFile) {
       const reader = new FileReader();
       reader.onload = (event) => {
         setFilePreview(event.target?.result as string);
       };
       reader.readAsDataURL(file);
-    } else {
+    } else if (isVideoFile) {
       setFilePreview(URL.createObjectURL(file));
     }
   };
@@ -262,6 +300,9 @@ export default function StoriesManager() {
 
         setStories(prev => [storyRow, ...prev]);
         setStoriesInLast24h(prev => prev + 1);
+        if (filePreview && filePreview.startsWith('blob:')) {
+          URL.revokeObjectURL(filePreview);
+        }
         setSelectedFile(null);
         setFilePreview(null);
         setTextContent('');
@@ -451,7 +492,14 @@ export default function StoriesManager() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => { setSelectedFile(null); setFilePreview(null); setTextContent(''); }}
+                          onClick={() => {
+                            if (filePreview && filePreview.startsWith('blob:')) {
+                              URL.revokeObjectURL(filePreview);
+                            }
+                            setSelectedFile(null);
+                            setFilePreview(null);
+                            setTextContent('');
+                          }}
                           className="p-2 bg-black/60 hover:bg-red-600 border border-white/10 rounded-full text-white transition-all active:scale-90 cursor-pointer"
                           title="Descartar e tirar outra"
                         >
