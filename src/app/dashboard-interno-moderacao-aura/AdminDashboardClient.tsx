@@ -42,7 +42,7 @@ export default function AdminDashboardClient({
   adminSecret
 }: AdminDashboardClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'pending' | 'rooms' | 'all' | 'photos' | 'banned'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'rooms' | 'all' | 'photos' | 'banned' | 'reports'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'provider' | 'client' | 'host'>('all');
   const [profiles, setProfiles] = useState<any[]>(initialProfiles);
@@ -55,6 +55,114 @@ export default function AdminDashboardClient({
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
   const [editFields, setEditFields] = useState<any>({});
+
+  const [reports, setReports] = useState<any[]>([]);
+  const [loadingReports, setLoadingReports] = useState(false);
+
+  React.useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    setLoadingReports(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/internal-ops/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'x-admin-secret': adminSecret
+        },
+        body: JSON.stringify({ isReportsList: true })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Erro ao carregar denúncias.');
+      setReports(result.reports || []);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setLoadingReports(false);
+    }
+  };
+
+  const handleDismissReport = async (reportId: string) => {
+    if (!confirm('Deseja realmente ignorar esta denúncia?')) return;
+    setActionLoading(`${reportId}-dismiss`);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/internal-ops/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'x-admin-secret': adminSecret
+        },
+        body: JSON.stringify({ isReportDismiss: true, reportId })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Erro ao ignorar denúncia.');
+
+      setReports(prev => prev.filter(r => r.id !== reportId));
+      alert('Denúncia arquivada com sucesso!');
+    } catch (err: any) {
+      alert(err.message || 'Erro ao processar ação.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePunishReport = async (reportId: string, profileId: string, reportedName: string) => {
+    const reasonInput = prompt(
+      `Deseja realmente suspender ${reportedName} e banir o IP do usuário permanentemente?\nDigite o motivo do banimento (opcional):`,
+      'Violação grave de termos de uso / denúncia apurada.'
+    );
+    if (reasonInput === null) return;
+
+    setActionLoading(`${reportId}-punish`);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/internal-ops/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'x-admin-secret': adminSecret
+        },
+        body: JSON.stringify({ 
+          isReportPunish: true, 
+          reportId, 
+          profileId,
+          reason: reasonInput
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Erro ao punir perfil.');
+
+      setReports(prev => prev.filter(r => r.id !== reportId));
+      setProfiles(prev => prev.map(p => {
+        if (p.id === profileId) {
+          return { ...p, verification_status: 'rejected' };
+        }
+        return p;
+      }));
+
+      alert('Perfil suspenso e IP banido com sucesso!');
+    } catch (err: any) {
+      alert(err.message || 'Erro ao processar punição.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleRoomModeration = async (roomId: string, status: 'verified' | 'rejected') => {
     setActionLoading(`${roomId}-room`);
@@ -396,6 +504,16 @@ export default function AdminDashboardClient({
               }`}
             >
               IPs Banidos ({bannedIps.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('reports')}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
+                activeTab === 'reports' 
+                  ? 'bg-gold-primary text-dark-bg font-bold shadow' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Denúncias ({reports.filter(r => r.status === 'pending').length})
             </button>
           </div>
 
@@ -835,6 +953,96 @@ export default function AdminDashboardClient({
                   </Button>
                 </Card>
               ))}
+            </div>
+          )}
+        </div>
+      ) : activeTab === 'reports' ? (
+        <div className="space-y-6">
+          {loadingReports ? (
+            <div className="w-full py-16 flex items-center justify-center">
+              <div className="w-8 h-8 border-4 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
+            </div>
+          ) : reports.length === 0 ? (
+            <Card variant="glass" className="p-16 border-dashed border-white/10 text-center bg-black/10">
+              <ShieldCheck className="w-12 h-12 text-emerald-500/80 mx-auto mb-3" />
+              <h3 className="text-sm font-semibold text-white">Nenhuma denúncia pendente!</h3>
+              <p className="text-xs text-gray-500 font-light mt-1 max-w-sm mx-auto">
+                Excelente! Não há denúncias registradas ou não resolvidas contra perfis do portal no momento.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 animate-fadeIn">
+              {reports.map((report) => {
+                const reportedName = report.reported?.name || 'Perfil Suspenso';
+                const reporterName = report.reporter?.name || 'Visitante Anônimo';
+                const isPending = report.status === 'pending';
+
+                return (
+                  <Card key={report.id} variant="glass" className={`p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-white/5 bg-black/25 relative ${isPending ? 'border-red-500/20' : ''}`}>
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${
+                          report.status === 'pending' 
+                            ? 'bg-red-500/10 text-red-400 border border-red-500/20' 
+                            : report.status === 'resolved' 
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                              : 'bg-white/5 text-gray-400 border border-white/10'
+                        }`}>
+                          {report.status === 'pending' ? 'Pendente' : report.status === 'resolved' ? 'Resolvido' : 'Ignorado'}
+                        </span>
+                        <span className="text-[10px] text-gray-500">
+                          {new Date(report.created_at).toLocaleString('pt-BR')}
+                        </span>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-bold text-white">
+                          Denunciada: <span className="text-gold-light font-medium">{reportedName}</span>
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1">
+                          <strong className="text-gray-300">Motivo:</strong> {report.reason}
+                        </p>
+                        {report.description && (
+                          <p className="text-xs text-gray-500 italic mt-1 bg-black/20 p-2.5 rounded-lg border border-white/5">
+                            "{report.description}"
+                          </p>
+                        )}
+                        <p className="text-[10px] text-gray-500 mt-2">
+                          <strong className="text-gray-400">Denunciante:</strong> {reporterName}
+                          {report.reported?.last_ip && (
+                            <span className="ml-2.5 font-mono text-[9px] bg-white/5 px-1.5 py-0.5 rounded">
+                              IP Denunciado: {report.reported.last_ip}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isPending && (
+                      <div className="flex gap-2 w-full md:w-auto shrink-0 self-end md:self-center">
+                        <Button
+                          variant="dark"
+                          onClick={() => handleDismissReport(report.id)}
+                          disabled={actionLoading !== null}
+                          className="flex-1 md:flex-initial py-2 text-[10px] px-4 border border-white/10 hover:bg-white/5 cursor-pointer"
+                        >
+                          Ignorar
+                        </Button>
+                        <Button
+                          variant="gold"
+                          onClick={() => handlePunishReport(report.id, report.reported_profile_id, reportedName)}
+                          disabled={actionLoading !== null}
+                          isLoading={actionLoading === `${report.id}-punish`}
+                          className="flex-1 md:flex-initial py-2 text-[10px] px-4 bg-red-600 hover:bg-red-500 text-white border-none cursor-pointer"
+                        >
+                          <ShieldAlert className="w-3.5 h-3.5 mr-1" />
+                          Suspender + Banir IP
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>

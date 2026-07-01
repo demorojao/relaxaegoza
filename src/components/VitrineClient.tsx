@@ -136,6 +136,7 @@ export default function VitrineClient({
   const [isSpecialtyDropdownOpen, setIsSpecialtyDropdownOpen] = useState(false);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [spaceFilter, setSpaceFilter] = useState<boolean>(false);
+  const [verifiedFilter, setVerifiedFilter] = useState<boolean>(false);
   const [genderFilter, setGenderFilter] = useState<'Feminino' | 'Masculino' | 'Trans' | ''>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -568,6 +569,11 @@ export default function VitrineClient({
         );
       }
 
+      // Filtro de Verificados
+      if (verifiedFilter) {
+        filteredData = filteredData.filter(p => p.verification_status === 'verified');
+      }
+
       // Filtro de Gênero
       if (genderFilter) {
         filteredData = filteredData.filter(p => p.gender === genderFilter);
@@ -781,6 +787,7 @@ export default function VitrineClient({
     if (cityFilter) count++;
     if (neighborhoodFilter) count++;
     if (spaceFilter) count++;
+    if (verifiedFilter) count++;
     if (genderFilter) count++;
     return count;
   };
@@ -871,6 +878,8 @@ export default function VitrineClient({
           setCategoryFilter={setCategoryFilter}
           spaceFilter={spaceFilter}
           setSpaceFilter={setSpaceFilter}
+          verifiedFilter={verifiedFilter}
+          setVerifiedFilter={setVerifiedFilter}
           viewMode={viewMode}
           setViewMode={setViewMode}
           cityFilter={cityFilter}

@@ -22,13 +22,88 @@ import {
   Music,
   CreditCard,
   Sparkles,
-  Lock
+  Lock,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { formatWhatsAppLink } from '@/lib/utils';
 import { getCDNUrl } from '@/lib/mediaHelper';
+import ReportModal from '@/components/ReportModal';
+import Watermark from '@/components/Watermark';
+
+const AVAILABLE_TAGS = ['Educada', 'Simpática', 'Ambiente Cheiroso', 'Excelente Massagem', 'Fiel às Fotos', 'Higiene Nota 10', 'Ótimo Atendimento'];
+
+const getStatusExpediente = (businessHours: any) => {
+  if (!businessHours || typeof businessHours !== 'object' || Object.keys(businessHours).length === 0) {
+    return { status: 'Indisponível', next: null };
+  }
+
+  // Obter hora atual em SP (UTC-3)
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const spTime = new Date(utc + (3600000 * -3));
+
+  const daysMap: Record<number, string> = {
+    0: 'Dom',
+    1: 'Seg',
+    2: 'Ter',
+    3: 'Qua',
+    4: 'Qui',
+    5: 'Sex',
+    6: 'Sab'
+  };
+
+  const currentDay = daysMap[spTime.getDay()];
+  const currentHour = spTime.getHours();
+  const currentMin = spTime.getMinutes();
+  const currentMinutesTotal = currentHour * 60 + currentMin;
+
+  const todayInfo = businessHours[currentDay];
+
+  if (todayInfo && todayInfo.active) {
+    const [startHour, startMin] = (todayInfo.start || '09:00').split(':').map(Number);
+    const [endHour, endMin] = (todayInfo.end || '18:00').split(':').map(Number);
+
+    const startTotal = startHour * 60 + startMin;
+    const endTotal = endHour * 60 + endMin;
+
+    if (endTotal < startTotal) {
+      if (currentMinutesTotal >= startTotal || currentMinutesTotal < endTotal) {
+        return { status: 'Em expediente', next: null };
+      }
+    } else {
+      if (currentMinutesTotal >= startTotal && currentMinutesTotal < endTotal) {
+        return { status: 'Em expediente', next: null };
+      }
+    }
+  }
+
+  const daysOfWeek = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
+  const dayIndexInWeek = spTime.getDay() === 0 ? 6 : spTime.getDay() - 1;
+
+  for (let i = 0; i < 7; i++) {
+    const checkIdx = (dayIndexInWeek + i) % 7;
+    const checkDayName = daysOfWeek[checkIdx];
+    const checkInfo = businessHours[checkDayName];
+
+    if (checkInfo && checkInfo.active) {
+      if (i === 0) {
+        const [startHour, startMin] = (checkInfo.start || '09:00').split(':').map(Number);
+        const startTotal = startHour * 60 + startMin;
+        if (currentMinutesTotal < startTotal) {
+          return { status: 'Indisponível', next: `${checkDayName} às ${checkInfo.start}` };
+        }
+      } else {
+        return { status: 'Indisponível', next: `${checkDayName} às ${checkInfo.start}` };
+      }
+    }
+  }
+
+  return { status: 'Indisponível', next: null };
+};
 
 // Componente de Conteúdo Exclusivo para o perfil público
-function PremiumSection({ providerId, providerName }: { providerId: string; providerName: string }) {
+function PremiumSection({ providerId, providerName, subscriptionPriceCents }: { providerId: string; providerName: string; subscriptionPriceCents?: number }) {
   const [medias, setMedias] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -92,7 +167,7 @@ function PremiumSection({ providerId, providerName }: { providerId: string; prov
       {/* CTAs */}
       <div className="flex flex-col sm:flex-row gap-3 mt-2">
         <button className="flex-1 py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer">
-          <Sparkles className="w-3.5 h-3.5" /> Assinar Canal (Em Breve)
+          <Sparkles className="w-3.5 h-3.5" /> Assinar Canal {subscriptionPriceCents ? `- R$ ${(subscriptionPriceCents / 100).toFixed(2)}/mês` : ''} (Em Breve)
         </button>
         <button className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer">
           <Lock className="w-3.5 h-3.5" /> Comprar Álbum (Em Breve)
@@ -132,8 +207,10 @@ export default function ProfileDetailsClient({
   const [ratingService, setRatingService] = useState(5);
   const [ratingEnvironment, setRatingEnvironment] = useState(5);
   const [comment, setComment] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const parseBio = (bioText: string) => {
     if (!bioText) return { specialties: '', included: '', rules: '', raw: '' };
@@ -221,7 +298,7 @@ export default function ProfileDetailsClient({
     const { data: pReviews, error } = await supabase
       .from('reviews')
       .select(`
-        id, rating_massage, rating_service, rating_environment, comment, is_verified_interaction, created_at,
+        id, rating_massage, rating_service, rating_environment, comment, is_verified_interaction, created_at, tags,
         client:profiles!reviews_client_id_fkey(name, verification_status)
       `)
       .eq('provider_id', id);
@@ -245,6 +322,7 @@ export default function ProfileDetailsClient({
           rating_service: ratingService,
           rating_environment: ratingEnvironment,
           comment,
+          tags: selectedTags,
           is_verified_interaction: true
         });
 
@@ -252,6 +330,7 @@ export default function ProfileDetailsClient({
 
       setReviewSuccess(true);
       setComment('');
+      setSelectedTags([]);
       
       // Recarregar avaliações
       await fetchReviews();
@@ -271,6 +350,20 @@ export default function ProfileDetailsClient({
   const avgMassage = count > 0 ? (reviews.reduce((acc, curr) => acc + curr.rating_massage, 0) / count).toFixed(1) : '4.9';
   const avgService = count > 0 ? (reviews.reduce((acc, curr) => acc + curr.rating_service, 0) / count).toFixed(1) : '4.9';
   const avgEnvironment = count > 0 ? (reviews.reduce((acc, curr) => acc + curr.rating_environment, 0) / count).toFixed(1) : '4.8';
+
+  // Contar frequências das tags das avaliações
+  const tagCounts: Record<string, number> = {};
+  reviews.forEach(rev => {
+    if (Array.isArray(rev.tags)) {
+      rev.tags.forEach((tag: string) => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    }
+  });
+  // Ordenar tags por frequência
+  const sortedTags = Object.entries(tagCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5); // top 5 tags
 
   // Ad-specific details resolver
   const adTitle = ad?.title || `Atendimento com ${profile.name}`;
@@ -503,6 +596,67 @@ export default function ProfileDetailsClient({
           })()}
         </div>
 
+        <button
+          onClick={() => setIsReportModalOpen(true)}
+          className="w-full text-center text-xs text-red-400/50 hover:text-red-400 transition-colors flex items-center justify-center gap-1.5 py-2.5 border border-dashed border-red-500/10 hover:border-red-500/30 rounded-xl cursor-pointer"
+        >
+          <AlertTriangle className="w-3.5 h-3.5" /> Denunciar este anúncio
+        </button>
+
+        {/* Horários de Expediente */}
+        {profile.business_hours && typeof profile.business_hours === 'object' && Object.keys(profile.business_hours).length > 0 && (
+          <div className="bg-black/40 border border-white/5 rounded-2xl p-4 sm:p-5 space-y-3.5 pt-6 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white uppercase tracking-widest flex items-center gap-2">
+                <Clock className="w-4 h-4 text-gold-primary" />
+                Horário de Atendimento
+              </h3>
+              {(() => {
+                const { status, next } = getStatusExpediente(profile.business_hours);
+                if (status === 'Em expediente') {
+                  return (
+                    <span className="inline-flex items-center gap-1.5 text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider animate-pulse">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      Em expediente
+                    </span>
+                  );
+                } else {
+                  return (
+                    <div className="flex flex-col items-end gap-0.5">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] bg-white/5 text-gray-400 border border-white/10 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-500" />
+                        Indisponível
+                      </span>
+                      {next && (
+                        <span className="text-[9px] text-gray-500 font-light">
+                          Abre {next}
+                        </span>
+                      )}
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+
+            {/* Lista expandível sutil de horários semanais */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+              {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'].map(day => {
+                const info = profile.business_hours[day] || { active: false };
+                return (
+                  <div key={day} className="flex justify-between items-center text-[10px] sm:text-xs bg-black/20 border border-white/5 p-2 rounded-lg">
+                    <span className="font-medium text-gray-400">{day}</span>
+                    {info.active ? (
+                      <span className="text-gray-300 font-light font-mono">{info.start} - {info.end}</span>
+                    ) : (
+                      <span className="text-gray-600 font-light italic">Folga</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Comodidades & Infraestrutura */}
         {profile.amenities && profile.amenities.length > 0 && (
           <div className="pt-6 border-t border-white/10 space-y-4">
@@ -585,15 +739,17 @@ export default function ProfileDetailsClient({
                       playsInline
                     />
                   ) : (
-                    <Image 
-                      src={getCDNUrl(media.url)} 
-                      alt={`Foto do Anúncio ${index + 1}`} 
-                      fill
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
-                      onContextMenu={(e) => e.preventDefault()}
-                      onDragStart={(e) => e.preventDefault()}
-                    />
+                    <Watermark className="w-full h-full">
+                      <Image 
+                        src={getCDNUrl(media.url)} 
+                        alt={`Foto do Anúncio ${index + 1}`} 
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
+                        onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
+                      />
+                    </Watermark>
                   )}
                   {media.is_verified && (
                     <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-emerald-500/20 text-emerald-400 z-10">
@@ -607,7 +763,11 @@ export default function ProfileDetailsClient({
         </div>
 
         {/* Conteúdo Exclusivo — Aba Premium */}
-        <PremiumSection providerId={id} providerName={profile.name} />
+        <PremiumSection 
+          providerId={id} 
+          providerName={profile.name} 
+          subscriptionPriceCents={profile.subscription_price_cents}
+        />
 
 
         <div className="space-y-6 pt-6 border-t border-white/5">
@@ -615,6 +775,17 @@ export default function ProfileDetailsClient({
             <Trophy className="w-4 h-4 text-gold-primary" />
             Opinião dos Clientes ({count})
           </h3>
+
+          {sortedTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 bg-black/30 border border-white/5 p-3 rounded-xl">
+              <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mr-1">Mais comentados:</span>
+              {sortedTags.map(([tag, count]) => (
+                <span key={tag} className="text-[10px] px-2.5 py-1 rounded-full bg-gold-primary/10 border border-gold-primary/20 text-gold-light font-medium">
+                  {tag} ({count})
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Form para Deixar Avaliação */}
           {currentUser && userRole === 'client' ? (
@@ -692,6 +863,33 @@ export default function ProfileDetailsClient({
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="text-[10px] text-gray-500 uppercase font-medium">Tags de Avaliação Rápida</label>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {AVAILABLE_TAGS.map(tag => {
+                    const isSel = selectedTags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTags(prev =>
+                            prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+                          );
+                        }}
+                        className={`text-[10px] px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                          isSel
+                            ? 'bg-gold-primary/20 border-gold-primary text-gold-light font-medium'
+                            : 'bg-black/40 border-white/10 text-gray-400 hover:border-white/30'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <button 
                 type="submit"
                 disabled={submittingReview}
@@ -752,6 +950,16 @@ export default function ProfileDetailsClient({
                       {rev.comment}
                     </p>
 
+                    {Array.isArray(rev.tags) && rev.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pl-1 pt-1">
+                        {rev.tags.map((tag: string) => (
+                          <span key={tag} className="text-[9px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-gray-400 font-light">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Notas individuais menores */}
                     <div className="flex gap-4 pl-1 text-[9px] text-gray-500 font-medium">
                       <span>Massagem: <strong className="text-gray-400">{rev.rating_massage}★</strong></span>
@@ -765,6 +973,13 @@ export default function ProfileDetailsClient({
           )}
         </div>
       </div>
+      
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        reportedProfileId={id}
+        reportedProfileName={profile.name}
+      />
     </div>
     </div>
   );

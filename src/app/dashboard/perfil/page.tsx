@@ -20,7 +20,8 @@ import {
   Lock,
   Play,
   Video,
-  FileImage
+  FileImage,
+  Clock
 } from 'lucide-react';
 import ImageBlurSelector from '@/components/ImageBlurSelector';
 import { getCDNUrl } from '@/lib/mediaHelper';
@@ -67,6 +68,28 @@ export default function ProfileEditor() {
   // Comodidades selecionadas
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
 
+  const DEFAULT_BUSINESS_HOURS = {
+    Seg: { active: false, start: '09:00', end: '18:00' },
+    Ter: { active: false, start: '09:00', end: '18:00' },
+    Qua: { active: false, start: '09:00', end: '18:00' },
+    Qui: { active: false, start: '09:00', end: '18:00' },
+    Sex: { active: false, start: '09:00', end: '18:00' },
+    Sab: { active: false, start: '09:00', end: '18:00' },
+    Dom: { active: false, start: '09:00', end: '18:00' }
+  };
+
+  const [businessHours, setBusinessHours] = useState<any>(DEFAULT_BUSINESS_HOURS);
+  const [imageConsent, setImageConsent] = useState(false);
+
+  const formatPhone = (value: string) => {
+    if (!value) return '';
+    const numbers = value.replace(/\D/g, ''); // keep only numbers
+    if (numbers.length <= 2) return `(${numbers}`;
+    if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    if (numbers.length <= 10) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+  };
+
   // Estados do Anúncio
   const [ad, setAd] = useState<any>(null);
   const [adTitle, setAdTitle] = useState('');
@@ -104,7 +127,12 @@ export default function ProfileEditor() {
         setProfile(data);
         setStageName(data.name || '');
         setAge(data.age || 18);
-        setWhatsapp(data.whatsapp || '');
+        setWhatsapp(formatPhone(data.whatsapp || ''));
+        if (data.business_hours && typeof data.business_hours === 'object' && Object.keys(data.business_hours).length > 0) {
+          setBusinessHours(data.business_hours);
+        } else {
+          setBusinessHours(DEFAULT_BUSINESS_HOURS);
+        }
         setWhatsappCustomMessage(data.whatsapp_custom_message || '');
         setNeighborhood(data.neighborhood || '');
         setCity(data.city || '');
@@ -223,6 +251,19 @@ export default function ProfileEditor() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // Validar WhatsApp
+    const rawWhatsapp = whatsapp.replace(/\D/g, '');
+    if (rawWhatsapp.length < 10 || rawWhatsapp.length > 11) {
+      alert('Por favor, informe um número de WhatsApp válido com DDD (10 ou 11 dígitos).');
+      return;
+    }
+
+    // Validar Consentimento de Imagens
+    if (!imageConsent) {
+      alert('Você precisa aceitar os termos de consentimento de direitos de imagem para poder salvar seu perfil.');
+      return;
+    }
 
     // Se o perfil é verificado e o usuário mudou nome, idade ou avatar, avisar antes
     const isVerified = profile?.verification_status === 'verified';
@@ -361,7 +402,7 @@ export default function ProfileEditor() {
       const updatePayload: any = {
         name: stageName,
         age: Number(age),
-        whatsapp,
+        whatsapp: rawWhatsapp,
         neighborhood: cleanNeighborhood,
         city: cleanCity,
         price_per_hour: Number(rate),
@@ -371,7 +412,8 @@ export default function ProfileEditor() {
         amenities: selectedAmenities,
         latitude: lat,
         longitude: lon,
-        avatar_url: finalAvatarUrl
+        avatar_url: finalAvatarUrl,
+        business_hours: businessHours
       };
 
       // Helper: tenta atualizar com todos os campos; se alguma coluna não existir (42703), faz fallback
@@ -1003,7 +1045,7 @@ export default function ProfileEditor() {
                   type="text" 
                   title="WhatsApp"
                   value={whatsapp} 
-                  onChange={(e) => setWhatsapp(e.target.value)} 
+                  onChange={(e) => setWhatsapp(formatPhone(e.target.value))} 
                   className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white pl-10 pr-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
                   required
                 />
@@ -1344,6 +1386,98 @@ export default function ProfileEditor() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Bloco 5: Grade Horária de Atendimento */}
+        <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-4">
+          <div className="flex items-center gap-2 text-white font-medium text-sm">
+            <Clock className="w-4 h-4 text-gold-primary" />
+            <span>Grade Horária de Atendimento Semanal</span>
+          </div>
+          <p className="text-[11px] text-gray-400 font-light leading-relaxed">
+            Defina os dias e horários em que você realiza atendimentos. Os clientes verão no seu perfil público se você está "Em expediente" ou quando retornará.
+          </p>
+
+          <div className="space-y-3.5">
+            {Object.keys(businessHours).map((day) => {
+              const info = businessHours[day] || { active: false, start: '09:00', end: '18:00' };
+              return (
+                <div key={day} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-black/30 border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id={`day-active-${day}`}
+                      checked={info.active}
+                      onChange={(e) => {
+                        setBusinessHours({
+                          ...businessHours,
+                          [day]: { ...info, active: e.target.checked }
+                        });
+                      }}
+                      className="rounded border-white/20 text-gold-primary focus:ring-0 focus:ring-offset-0 bg-black/40 accent-gold-primary w-4.5 h-4.5 cursor-pointer"
+                    />
+                    <label htmlFor={`day-active-${day}`} className="text-xs font-bold text-white uppercase min-w-[45px] cursor-pointer">
+                      {day}
+                    </label>
+                  </div>
+
+                  {info.active ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-gray-500">Das</span>
+                      <input
+                        type="time"
+                        title={`Horário de início — ${day}`}
+                        value={info.start || '09:00'}
+                        onChange={(e) => {
+                          setBusinessHours({
+                            ...businessHours,
+                            [day]: { ...info, start: e.target.value }
+                          });
+                        }}
+                        className="bg-dark-bg/60 border border-dark-border text-xs text-white px-2 py-1.5 rounded-lg focus:border-gold-primary/50 focus:outline-none transition-colors"
+                      />
+                      <span className="text-[10px] text-gray-500">até às</span>
+                      <input
+                        type="time"
+                        title={`Horário de término — ${day}`}
+                        value={info.end || '18:00'}
+                        onChange={(e) => {
+                          setBusinessHours({
+                            ...businessHours,
+                            [day]: { ...info, end: e.target.value }
+                          });
+                        }}
+                        className="bg-dark-bg/60 border border-dark-border text-xs text-white px-2 py-1.5 rounded-lg focus:border-gold-primary/50 focus:outline-none transition-colors"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-500 italic">Folga / Fechado</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bloco 6: Consentimento Legal de Imagens */}
+        <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-4">
+          <div className="flex items-center gap-2 text-white font-medium text-sm">
+            <CheckSquare className="w-4 h-4 text-gold-primary" />
+            <span>Consentimento de Direitos de Imagem</span>
+          </div>
+
+          <div className="flex items-start gap-3 p-3.5 rounded-xl bg-black/40 border border-gold-primary/20">
+            <input
+              type="checkbox"
+              id="image-consent-checkbox"
+              checked={imageConsent}
+              onChange={(e) => setImageConsent(e.target.checked)}
+              className="rounded border-white/20 text-gold-primary focus:ring-0 focus:ring-offset-0 bg-black/40 accent-gold-primary w-5 h-5 cursor-pointer mt-0.5"
+            />
+            <label htmlFor="image-consent-checkbox" className="text-xs text-gray-300 font-light leading-relaxed cursor-pointer select-none">
+              Eu declaro que possuo direito de uso sobre todas as imagens enviadas e dou autorização de publicação no portal <strong>Relaxa & Goza</strong>. Estou ciente de que a publicação de imagens de terceiros sem autorização é de minha inteira responsabilidade legal.
+            </label>
+          </div>
         </div>
 
         {/* Submit */}

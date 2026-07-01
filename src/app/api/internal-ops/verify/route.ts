@@ -51,8 +51,78 @@ export async function POST(req: NextRequest) {
       isBan,
       isUnban,
       ipAddress,
-      reason
+      reason,
+      isReportsList,
+      isReportDismiss,
+      isReportPunish,
+      reportId
     } = await req.json();
+
+    if (isReportsList) {
+      const { data: reports, error: reportsError } = await supabaseService
+        .from('reports')
+        .select(`
+          id,
+          reason,
+          description,
+          status,
+          created_at,
+          reporter:profiles!reports_reporter_id_fkey(id, name),
+          reported:profiles!reports_reported_profile_id_fkey(id, name, last_ip)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (reportsError) throw reportsError;
+      return NextResponse.json({ success: true, reports });
+    }
+
+    if (isReportDismiss) {
+      if (!reportId) {
+        return NextResponse.json({ error: 'ID de denúncia inválido.' }, { status: 400 });
+      }
+      const { error: updateError } = await supabaseService
+        .from('reports')
+        .update({ status: 'dismissed' })
+        .eq('id', reportId);
+
+      if (updateError) throw updateError;
+      return NextResponse.json({ success: true });
+    }
+
+    if (isReportPunish) {
+      if (!reportId || !profileId) {
+        return NextResponse.json({ error: 'ID de denúncia ou de perfil inválido.' }, { status: 400 });
+      }
+      const { error: updateReportError } = await supabaseService
+        .from('reports')
+        .update({ status: 'resolved' })
+        .eq('id', reportId);
+      if (updateReportError) throw updateReportError;
+
+      const { data: reportedProfile, error: getProfileError } = await supabaseService
+        .from('profiles')
+        .update({ verification_status: 'rejected' })
+        .eq('id', profileId)
+        .select('last_ip')
+        .single();
+      if (getProfileError) throw getProfileError;
+
+      await supabaseService
+        .from('ads')
+        .update({ is_active: false })
+        .eq('profile_id', profileId);
+
+      if (reportedProfile?.last_ip) {
+        await supabaseService
+          .from('ip_bans')
+          .upsert({ 
+            ip_address: reportedProfile.last_ip, 
+            reason: reason || 'Denúncia apurada e confirmada pela moderação.' 
+          }, { onConflict: 'ip_address' });
+      }
+
+      return NextResponse.json({ success: true });
+    }
 
     if (!isRoom && !isPhoto && !isBan && !isUnban && !profileId) {
       return NextResponse.json({ error: 'ID de perfil inválido.' }, { status: 400 });

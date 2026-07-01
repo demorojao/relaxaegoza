@@ -6,6 +6,8 @@ interface FilterBarProps {
   setCategoryFilter: (v: string) => void;
   spaceFilter: boolean;
   setSpaceFilter: (v: boolean) => void;
+  verifiedFilter: boolean;
+  setVerifiedFilter: (v: boolean) => void;
   viewMode: 'reels' | 'grid' | 'map';
   setViewMode: (v: 'reels' | 'grid' | 'map') => void;
   cityFilter: string;
@@ -24,6 +26,8 @@ export default function FilterBar({
   setCategoryFilter,
   spaceFilter,
   setSpaceFilter,
+  verifiedFilter,
+  setVerifiedFilter,
   viewMode,
   setViewMode,
   cityFilter,
@@ -106,6 +110,16 @@ export default function FilterBar({
             }`}
           >
             🏠 Com Espaço
+          </button>
+          <button
+            onClick={() => { setVerifiedFilter(!verifiedFilter); }}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
+              verifiedFilter
+                ? 'bg-linear-to-r from-emerald-500 to-emerald-700 border-emerald-500 text-white shadow-md shadow-emerald-500/10'
+                : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            🛡️ Verificados
           </button>
         </div>
       </div>
