@@ -24,7 +24,8 @@ import {
   Sparkles,
   Lock,
   AlertTriangle,
-  Clock
+  Clock,
+  FileImage
 } from 'lucide-react';
 import { formatWhatsAppLink } from '@/lib/utils';
 import { getCDNUrl } from '@/lib/mediaHelper';
@@ -707,15 +708,15 @@ export default function ProfileDetailsClient({
           </div>
         )}
 
-        {/* Galeria de Fotos e Vídeos do Anúncio */}
+        {/* Galeria Geral do Perfil */}
         <div className="space-y-4 pt-6 border-t border-white/5">
           <h3 className="text-sm font-semibold text-white uppercase tracking-widest flex items-center gap-2">
-            <Star className="w-4 h-4 text-wine-light" />
-            Galeria do Anúncio
+            <FileImage className="w-4 h-4 text-gold-primary" />
+            Galeria do Perfil
           </h3>
           
           {mediaToRender.length === 0 ? (
-            <p className="text-gray-500 text-xs font-light">Nenhuma foto ou vídeo cadastrado neste anúncio.</p>
+            <p className="text-gray-500 text-xs font-light">Nenhuma foto ou vídeo cadastrado na galeria.</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {mediaToRender.map((media: any, index: number) => (
