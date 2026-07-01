@@ -849,8 +849,126 @@ export default function ProfileEditor() {
             </div>
           </div>
         </div>
+
+        {/* Bloco 1: Galeria Geral do Perfil */}
+        <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-dark-border/20 pb-4">
+            <div className="flex items-center gap-2 text-white font-medium text-sm">
+              <FileImage className="w-4 h-4 text-gold-primary" />
+              <span>Galeria Geral do Perfil</span>
+            </div>
+
+            <label className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white hover:bg-white/10 cursor-pointer transition-all flex items-center gap-1.5">
+              <Upload className="w-3.5 h-3.5 text-gold-primary" />
+              {uploadingProfileMedia ? 'Enviando...' : 'Enviar Foto / Vídeo'}
+              <input
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleUploadProfileMedia}
+                disabled={uploadingProfileMedia}
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          <p className="text-[11px] text-gray-500 font-light leading-relaxed">
+            Estas fotos e vídeos formam a sua galeria pública e são exibidas diretamente no seu perfil para os clientes.
+          </p>
+
+          {profilePhotosList.filter(m => m.media_type === 'photo' || !m.media_type).length === 0 ? (
+            <div className="text-center py-8 text-xs text-gray-500 font-light border border-dashed border-dark-border/40 rounded-xl">
+              Nenhuma foto na sua galeria. Clique em "Enviar Foto / Vídeo" acima para começar.
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+              {profilePhotosList.filter(m => m.media_type === 'photo' || !m.media_type).map(photo => (
+                <div 
+                  key={photo.id}
+                  className="relative aspect-[3/4] rounded-xl overflow-hidden border border-dark-border group"
+                >
+                  <img 
+                    src={getCDNUrl(photo.photo_url)} 
+                    alt="Galeria" 
+                    className="w-full h-full object-cover" 
+                  />
+                  
+                  {photo.is_verified && (
+                    <div className="absolute top-2 left-2 bg-emerald-500/20 border border-emerald-500/30 p-1 rounded-full">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (confirm('Tem certeza que deseja apagar permanentemente esta foto?')) {
+                        try {
+                          const { error } = await supabase.from('profile_photos').delete().eq('id', photo.id);
+                          if (error) throw error;
+
+                          const urlParts = photo.photo_url.split('/profile_media/');
+                          if (urlParts.length > 1) {
+                            const storagePath = decodeURIComponent(urlParts[1]);
+                            await supabase.storage.from('profile_media').remove([storagePath]);
+                          }
+
+                          setAdPhotos(prev => prev.filter(p => p !== photo.photo_url));
+                          setProfilePhotosList(prev => prev.filter(p => p.id !== photo.id));
+                        } catch (err) {
+                          alert('Erro ao excluir foto.');
+                        }
+                      }
+                    }}
+                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 p-1.5 rounded-lg text-white transition-colors shadow z-10 opacity-0 group-hover:opacity-100"
+                    title="Apagar permanentemente"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Vídeos da galeria */}
+          {profilePhotosList.filter(m => m.media_type === 'video').length > 0 && (
+            <div className="pt-4 border-t border-dark-border/20">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Vídeos ({profilePhotosList.filter(m => m.media_type === 'video').length})</span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {profilePhotosList.filter(m => m.media_type === 'video').map(video => (
+                  <div key={video.id} className="relative aspect-video rounded-xl overflow-hidden border border-dark-border group">
+                    <video src={getCDNUrl(video.photo_url)} className="w-full h-full object-cover" controls playsInline />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (confirm('Tem certeza que deseja apagar permanentemente este vídeo?')) {
+                          try {
+                            const { error } = await supabase.from('profile_photos').delete().eq('id', video.id);
+                            if (error) throw error;
+                            const urlParts = video.photo_url.split('/profile_media/');
+                            if (urlParts.length > 1) {
+                              const storagePath = decodeURIComponent(urlParts[1]);
+                              await supabase.storage.from('profile_media').remove([storagePath]);
+                            }
+                            setAdVideos(prev => prev.filter(v => v !== video.photo_url));
+                            setProfilePhotosList(prev => prev.filter(p => p.id !== video.id));
+                          } catch (err) {
+                            alert('Erro ao excluir vídeo.');
+                          }
+                        }
+                      }}
+                      className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 p-1.5 rounded-lg text-white transition-colors shadow z-10 opacity-0 group-hover:opacity-100"
+                      title="Apagar permanentemente"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         
-        {/* Bloco 1: Categoria da Vitrine */}
+        {/* Bloco 2: Categoria da Vitrine */}
         <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-5">
           <div className="flex items-center gap-2 text-white font-medium text-sm">
             <ShieldAlert className="w-4 h-4 text-gold-primary" />
@@ -1270,123 +1388,7 @@ export default function ProfileEditor() {
           </div>
         </div>
 
-        {/* Bloco 5: Galeria Geral do Perfil (fotos independentes do anúncio) */}
-        <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-dark-border/20 pb-4">
-            <div className="flex items-center gap-2 text-white font-medium text-sm">
-              <FileImage className="w-4 h-4 text-gold-primary" />
-              <span>Galeria Geral do Perfil</span>
-            </div>
 
-            <label className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white hover:bg-white/10 cursor-pointer transition-all flex items-center gap-1.5">
-              <Upload className="w-3.5 h-3.5 text-gold-primary" />
-              {uploadingProfileMedia ? 'Enviando...' : 'Enviar Foto / Vídeo'}
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleUploadProfileMedia}
-                disabled={uploadingProfileMedia}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          <p className="text-[11px] text-gray-500 font-light leading-relaxed">
-            Estas fotos ficam salvas no seu perfil. Você pode usá-las na aba <strong className="text-gray-300">Configuração de Anúncio</strong> para selecionar quais fotos aparecerão no seu anúncio ativo.
-          </p>
-
-          {profilePhotosList.filter(m => m.media_type === 'photo' || !m.media_type).length === 0 ? (
-            <div className="text-center py-8 text-xs text-gray-500 font-light border border-dashed border-dark-border/40 rounded-xl">
-              Nenhuma foto na sua galeria. Clique em "Enviar Foto / Vídeo" acima para começar.
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {profilePhotosList.filter(m => m.media_type === 'photo' || !m.media_type).map(photo => (
-                <div 
-                  key={photo.id}
-                  className="relative aspect-[3/4] rounded-xl overflow-hidden border border-dark-border group"
-                >
-                  <img 
-                    src={getCDNUrl(photo.photo_url)} 
-                    alt="Galeria" 
-                    className="w-full h-full object-cover" 
-                  />
-                  
-                  {photo.is_verified && (
-                    <div className="absolute top-2 left-2 bg-emerald-500/20 border border-emerald-500/30 p-1 rounded-full">
-                      <Check className="w-3 h-3 text-emerald-400" />
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (confirm('Tem certeza que deseja apagar permanentemente esta foto?')) {
-                        try {
-                          const { error } = await supabase.from('profile_photos').delete().eq('id', photo.id);
-                          if (error) throw error;
-
-                          const urlParts = photo.photo_url.split('/profile_media/');
-                          if (urlParts.length > 1) {
-                            const storagePath = decodeURIComponent(urlParts[1]);
-                            await supabase.storage.from('profile_media').remove([storagePath]);
-                          }
-
-                          setAdPhotos(prev => prev.filter(p => p !== photo.photo_url));
-                          setProfilePhotosList(prev => prev.filter(p => p.id !== photo.id));
-                        } catch (err) {
-                          alert('Erro ao excluir foto.');
-                        }
-                      }
-                    }}
-                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 p-1.5 rounded-lg text-white transition-colors shadow z-10 opacity-0 group-hover:opacity-100"
-                    title="Apagar permanentemente"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Vídeos da galeria */}
-          {profilePhotosList.filter(m => m.media_type === 'video').length > 0 && (
-            <div className="pt-4 border-t border-dark-border/20">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Vídeos ({profilePhotosList.filter(m => m.media_type === 'video').length})</span>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {profilePhotosList.filter(m => m.media_type === 'video').map(video => (
-                  <div key={video.id} className="relative aspect-video rounded-xl overflow-hidden border border-dark-border group">
-                    <video src={getCDNUrl(video.photo_url)} className="w-full h-full object-cover" controls playsInline />
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (confirm('Tem certeza que deseja apagar permanentemente este vídeo?')) {
-                          try {
-                            const { error } = await supabase.from('profile_photos').delete().eq('id', video.id);
-                            if (error) throw error;
-                            const urlParts = video.photo_url.split('/profile_media/');
-                            if (urlParts.length > 1) {
-                              const storagePath = decodeURIComponent(urlParts[1]);
-                              await supabase.storage.from('profile_media').remove([storagePath]);
-                            }
-                            setAdVideos(prev => prev.filter(v => v !== video.photo_url));
-                            setProfilePhotosList(prev => prev.filter(p => p.id !== video.id));
-                          } catch (err) {
-                            alert('Erro ao excluir vídeo.');
-                          }
-                        }
-                      }}
-                      className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 p-1.5 rounded-lg text-white transition-colors shadow z-10 opacity-0 group-hover:opacity-100"
-                      title="Apagar permanentemente"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Bloco 5: Grade Horária de Atendimento */}
         <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-4">
@@ -1421,38 +1423,41 @@ export default function ProfileEditor() {
                     </label>
                   </div>
 
-                  {info.active ? (
+                  <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-gray-500">Das</span>
                       <input
                         type="time"
                         title={`Horário de início — ${day}`}
                         value={info.start || '09:00'}
+                        disabled={!info.active}
                         onChange={(e) => {
                           setBusinessHours({
                             ...businessHours,
                             [day]: { ...info, start: e.target.value }
                           });
                         }}
-                        className="bg-dark-bg/60 border border-dark-border text-xs text-white px-2 py-1.5 rounded-lg focus:border-gold-primary/50 focus:outline-none transition-colors"
+                        className={`bg-dark-bg/60 border border-dark-border text-xs text-white px-2 py-1.5 rounded-lg focus:border-gold-primary/50 focus:outline-none transition-colors ${!info.active ? 'opacity-30 cursor-not-allowed' : ''}`}
                       />
                       <span className="text-[10px] text-gray-500">até às</span>
                       <input
                         type="time"
                         title={`Horário de término — ${day}`}
                         value={info.end || '18:00'}
+                        disabled={!info.active}
                         onChange={(e) => {
                           setBusinessHours({
                             ...businessHours,
                             [day]: { ...info, end: e.target.value }
                           });
                         }}
-                        className="bg-dark-bg/60 border border-dark-border text-xs text-white px-2 py-1.5 rounded-lg focus:border-gold-primary/50 focus:outline-none transition-colors"
+                        className={`bg-dark-bg/60 border border-dark-border text-xs text-white px-2 py-1.5 rounded-lg focus:border-gold-primary/50 focus:outline-none transition-colors ${!info.active ? 'opacity-30 cursor-not-allowed' : ''}`}
                       />
                     </div>
-                  ) : (
-                    <span className="text-xs text-gray-500 italic">Folga / Fechado</span>
-                  )}
+                    {!info.active && (
+                      <span className="text-[9px] text-red-400 bg-red-500/10 px-2 py-0.5 rounded font-medium border border-red-500/20">Folga</span>
+                    )}
+                  </div>
                 </div>
               );
             })}

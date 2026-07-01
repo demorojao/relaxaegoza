@@ -370,22 +370,11 @@ export default function ProfileDetailsClient({
   const adDescription = ad?.description || profile.bio || '';
   const adPrice = ad ? ad.price : (profile.price_per_hour || 0);
 
-  const adMediaList = ad 
-    ? [
-        ...((ad.photos || []).map((url: string) => {
-          const dbPhoto = photos.find(p => p.photo_url === url);
-          return { url, type: 'photo', is_verified: dbPhoto?.is_verified || false };
-        })),
-        ...((ad.videos || []).map((url: string) => {
-          const dbVideo = photos.find(p => p.photo_url === url);
-          return { url, type: 'video', is_verified: dbVideo?.is_verified || false };
-        }))
-      ]
-    : [];
-
-  const mediaToRender = adMediaList.length > 0 
-    ? adMediaList 
-    : photos.map(p => ({ url: p.photo_url, type: 'photo', is_verified: p.is_verified }));
+  const mediaToRender = photos.map(p => ({
+    url: p.photo_url,
+    type: p.media_type || 'photo',
+    is_verified: p.is_verified
+  }));
 
   const isOwner = currentUser?.id === profile.id;
 
