@@ -8,30 +8,83 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Não autorizado. Faça login novamente.' }, { status: 401 });
-    }
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = getSupabaseServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Usuário não autenticado.' }, { status: 401 });
-    }
-
     const body = await req.json();
-    const { tier, isBoost } = body;
+    const { tier, isBoost, isGift, targetProfileId } = body;
 
-    // Buscar a role, data de criação e assinatura do usuário no banco
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, created_at, subscription_tier')
-      .eq('id', user.id)
-      .single();
+    const supabase = getSupabaseServerClient();
+    let user: any = null;
+    let profile: any = null;
 
-    if (!profile) {
-      return NextResponse.json({ error: 'Perfil não encontrado.' }, { status: 404 });
+    const authHeader = req.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user: authUser } } = await supabase.auth.getUser(token);
+      user = authUser;
+      if (user) {
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('role, created_at, subscription_tier')
+          .eq('id', user.id)
+          .single();
+        profile = userProfile;
+      }
+    }
+
+    if (!isGift) {
+      if (!user || !profile) {
+        return NextResponse.json({ error: 'Não autorizado. Faça login novamente.' }, { status: 401 });
+      }
+    }
+
+    if (isGift && isBoost) {
+      if (!targetProfileId) {
+        return NextResponse.json({ error: 'Perfil de destino nao informado.' }, { status: 400 });
+      }
+
+      const { data: targetProfile, error: targetError } = await supabase
+        .from('profiles')
+        .select('name, role')
+        .eq('id', targetProfileId)
+        .single();
+
+      if (targetError || !targetProfile || targetProfile.role !== 'provider') {
+        return NextResponse.json({ error: 'Profissional de destino nao encontrada.' }, { status: 404 });
+      }
+
+      const amount = 5000; // R$ 50,00
+      const planName = `Super Destaque de Presente para ${targetProfile.name}`;
+      const planDescription = `Coloque ${targetProfile.name} no topo da vitrine por 6 horas como um presente especial.`;
+
+      const origin = req.headers.get('origin') || 'http://localhost:3000';
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'brl',
+              product_data: {
+                name: planName,
+                description: planDescription,
+              },
+              unit_amount: amount,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        metadata: {
+          userId: user?.id || 'guest_buyer',
+          targetProfileId: targetProfileId,
+          type: 'boost',
+          durationHours: '6',
+          isGift: 'true'
+        },
+        success_url: `${origin}/perfil/${targetProfileId}?checkout_status=success_gift_boost`,
+        cancel_url: `${origin}/perfil/${targetProfileId}?checkout_status=cancelled_gift_boost`,
+      });
+
+      return NextResponse.json({ url: session.url });
     }
 
     if (isBoost) {

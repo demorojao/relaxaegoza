@@ -19,7 +19,8 @@ import {
   Menu,
   X,
   Zap,
-  Lock
+  Lock,
+  Bell
 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -31,6 +32,55 @@ export default function DashboardLayout({
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    let channel: any;
+
+    async function fetchUnreadCount() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { count, error } = await supabase
+          .from('profile_notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('profile_id', user.id)
+          .eq('is_read', false);
+        if (!error && count !== null) {
+          setUnreadCount(count);
+        }
+      }
+    }
+
+    async function setupRealtime() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      channel = supabase
+        .channel(`realtime_notifications_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'profile_notifications',
+            filter: `profile_id=eq.${user.id}`
+          },
+          () => {
+            fetchUnreadCount();
+          }
+        )
+        .subscribe();
+    }
+
+    fetchUnreadCount();
+    setupRealtime();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchRole() {
@@ -55,6 +105,11 @@ export default function DashboardLayout({
       name: 'Métricas & Painel',
       icon: LayoutDashboard,
       path: '/dashboard'
+    },
+    {
+      name: 'Notificações',
+      icon: Bell,
+      path: '/dashboard/notificacoes'
     },
     {
       name: 'Estruturar Perfil',
@@ -155,7 +210,12 @@ export default function DashboardLayout({
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}>
                       <Icon className={`w-4 h-4 ${isActive ? 'text-gold-primary' : ''}`} />
-                      {item.name}
+                      <span className="flex-1 text-left">{item.name}</span>
+                      {item.path === '/dashboard/notificacoes' && unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 animate-pulse">
+                          {unreadCount}
+                        </span>
+                      )}
                     </span>
                   </Link>
                 );
@@ -205,7 +265,12 @@ export default function DashboardLayout({
                         : 'text-gray-400 hover:text-white hover:bg-dark-bg/60'
                     }`}>
                       <Icon className={`w-4 h-4 ${isActive ? 'text-gold-primary' : ''}`} />
-                      {item.name}
+                      <span className="flex-1 text-left">{item.name}</span>
+                      {item.path === '/dashboard/notificacoes' && unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
+                          {unreadCount}
+                        </span>
+                      )}
                     </span>
                   </Link>
                 );

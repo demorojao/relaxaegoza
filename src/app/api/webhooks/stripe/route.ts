@@ -56,18 +56,59 @@ export async function POST(req: NextRequest) {
 
         if (type === 'boost') {
           const hours = Number(durationHours || '2');
-          const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
-          console.log(`Webhook: Processando boost temporário de ${hours}h para o usuário ${userId}`);
+          const targetId = metadata.targetProfileId || userId;
+          
+          // Buscar expiracao de boost atual para obter comportamento aditivo
+          const { data: currentProfile } = await supabase
+            .from('profiles')
+            .select('boost_expires_at')
+            .eq('id', targetId)
+            .single();
+
+          let baseTime = Date.now();
+          if (currentProfile?.boost_expires_at) {
+            const currentExpire = new Date(currentProfile.boost_expires_at).getTime();
+            if (currentExpire > baseTime) {
+              baseTime = currentExpire;
+            }
+          }
+
+          const expiresAt = new Date(baseTime + hours * 60 * 60 * 1000).toISOString();
+          console.log(`Webhook: Processando boost de ${hours}h para o usuario ${targetId}. Expira em: ${expiresAt}`);
 
           const { error } = await supabase
             .from('profiles')
             .update({ boost_expires_at: expiresAt })
-            .eq('id', userId);
+            .eq('id', targetId);
 
           if (error) {
             throw new Error(`Erro ao aplicar boost no Supabase: ${JSON.stringify(error)}`);
           }
-          console.log(`Boost do usuário ${userId} ativado até ${expiresAt}.`);
+          console.log(`Boost do usuario ${targetId} ativado ate ${expiresAt}.`);
+
+          // Se for um boost de presente, envia notificacao no sistema
+          if (metadata.isGift === 'true') {
+            let buyerName = 'Um cliente secreto';
+            if (userId && userId !== 'guest_buyer') {
+              const { data: buyerProfile } = await supabase
+                .from('profiles')
+                .select('name')
+                .eq('id', userId)
+                .single();
+              if (buyerProfile?.name) {
+                buyerName = buyerProfile.name;
+              }
+            }
+
+            await supabase
+              .from('profile_notifications')
+              .insert({
+                profile_id: targetId,
+                title: 'Voce recebeu um Boost de Presente! 🎁🚀',
+                content: `${buyerName} deu um Super Destaque de 6 horas para colocar o seu perfil no topo da vitrine!`,
+                type: 'gift_boost'
+              });
+          }
         } else if (tier) {
           console.log(`Webhook: Processando upgrade para o usuário ${userId} para o plano ${tier}`);
 

@@ -199,6 +199,59 @@ export default function ProfileDetailsClient({
   const [reviews, setReviews] = useState<any[]>(initialReviews);
   const [ad, setAd] = useState<any>(initialAd);
 
+  const [checkoutStatus, setCheckoutStatus] = useState<string | null>(null);
+  const [giftingCheckout, setGiftingCheckout] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const status = params.get('checkout_status');
+      if (status) {
+        setCheckoutStatus(status);
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    }
+  }, []);
+
+  const handleGiftBoost = async () => {
+    setGiftingCheckout(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          isBoost: true,
+          isGift: true,
+          targetProfileId: id
+        })
+      });
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.error) {
+        alert(data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao iniciar o checkout do presente.');
+    } finally {
+      setGiftingCheckout(false);
+    }
+  };
+
   // Auth States for leaving reviews
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -402,6 +455,23 @@ export default function ProfileDetailsClient({
 
   return (
     <div className="w-full space-y-6">
+      {checkoutStatus === 'success_gift_boost' && (
+        <div className="w-full bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-300 text-xs px-4 py-3.5 rounded-2xl flex items-center gap-3 mb-6 animate-fadeIn">
+          <span className="text-lg animate-bounce">🎁🚀</span>
+          <div className="space-y-0.5">
+            <span className="font-bold block">Presente Enviado com Sucesso!</span>
+            <span className="text-gray-400 font-light">Seu presente foi creditado. O perfil de **{profile.name}** foi impulsionado para o topo da vitrine por 6 horas! Obrigado pelo seu apoio.</span>
+          </div>
+        </div>
+      )}
+
+      {checkoutStatus === 'cancelled_gift_boost' && (
+        <div className="w-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs px-4 py-3 rounded-2xl flex items-center gap-2 mb-6">
+          <span className="text-base">❌</span>
+          <span>O envio do presente foi cancelado. Nenhuma cobrança foi realizada.</span>
+        </div>
+      )}
+
       {isOwner && (!ad || !ad.is_active) && (
         <div className="w-full bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs px-4 py-3 rounded-2xl flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
@@ -584,6 +654,39 @@ export default function ProfileDetailsClient({
               </a>
             );
           })()}
+        </div>
+
+        {/* Presentear com Boost de Destaque */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-gold-primary/10 via-black/40 to-wine-primary/10 border border-gold-primary/20 rounded-2xl p-5 md:p-6 space-y-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gold-primary/5 blur-2xl rounded-full pointer-events-none" />
+          
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-gold-primary/10 border border-gold-primary/20 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5 text-gold-primary animate-pulse" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                Presentear com Destaque (Boost) 🎁
+              </h4>
+              <p className="text-[11px] text-gray-400 font-light leading-relaxed">
+                Gostou do atendimento de {profile.name}? Dê um **Super Destaque** de presente para colocar o perfil dela no topo da vitrine de buscas por **6 horas**.
+              </p>
+            </div>
+          </div>
+          
+          <div className="pt-2 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+            <div className="flex flex-col">
+              <span className="text-[9px] text-gray-500 uppercase tracking-widest font-semibold">Valor do Presente</span>
+              <span className="text-lg font-bold text-gold-light">R$ 50,00</span>
+            </div>
+            <button
+              onClick={handleGiftBoost}
+              disabled={giftingCheckout}
+              className="w-full sm:w-auto px-6 py-3 bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.15)] hover:shadow-[0_0_25px_rgba(212,175,55,0.3)] disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              {giftingCheckout ? 'Carregando...' : 'Dar Boost de Presente 🚀'}
+            </button>
+          </div>
         </div>
 
         <button
