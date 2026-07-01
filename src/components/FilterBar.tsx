@@ -45,7 +45,7 @@ export default function FilterBar({
             onClick={() => setCurrentTab('ads')}
             className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'ads'
-                ? 'bg-gradient-to-r from-gold-primary to-gold-dark text-dark-bg shadow-md'
+                ? 'bg-linear-to-r from-gold-primary to-gold-dark text-dark-bg shadow-md'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -55,7 +55,7 @@ export default function FilterBar({
             onClick={() => setCurrentTab('models')}
             className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'models'
-                ? 'bg-gradient-to-r from-gold-primary to-gold-dark text-dark-bg shadow-md'
+                ? 'bg-linear-to-r from-gold-primary to-gold-dark text-dark-bg shadow-md'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -71,7 +71,7 @@ export default function FilterBar({
             onClick={() => { setCategoryFilter(''); setSpaceFilter(false); }}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
               categoryFilter === '' && !spaceFilter
-                ? 'bg-gradient-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md shadow-gold-primary/10'
+                ? 'bg-linear-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md shadow-gold-primary/10'
                 : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
           >
@@ -81,7 +81,7 @@ export default function FilterBar({
             onClick={() => { setCategoryFilter('escort'); setSpaceFilter(false); }}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
               categoryFilter === 'escort' && !spaceFilter
-                ? 'bg-gradient-to-r from-wine-primary to-wine-dark border-wine-primary text-white shadow-md shadow-wine-primary/10'
+                ? 'bg-linear-to-r from-wine-primary to-wine-dark border-wine-primary text-white shadow-md shadow-wine-primary/10'
                 : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
           >
@@ -91,7 +91,7 @@ export default function FilterBar({
             onClick={() => { setCategoryFilter('massage'); setSpaceFilter(false); }}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
               categoryFilter === 'massage' && !spaceFilter
-                ? 'bg-gradient-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md shadow-gold-primary/10'
+                ? 'bg-linear-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md shadow-gold-primary/10'
                 : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
           >
@@ -101,7 +101,7 @@ export default function FilterBar({
             onClick={() => { setSpaceFilter(true); }}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
               spaceFilter
-                ? 'bg-gradient-to-r from-emerald-600 to-emerald-800 border-emerald-600 text-white shadow-md shadow-emerald-600/10'
+                ? 'bg-linear-to-r from-emerald-600 to-emerald-800 border-emerald-600 text-white shadow-md shadow-emerald-600/10'
                 : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
           >
@@ -116,9 +116,12 @@ export default function FilterBar({
         <div className="flex flex-col sm:flex-row gap-2 flex-1 min-w-0">
           {/* Seletor de Cidade */}
           <div className="relative flex-1 min-w-0">
+            <label htmlFor="city-filter-select" className="sr-only">Filtrar por Cidade</label>
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
             <select 
+              id="city-filter-select"
               value={cityFilter}
+              title="Filtrar por Cidade"
               onChange={(e) => {
                 setCityFilter(e.target.value);
                 setNeighborhoodFilter('');
@@ -140,9 +143,12 @@ export default function FilterBar({
           {/* Seletor de Bairro */}
           {cityFilter && availableLocations[cityFilter] && availableLocations[cityFilter].length > 0 && (
             <div className="relative flex-1 min-w-0 animate-fadeIn">
+              <label htmlFor="neighborhood-filter-select" className="sr-only">Filtrar por Bairro</label>
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
               <select 
+                id="neighborhood-filter-select"
                 value={neighborhoodFilter}
+                title="Filtrar por Bairro"
                 onChange={(e) => setNeighborhoodFilter(e.target.value)}
                 className="w-full bg-black/40 border border-white/5 focus:border-gold-primary/30 rounded-xl py-2.5 pl-9 pr-10 text-xs sm:text-sm text-white focus:outline-none transition-colors appearance-none cursor-pointer"
               >

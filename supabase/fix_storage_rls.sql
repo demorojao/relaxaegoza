@@ -10,12 +10,12 @@ VALUES (
   'profile_media',
   'profile_media',
   true,
-  15728640,  -- 15MB
+  26214400,  -- 25MB (para comportar vídeos comprimidos client-side)
   ARRAY['image/jpeg','image/jpg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime']
 )
 ON CONFLICT (id) DO UPDATE SET
   public = true,
-  file_size_limit = 15728640,
+  file_size_limit = 26214400,
   allowed_mime_types = ARRAY['image/jpeg','image/jpg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime'];
 
 

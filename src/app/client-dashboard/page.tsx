@@ -167,7 +167,7 @@ export default function ClientDashboard() {
               <span className="text-[10px] uppercase text-gray-500 font-semibold block mb-1">Nível de Confiança</span>
               <span className="text-sm font-bold text-gold-primary">{trustLevel}</span>
             </div>
-            <div className="w-[1px] h-8 bg-white/5" />
+            <div className="w-px h-8 bg-white/5" />
             <div className="text-center">
               <span className="text-[10px] uppercase text-gray-500 font-semibold block mb-1">Taxa de Segurança</span>
               <span className="text-sm font-bold text-emerald-400">{trustScore}</span>
@@ -206,17 +206,17 @@ export default function ClientDashboard() {
               </div>
 
               {profile?.verification_status === 'verified' ? (
-                <div className="bg-emerald-500/[0.02] border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3 animate-fadeIn">
+                <div className="bg-emerald-500/2 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3 animate-fadeIn">
                   <ShieldCheck className="w-8 h-8 text-emerald-400 shrink-0" />
                   <div>
                     <h4 className="text-xs font-semibold text-white">Selo Ouro de Segurança Ativo!</h4>
                     <p className="text-[10px] text-gray-500 font-light leading-relaxed">
-                      Seu selo é anexado às suas interações e avaliações. As profissionais verão que você é um cliente verificado e idôneo.
+                      Seu selo é anexado às suas interações e avaliações. As profissionais veram que você é um cliente verificado e idôneo.
                     </p>
                   </div>
                 </div>
               ) : profile?.verification_status === 'pending' ? (
-                <div className="bg-gold-primary/[0.02] border border-gold-primary/20 rounded-xl p-4 flex items-center gap-3 animate-fadeIn">
+                <div className="bg-gold-primary/2 border border-gold-primary/20 rounded-xl p-4 flex items-center gap-3 animate-fadeIn">
                   <div className="w-8 h-8 rounded-full border border-gold-primary/30 border-t-gold-primary animate-spin shrink-0" />
                   <div>
                     <h4 className="text-xs font-semibold text-white">Selo de Segurança em Análise</h4>
@@ -244,6 +244,8 @@ export default function ClientDashboard() {
                         <input 
                           type="file" 
                           accept="image/*"
+                          title="Foto de selfie para verificação"
+                          placeholder="Envie sua foto de selfie"
                           onChange={(e) => {
                             const file = e.target.files?.[0] || null;
                             setSelfieFile(file);
@@ -301,15 +303,15 @@ export default function ClientDashboard() {
               <h4 className="text-xs font-semibold text-gold-primary uppercase tracking-wider">Regras de Convivência</h4>
               <ul className="space-y-3 text-xs text-gray-400 font-light leading-relaxed">
                 <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-gold-primary mt-0.5 flex-shrink-0" />
+                  <Check className="w-4 h-4 text-gold-primary mt-0.5 shrink-0" />
                   <span>Seja sempre educado e respeitoso com as profissionais.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-gold-primary mt-0.5 flex-shrink-0" />
+                  <Check className="w-4 h-4 text-gold-primary mt-0.5 shrink-0" />
                   <span>Respeite as regras estruturadas de cada perfil.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-gold-primary mt-0.5 flex-shrink-0" />
+                  <Check className="w-4 h-4 text-gold-primary mt-0.5 shrink-0" />
                   <span>Avaliações inverídicas acarretarão perda do selo de confiança.</span>
                 </li>
               </ul>

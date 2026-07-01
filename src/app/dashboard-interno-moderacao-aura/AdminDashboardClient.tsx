@@ -665,7 +665,7 @@ export default function AdminDashboardClient({
                               className="relative w-24 h-16 rounded-lg overflow-hidden border border-white/10 cursor-zoom-in shrink-0 group"
                               onClick={() => setSelectedImage(photo)}
                             >
-                              <img src={photo} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                              <img src={photo} alt="Foto adicional da sala" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                               <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                 <Eye className="w-4 h-4 text-white" />
                               </div>
@@ -955,8 +955,10 @@ export default function AdminDashboardClient({
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       {/* Subscription Tier */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-400 font-bold uppercase block">Plano de Assinatura (Upgrade/Downgrade)</label>
+                        <label htmlFor="subscription_tier" className="text-[10px] text-gray-400 font-bold uppercase block">Plano de Assinatura (Upgrade/Downgrade)</label>
                         <select
+                          id="subscription_tier"
+                          title="Plano de Assinatura"
                           value={editFields.subscription_tier}
                           onChange={(e) => setEditFields({ ...editFields, subscription_tier: e.target.value })}
                           className="w-full bg-dark-bg/85 border border-white/10 text-xs text-white rounded-lg px-3 py-2.5 focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -969,8 +971,10 @@ export default function AdminDashboardClient({
 
                       {/* Verification Status */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-400 font-bold uppercase block">Status de Verificação de Identidade</label>
+                        <label htmlFor="verification_status" className="text-[10px] text-gray-400 font-bold uppercase block">Status de Verificação de Identidade</label>
                         <select
+                          id="verification_status"
+                          title="Status de Verificação de Identidade"
                           value={editFields.verification_status}
                           onChange={(e) => setEditFields({ ...editFields, verification_status: e.target.value })}
                           className="w-full bg-dark-bg/85 border border-white/10 text-xs text-white rounded-lg px-3 py-2.5 focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -985,8 +989,10 @@ export default function AdminDashboardClient({
                       {/* Space Verification */}
                       {!isClient && (
                         <div className="space-y-1.5">
-                          <label className="text-[10px] text-gray-400 font-bold uppercase block">Selo de Espaço Físico / Ambiente</label>
+                          <label htmlFor="is_space_verified" className="text-[10px] text-gray-400 font-bold uppercase block">Selo de Espaço Físico / Ambiente</label>
                           <select
+                            id="is_space_verified"
+                            title="Selo de Espaço Físico"
                             value={editFields.is_space_verified ? "true" : "false"}
                             onChange={(e) => setEditFields({ ...editFields, is_space_verified: e.target.value === "true" })}
                             className="w-full bg-dark-bg/85 border border-white/10 text-xs text-white rounded-lg px-3 py-2.5 focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -1000,8 +1006,10 @@ export default function AdminDashboardClient({
                       {/* Category */}
                       {!isClient && (
                         <div className="space-y-1.5">
-                          <label className="text-[10px] text-gray-400 font-bold uppercase block">Categoria de Atendimento</label>
+                          <label htmlFor="category" className="text-[10px] text-gray-400 font-bold uppercase block">Categoria de Atendimento</label>
                           <select
+                            id="category"
+                            title="Categoria de Atendimento"
                             value={editFields.category}
                             onChange={(e) => setEditFields({ ...editFields, category: e.target.value })}
                             className="w-full bg-dark-bg/85 border border-white/10 text-xs text-white rounded-lg px-3 py-2.5 focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -1016,8 +1024,10 @@ export default function AdminDashboardClient({
                       {/* Gender */}
                       {!isClient && (
                         <div className="space-y-1.5">
-                          <label className="text-[10px] text-gray-400 font-bold uppercase block">Gênero</label>
+                          <label htmlFor="gender" className="text-[10px] text-gray-400 font-bold uppercase block">Gênero</label>
                           <select
+                            id="gender"
+                            title="Gênero"
                             value={editFields.gender}
                             onChange={(e) => setEditFields({ ...editFields, gender: e.target.value })}
                             className="w-full bg-dark-bg/85 border border-white/10 text-xs text-white rounded-lg px-3 py-2.5 focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -1032,9 +1042,12 @@ export default function AdminDashboardClient({
                       {/* Price Per Hour */}
                       {!isClient && (
                         <div className="space-y-1.5">
-                          <label className="text-[10px] text-gray-400 font-bold uppercase block">Valor da Hora (R$)</label>
+                          <label htmlFor="price_per_hour" className="text-[10px] text-gray-400 font-bold uppercase block">Valor da Hora (R$)</label>
                           <input
+                            id="price_per_hour"
                             type="number"
+                            title="Valor da Hora"
+                            placeholder="Valor por hora em reais"
                             value={editFields.price_per_hour}
                             onChange={(e) => setEditFields({ ...editFields, price_per_hour: parseFloat(e.target.value) || 0 })}
                             className="w-full bg-dark-bg/85 border border-white/10 text-xs text-white rounded-lg px-3 py-2 focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -1044,9 +1057,11 @@ export default function AdminDashboardClient({
 
                       {/* Título de Verificação Personalizado */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-400 font-bold uppercase block">Título de Verificação Personalizado</label>
+                        <label htmlFor="verification_title" className="text-[10px] text-gray-400 font-bold uppercase block">Título de Verificação Personalizado</label>
                         <input
+                          id="verification_title"
                           type="text"
+                          title="Título de Verificação Personalizado"
                           value={editFields.verification_title || ''}
                           onChange={(e) => setEditFields({ ...editFields, verification_title: e.target.value })}
                           placeholder="Ex: Foto Real, Elite, VIP"
@@ -1150,9 +1165,11 @@ export default function AdminDashboardClient({
               className="object-contain"
             />
           </div>
-          <button 
+           <button 
             className="absolute top-6 right-6 p-2 rounded-xl bg-white/5 border border-white/10 text-white cursor-pointer hover:bg-white/10"
             onClick={() => setSelectedImage(null)}
+            title="Fechar imagem ampliada"
+            aria-label="Fechar"
           >
             <X className="w-5 h-5" />
           </button>

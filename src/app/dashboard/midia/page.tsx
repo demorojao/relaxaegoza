@@ -393,7 +393,7 @@ export default function MediaManager() {
 
             {/* Input de Arquivo Local */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium block">Selecionar Arquivo Local</label>
+              <label htmlFor="media-file-input" className="text-xs text-gray-400 font-medium block">Selecionar Arquivo Local</label>
               
               <div className="flex flex-col items-center justify-center border border-dashed border-dark-border/40 hover:border-gold-primary/40 bg-black/30 rounded-xl p-5 transition-colors cursor-pointer relative group min-h-[120px]">
                 <input 
@@ -402,6 +402,7 @@ export default function MediaManager() {
                   onChange={handleFileChange}
                   className="absolute inset-0 opacity-0 cursor-pointer z-10"
                   id="media-file-input"
+                  title="Selecionar arquivo de mídia"
                 />
                 
                 {filePreview ? (
@@ -439,7 +440,7 @@ export default function MediaManager() {
         {/* Upgrade Box Column */}
         <div className="space-y-4">
           {tier !== 'gold' && (
-            <div className="bg-gradient-to-br from-gold-primary/[0.04] to-transparent rounded-2xl border border-gold-primary/20 p-5 space-y-4">
+            <div className="bg-gradient-to-br from-gold-primary/4 to-transparent rounded-2xl border border-gold-primary/20 p-5 space-y-4">
               <div className="p-2 bg-gold-primary/10 text-gold-primary rounded-xl w-fit">
                 <Sparkles className="w-5 h-5 animate-pulse" />
               </div>

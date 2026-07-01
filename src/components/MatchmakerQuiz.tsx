@@ -56,6 +56,7 @@ export default function MatchmakerQuiz({ isOpen, onClose, onComplete }: Matchmak
           </div>
           <button 
             onClick={onClose}
+            title="Fechar"
             className="p-1 text-gray-500 hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -81,21 +82,21 @@ export default function MatchmakerQuiz({ isOpen, onClose, onComplete }: Matchmak
             <div className="space-y-3">
               <button 
                 onClick={() => handleAnswerSelect('vibe', 'massage')}
-                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/[0.02] bg-black/20 text-xs text-white transition-all cursor-pointer flex flex-col gap-1"
+                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/2 bg-black/20 text-xs text-white transition-all cursor-pointer flex flex-col gap-1"
               >
                 <span className="font-semibold text-gold-light text-sm">🧘 Zen & Terapêutico</span>
                 <span className="text-gray-500 font-light text-[10px]">Massagem tântrica, relaxante, tailandesa e alinhamento corporal.</span>
               </button>
               <button 
                 onClick={() => handleAnswerSelect('vibe', 'escort')}
-                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-wine-primary hover:bg-wine-primary/[0.02] bg-black/20 text-xs text-white transition-all cursor-pointer flex flex-col gap-1"
+                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-wine-primary hover:bg-wine-primary/2 bg-black/20 text-xs text-white transition-all cursor-pointer flex flex-col gap-1"
               >
                 <span className="font-semibold text-wine-light text-sm">🔥 Conexão Intensa</span>
                 <span className="text-gray-500 font-light text-[10px]">Acompanhantes de luxo premium para encontros e entretenimento adulto.</span>
               </button>
               <button 
                 onClick={() => handleAnswerSelect('vibe', 'both')}
-                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gradient-to-r hover:from-gold-primary/[0.02] hover:to-wine-primary/[0.02] bg-black/20 text-xs text-white transition-all cursor-pointer flex flex-col gap-1"
+                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-linear-to-r hover:from-gold-primary/2 hover:to-wine-primary/2 bg-black/20 text-xs text-white transition-all cursor-pointer flex flex-col gap-1"
               >
                 <span className="font-semibold text-white text-sm">✨ Experiência Completa</span>
                 <span className="text-gray-500 font-light text-[10px]">Profissionais que atendem com o melhor de ambos os serviços.</span>
@@ -111,21 +112,21 @@ export default function MatchmakerQuiz({ isOpen, onClose, onComplete }: Matchmak
             <div className="space-y-3">
               <button 
                 onClick={() => handleAnswerSelect('budget', '300')}
-                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/[0.02] bg-black/20 text-xs text-white transition-all cursor-pointer flex justify-between items-center"
+                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/2 bg-black/20 text-xs text-white transition-all cursor-pointer flex justify-between items-center"
               >
                 <span className="font-semibold text-sm">💰 Econômico / Razoável</span>
                 <span className="text-gold-light font-bold">Até R$ 300</span>
               </button>
               <button 
                 onClick={() => handleAnswerSelect('budget', '600')}
-                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/[0.02] bg-black/20 text-xs text-white transition-all cursor-pointer flex justify-between items-center"
+                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/2 bg-black/20 text-xs text-white transition-all cursor-pointer flex justify-between items-center"
               >
                 <span className="font-semibold text-sm">💎 Intermediário / Premium</span>
                 <span className="text-gold-light font-bold">Até R$ 600</span>
               </button>
               <button 
                 onClick={() => handleAnswerSelect('budget', '')}
-                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/[0.02] bg-black/20 text-xs text-white transition-all cursor-pointer flex justify-between items-center"
+                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/2 bg-black/20 text-xs text-white transition-all cursor-pointer flex justify-between items-center"
               >
                 <span className="font-semibold text-sm">👑 Exclusividade Sem Limites</span>
                 <span className="text-emerald-400 font-bold">Qualquer valor</span>
@@ -141,14 +142,14 @@ export default function MatchmakerQuiz({ isOpen, onClose, onComplete }: Matchmak
             <div className="space-y-3">
               <button 
                 onClick={() => handleAnswerSelect('space', 'local')}
-                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/[0.02] bg-black/20 text-xs text-white transition-all cursor-pointer flex flex-col gap-1"
+                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/2 bg-black/20 text-xs text-white transition-all cursor-pointer flex flex-col gap-1"
               >
                 <span className="font-semibold text-sm flex items-center gap-1.5"><MapPin className="w-4 h-4 text-gold-primary" /> Local Próprio / Residência</span>
                 <span className="text-gray-500 font-light text-[10px]">Prefiro ir ao ambiente climatizado e estruturado da profissional.</span>
               </button>
               <button 
                 onClick={() => handleAnswerSelect('space', 'any')}
-                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/[0.02] bg-black/20 text-xs text-white transition-all cursor-pointer flex flex-col gap-1"
+                className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-gold-primary hover:bg-gold-primary/2 bg-black/20 text-xs text-white transition-all cursor-pointer flex flex-col gap-1"
               >
                 <span className="font-semibold text-sm flex items-center gap-1.5"><HelpCircle className="w-4 h-4 text-gray-400" /> A Combinar / Delivery / Hotel</span>
                 <span className="text-gray-500 font-light text-[10px]">Aceito deslocamento, atendimento em hotel, motel ou delivery.</span>

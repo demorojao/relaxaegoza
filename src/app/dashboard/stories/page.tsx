@@ -18,6 +18,7 @@ export default function StoriesManager() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [compressing, setCompressing] = useState(false);
   
   // Text Overlay States
   const [textContent, setTextContent] = useState('');
@@ -113,6 +114,119 @@ export default function StoriesManager() {
     // No-op
   };
 
+  /**
+   * Comprime um vídeo client-side usando Canvas + MediaRecorder.
+   * Reduz a resolução para 720p vertical e usa bitrate econômico.
+   */
+  const compressVideo = async (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      const sourceUrl = URL.createObjectURL(file);
+      video.src = sourceUrl;
+
+      video.onloadedmetadata = () => {
+        // Target: 720x1280 vertical, mantendo aspect ratio
+        const scale = Math.min(1, 720 / Math.min(video.videoWidth, video.videoHeight));
+        const width = Math.round(video.videoWidth * scale);
+        const height = Math.round(video.videoHeight * scale);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(file); return; }
+
+        // Tentar bitrate econômico: ~1.5Mbps para vídeo curto
+        const targetBitsPerSecond = 1_500_000;
+        let stream: MediaStream;
+        try {
+          stream = canvas.captureStream(30);
+        } catch {
+          URL.revokeObjectURL(sourceUrl);
+          resolve(file);
+          return;
+        }
+
+        // Adicionar áudio se existir
+        try {
+          const audioCtx = new AudioContext();
+          const source = audioCtx.createMediaElementSource(video);
+          const dest = audioCtx.createMediaStreamDestination();
+          source.connect(dest);
+          source.connect(audioCtx.destination);
+          dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+        } catch {
+          // Sem áudio disponível ou não suportado — continua sem
+        }
+
+        let recorder: MediaRecorder;
+        const supportedMimeTypes = [
+          'video/webm;codecs=vp9',
+          'video/webm;codecs=vp8',
+          'video/webm',
+          'video/mp4',
+        ];
+        const mimeType = supportedMimeTypes.find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+
+        try {
+          recorder = new MediaRecorder(stream, {
+            mimeType,
+            videoBitsPerSecond: targetBitsPerSecond,
+          });
+        } catch {
+          URL.revokeObjectURL(sourceUrl);
+          resolve(file);
+          return;
+        }
+
+        const chunks: Blob[] = [];
+        recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+        recorder.onstop = () => {
+          URL.revokeObjectURL(sourceUrl);
+          const blob = new Blob(chunks, { type: mimeType });
+          const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+          const compressedFile = new File([blob], `story_compressed.${ext}`, { type: mimeType, lastModified: Date.now() });
+          resolve(compressedFile);
+        };
+
+        recorder.onerror = () => {
+          URL.revokeObjectURL(sourceUrl);
+          resolve(file);
+        };
+
+        // Desenhar cada frame no canvas enquanto o vídeo reproduz
+        const drawFrame = () => {
+          if (video.paused || video.ended) return;
+          ctx.drawImage(video, 0, 0, width, height);
+          requestAnimationFrame(drawFrame);
+        };
+
+        video.onplay = () => {
+          drawFrame();
+          recorder.start(100); // Chunks de 100ms
+        };
+
+        video.onended = () => {
+          recorder.stop();
+          stream.getTracks().forEach(t => t.stop());
+        };
+
+        video.play().catch(() => {
+          URL.revokeObjectURL(sourceUrl);
+          resolve(file);
+        });
+      };
+
+      video.onerror = () => {
+        URL.revokeObjectURL(sourceUrl);
+        resolve(file);
+      };
+    });
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -133,9 +247,10 @@ export default function StoriesManager() {
     const isImageFile = file.type.startsWith('image/');
     
     if (isVideoFile) {
-      const maxVideoSize = 25 * 1024 * 1024; // 25MB
+      // Aceitar até 50MB no client (será comprimido antes de enviar)
+      const maxVideoSize = 50 * 1024 * 1024;
       if (file.size > maxVideoSize) {
-        alert('O arquivo de vídeo é muito grande. O tamanho máximo permitido é de 25MB para evitar falhas de upload. Por favor, escolha um vídeo menor ou reduza a qualidade da gravação.');
+        alert('O arquivo de vídeo é muito grande. O tamanho máximo permitido é de 50MB. Por favor, escolha um vídeo menor ou reduza a qualidade da gravação.');
         setSelectedFile(null);
         setFilePreview(null);
         e.target.value = '';
@@ -155,19 +270,35 @@ export default function StoriesManager() {
     // Detectar e atualizar o tipo de mídia automaticamente
     if (isVideoFile) {
       setMediaType('video');
+      
+      // Validar duração ANTES de aceitar o arquivo (evita race condition)
       const videoElement = document.createElement('video');
       videoElement.preload = 'metadata';
       const tempUrl = URL.createObjectURL(file);
       videoElement.onloadedmetadata = () => {
         URL.revokeObjectURL(tempUrl);
         if (videoElement.duration > 16) {
-          alert('O vídeo de story deve ter no máximo 15 segundos.');
+          alert('O vídeo de story deve ter no máximo 15 segundos. Seu vídeo tem ' + Math.round(videoElement.duration) + ' segundos.');
           setSelectedFile(null);
           setFilePreview(null);
-          e.target.value = ''; // Permite selecionar o mesmo arquivo corrigido
+          e.target.value = '';
+          return;
         }
+        // Duração OK — agora sim aceitar o arquivo e gerar preview
+        setSelectedFile(file);
+        setFilePreview(URL.createObjectURL(file));
+      };
+      videoElement.onerror = () => {
+        URL.revokeObjectURL(tempUrl);
+        alert('Não foi possível ler o vídeo selecionado. Tente outro formato (MP4 é recomendado).');
+        setSelectedFile(null);
+        setFilePreview(null);
+        e.target.value = '';
       };
       videoElement.src = tempUrl;
+
+      // Retorna sem setar selectedFile — o callback acima faz isso após validar
+      return;
     } else if (isImageFile) {
       setMediaType('photo');
     }
@@ -180,8 +311,6 @@ export default function StoriesManager() {
         setFilePreview(event.target?.result as string);
       };
       reader.readAsDataURL(file);
-    } else if (isVideoFile) {
-      setFilePreview(URL.createObjectURL(file));
     }
   };
 
@@ -234,12 +363,33 @@ export default function StoriesManager() {
     setSubmitting(true);
 
     try {
-      // 1. Upload do Arquivo para o Supabase Storage Bucket `profile_media`
-      const fileExt = selectedFile.name.split('.').pop() || (mediaType === 'photo' ? 'jpg' : 'mp4');
-      const fileName = `${user.id}/story_${Date.now()}_media.${fileExt}`;
+      // 1. Preparar o arquivo para upload
+      let fileToUpload: File = selectedFile;
       
-      let fileToUpload = selectedFile;
-      if (mediaType === 'photo') {
+      if (mediaType === 'video') {
+        // Comprimir o vídeo client-side para caber no limite do bucket (15MB)
+        setCompressing(true);
+        try {
+          const compressed = await compressVideo(selectedFile);
+          // Só usar o comprimido se realmente ficou menor
+          if (compressed.size < selectedFile.size) {
+            fileToUpload = compressed;
+            console.log(`Vídeo comprimido: ${(selectedFile.size / 1024 / 1024).toFixed(1)}MB → ${(compressed.size / 1024 / 1024).toFixed(1)}MB`);
+          }
+        } catch (compressErr) {
+          console.error('Erro na compressão de vídeo:', compressErr);
+          // Continua com o original se a compressão falhar
+        }
+        setCompressing(false);
+        
+        // Verificar se o arquivo cabe no limite do bucket após compressão
+        const bucketLimit = 25 * 1024 * 1024; // 25MB (limite do Supabase bucket)
+        if (fileToUpload.size > bucketLimit) {
+          alert(`O vídeo tem ${(fileToUpload.size / 1024 / 1024).toFixed(1)}MB mesmo após compressão. O limite do servidor é 25MB. Tente gravar um vídeo mais curto ou com resolução menor.`);
+          setSubmitting(false);
+          return;
+        }
+      } else if (mediaType === 'photo') {
         try {
           const watermarkText = `Relaxa & Goza - ${profile?.name || ''}`;
           fileToUpload = await applyWatermark(selectedFile, watermarkText);
@@ -247,6 +397,10 @@ export default function StoriesManager() {
           console.error("Erro ao aplicar marca d'água:", watermarkErr);
         }
       }
+
+      // 2. Upload do Arquivo para o Supabase Storage Bucket `profile_media`
+      const fileExt = fileToUpload.name.split('.').pop() || (mediaType === 'photo' ? 'jpg' : 'webm');
+      const fileName = `${user.id}/story_${Date.now()}_media.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('profile_media')
@@ -444,16 +598,22 @@ export default function StoriesManager() {
               <div className="space-y-4">
                 {/* Hidden Native Capture and Gallery Inputs */}
                 <input 
+                  id="camera-capture-input"
                   type="file"
                   accept={mediaType === 'photo' ? "image/*" : "video/*"}
                   capture="user"
+                  title="Capturar com a Câmera"
+                  placeholder="Capturar com a câmera"
                   ref={cameraInputRef}
                   onChange={handleFileChange}
                   className="hidden"
                 />
                 <input 
+                  id="gallery-upload-input"
                   type="file"
                   accept={mediaType === 'photo' ? "image/*" : "video/*"}
+                  title="Escolher da Galeria"
+                  placeholder="Escolher da galeria"
                   ref={galleryInputRef}
                   onChange={handleFileChange}
                   className="hidden"
@@ -516,8 +676,11 @@ export default function StoriesManager() {
                       
                       <div className="space-y-2">
                         <div>
+                          <label htmlFor="story-text-input" className="sr-only">Texto do Story</label>
                           <input 
+                            id="story-text-input"
                             type="text"
+                            title="Texto do Story"
                             value={textContent}
                             onChange={(e) => setTextContent(e.target.value.slice(0, 80))}
                             placeholder="Escreva algo sobre você ou serviço..."
@@ -530,8 +693,10 @@ export default function StoriesManager() {
 
                         <div className="grid grid-cols-3 gap-2">
                           <div>
-                            <span className="text-[8px] text-gray-400 block mb-0.5">Posição</span>
+                            <label htmlFor="text-position-select" className="text-[8px] text-gray-400 block mb-0.5">Posição</label>
                             <select
+                              id="text-position-select"
+                              title="Posição do texto"
                               value={textPosition}
                               onChange={(e) => setTextPosition(e.target.value as any)}
                               className="w-full px-1.5 py-1 text-[10px] rounded bg-black/80 border border-white/10 text-white focus:outline-none focus:border-gold-primary cursor-pointer"
@@ -543,8 +708,10 @@ export default function StoriesManager() {
                           </div>
 
                           <div>
-                            <span className="text-[8px] text-gray-400 block mb-0.5">Cor Texto</span>
+                            <label htmlFor="text-color-select" className="text-[8px] text-gray-400 block mb-0.5">Cor Texto</label>
                             <select
+                              id="text-color-select"
+                              title="Cor do texto"
                               value={textColor}
                               onChange={(e) => setTextColor(e.target.value as any)}
                               className="w-full px-1.5 py-1 text-[10px] rounded bg-black/80 border border-white/10 text-white focus:outline-none focus:border-gold-primary cursor-pointer"
@@ -556,8 +723,10 @@ export default function StoriesManager() {
                           </div>
 
                           <div>
-                            <span className="text-[8px] text-gray-400 block mb-0.5">Estilo</span>
+                            <label htmlFor="text-style-select" className="text-[8px] text-gray-400 block mb-0.5">Estilo</label>
                             <select
+                              id="text-style-select"
+                              title="Estilo do texto"
                               value={textBg}
                               onChange={(e) => setTextBg(e.target.value as any)}
                               className="w-full px-1.5 py-1 text-[10px] rounded bg-black/80 border border-white/10 text-white focus:outline-none focus:border-gold-primary cursor-pointer"
@@ -591,11 +760,17 @@ export default function StoriesManager() {
                       
                       <button
                         type="submit"
-                        disabled={submitting}
+                        disabled={submitting || compressing}
                         className="px-4 py-2 rounded-lg bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       >
-                        {submitting ? (
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        {compressing ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Comprimindo...
+                          </>
+                        ) : submitting ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Enviando...
+                          </>
                         ) : (
                           <>
                             Enviar <Sparkles className="w-3.5 h-3.5 text-dark-bg" />
@@ -612,7 +787,7 @@ export default function StoriesManager() {
                     <button
                       type="button"
                       onClick={() => cameraInputRef.current?.click()}
-                      className="flex flex-col items-center justify-center border border-dashed border-dark-border/40 hover:border-gold-primary/40 hover:bg-gold-primary/[0.02] bg-black/30 rounded-xl p-5 transition-colors cursor-pointer min-h-[140px] text-center gap-2 group animate-fadeIn"
+                      className="flex flex-col items-center justify-center border border-dashed border-dark-border/40 hover:border-gold-primary/40 hover:bg-gold-primary/2 bg-black/30 rounded-xl p-5 transition-colors cursor-pointer min-h-[140px] text-center gap-2 group animate-fadeIn"
                     >
                       <Camera className="w-6 h-6 text-gray-500 group-hover:text-gold-primary transition-colors animate-pulse" />
                       <span className="text-xs text-white font-semibold">
@@ -627,7 +802,7 @@ export default function StoriesManager() {
                     <button
                       type="button"
                       onClick={() => galleryInputRef.current?.click()}
-                      className="flex flex-col items-center justify-center border border-dashed border-dark-border/40 hover:border-gold-primary/40 hover:bg-gold-primary/[0.02] bg-black/30 rounded-xl p-5 transition-colors cursor-pointer min-h-[140px] text-center gap-2 group animate-fadeIn"
+                      className="flex flex-col items-center justify-center border border-dashed border-dark-border/40 hover:border-gold-primary/40 hover:bg-gold-primary/2 bg-black/30 rounded-xl p-5 transition-colors cursor-pointer min-h-[140px] text-center gap-2 group animate-fadeIn"
                     >
                       <Upload className="w-6 h-6 text-gray-500 group-hover:text-gold-primary transition-colors" />
                       <span className="text-xs text-white font-semibold">
@@ -647,7 +822,7 @@ export default function StoriesManager() {
 
         {/* Quadro Lateral explicativo */}
         <div className="space-y-4">
-          <div className="bg-gradient-to-br from-gold-primary/[0.04] to-transparent rounded-2xl border border-gold-primary/20 p-5 space-y-4">
+          <div className="bg-gradient-to-br from-gold-primary/4 to-transparent rounded-2xl border border-gold-primary/20 p-5 space-y-4">
             <div className="p-2 bg-gold-primary/10 text-gold-primary rounded-xl w-fit">
               <Clock className="w-5 h-5" />
             </div>

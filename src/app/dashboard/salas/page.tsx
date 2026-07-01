@@ -280,9 +280,11 @@ export default function HostRoomsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Título */}
               <div className="space-y-1.5">
-                <label className="text-xs text-gray-400 font-medium">Nome / Título da Sala</label>
+                <label htmlFor="room-title-input" className="text-xs text-gray-400 font-medium">Nome / Título da Sala</label>
                 <input 
+                  id="room-title-input"
                   type="text"
+                  title="Nome / Título da Sala"
                   placeholder="Ex: Sala Luxo com Hidro e Maca"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -293,11 +295,13 @@ export default function HostRoomsPage() {
 
               {/* Preço */}
               <div className="space-y-1.5">
-                <label className="text-xs text-gray-400 font-medium">Preço por Hora (R$)</label>
+                <label htmlFor="room-price-input" className="text-xs text-gray-400 font-medium">Preço por Hora (R$)</label>
                 <div className="relative">
                   <DollarSign className="absolute left-3.5 top-3 w-4 h-4 text-gray-500" />
                   <input 
+                    id="room-price-input"
                     type="number"
+                    title="Preço por Hora"
                     placeholder="Ex: 80"
                     value={pricePerHour}
                     onChange={(e) => setPricePerHour(e.target.value)}
@@ -311,9 +315,11 @@ export default function HostRoomsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Endereço */}
               <div className="space-y-1.5">
-                <label className="text-xs text-gray-400 font-medium">Endereço Completo</label>
+                <label htmlFor="room-address-input" className="text-xs text-gray-400 font-medium">Endereço Completo</label>
                 <input 
+                  id="room-address-input"
                   type="text"
+                  title="Endereço Completo"
                   placeholder="Rua/Av, número, complemento"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
@@ -324,9 +330,11 @@ export default function HostRoomsPage() {
 
               {/* Bairro */}
               <div className="space-y-1.5">
-                <label className="text-xs text-gray-400 font-medium">Bairro</label>
+                <label htmlFor="room-neighborhood-input" className="text-xs text-gray-400 font-medium">Bairro</label>
                 <input 
+                  id="room-neighborhood-input"
                   type="text"
+                  title="Bairro"
                   placeholder="Ex: Jardins"
                   value={neighborhood}
                   onChange={(e) => setNeighborhood(e.target.value)}
@@ -338,8 +346,10 @@ export default function HostRoomsPage() {
 
             {/* Descrição */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Descrição da Infraestrutura e Regras</label>
+              <label htmlFor="room-description-input" className="text-xs text-gray-400 font-medium">Descrição da Infraestrutura e Regras</label>
               <textarea 
+                id="room-description-input"
+                title="Descrição da Infraestrutura e Regras"
                 placeholder="Descreva o espaço, conforto, privacidade, regras de uso, etc."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -376,13 +386,15 @@ export default function HostRoomsPage() {
 
             {/* Fotos da Sala */}
             <div className="space-y-2">
-              <label className="text-xs text-gray-400 font-medium block">Fotos da Sala (Mínimo 1)</label>
+              <label htmlFor="room-photos-upload" className="text-xs text-gray-400 font-medium block cursor-pointer">Fotos da Sala (Mínimo 1)</label>
               
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {/* Upload Button */}
                 <div className="relative border border-dashed border-dark-border hover:border-emerald-500/50 transition-colors rounded-xl p-4 bg-dark-bg/40 flex flex-col items-center justify-center gap-2 aspect-video cursor-pointer min-h-[90px]">
                   <input 
+                    id="room-photos-upload"
                     type="file" 
+                    title="Fotos da Sala"
                     accept="image/*"
                     multiple
                     onChange={handlePhotoSelect}
@@ -399,6 +411,7 @@ export default function HostRoomsPage() {
                     <button
                       type="button"
                       onClick={() => handleRemovePhoto(index)}
+                      title="Remover Foto"
                       className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-red-600/90 text-white cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <Trash2 className="w-3 h-3" />

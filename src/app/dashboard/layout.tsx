@@ -17,7 +17,9 @@ import {
   Calendar,
   Camera,
   Menu,
-  X
+  X,
+  Zap,
+  Lock
 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -73,6 +75,16 @@ export default function DashboardLayout({
       name: 'Enviar Verificação',
       icon: ShieldCheck,
       path: '/dashboard/verificacao'
+    },
+    {
+      name: 'Boost de Anúncio',
+      icon: Zap,
+      path: '/dashboard/boost'
+    },
+    {
+      name: 'Conteúdo Exclusivo',
+      icon: Lock,
+      path: '/dashboard/premium'
     },
     {
       name: 'Planos de Anúncio',

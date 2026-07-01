@@ -232,11 +232,14 @@ export default function VerificationPanel() {
             {profile?.verification_status === 'none' && !success && (
               <form onSubmit={handleIdentitySubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs text-gray-400 font-medium">Selfie segurando papel manuscrito</label>
+                  <label htmlFor="selfie-file-input" className="text-xs text-gray-400 font-medium">Selfie segurando papel manuscrito</label>
                   <div className="relative border border-dashed border-dark-border hover:border-wine-primary/50 transition-colors rounded-xl p-4 bg-dark-bg/40 flex flex-col items-center justify-center gap-2 min-h-24">
                     <input 
+                      id="selfie-file-input"
                       type="file" 
                       accept="image/*"
+                      title="Foto de selfie para verificação"
+                      placeholder="Escolha o arquivo de selfie"
                       onChange={(e) => {
                         const file = e.target.files?.[0] || null;
                         setSelfieFile(file);
@@ -264,11 +267,14 @@ export default function VerificationPanel() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs text-gray-400 font-medium">Foto do Documento (RG ou CNH)</label>
+                  <label htmlFor="document-file-input" className="text-xs text-gray-400 font-medium">Foto do Documento (RG ou CNH)</label>
                   <div className="relative border border-dashed border-dark-border hover:border-wine-primary/50 transition-colors rounded-xl p-4 bg-dark-bg/40 flex flex-col items-center justify-center gap-2 min-h-24">
                     <input 
+                      id="document-file-input"
                       type="file" 
                       accept="image/*"
+                      title="Foto do documento para verificação"
+                      placeholder="Escolha o arquivo do documento"
                       onChange={(e) => {
                         const file = e.target.files?.[0] || null;
                         setDocumentFile(file);
@@ -305,6 +311,7 @@ export default function VerificationPanel() {
                 ) : (
                   <button 
                     type="submit" 
+                    title="Enviar documentos para análise"
                     className="w-full py-3 rounded-xl bg-wine-primary hover:bg-wine-light text-white text-xs font-semibold tracking-wide transition-all shadow-[0_4px_12px_rgba(155,44,44,0.2)] cursor-pointer"
                   >
                     Enviar para Análise
@@ -314,7 +321,7 @@ export default function VerificationPanel() {
             )}
 
             {profile?.verification_status === 'pending' && (
-              <div className="bg-gold-primary/[0.02] border border-gold-primary/20 rounded-xl p-4 text-center space-y-2">
+              <div className="bg-gold-primary/2 border border-gold-primary/20 rounded-xl p-4 text-center space-y-2">
                 <Clock className="w-8 h-8 text-gold-primary mx-auto mb-1 animate-pulse" />
                 <h4 className="text-xs font-semibold text-white mb-1">Análise em Andamento</h4>
                 <p className="text-[10px] text-gray-500 font-light leading-relaxed">
@@ -329,7 +336,7 @@ export default function VerificationPanel() {
             )}
 
             {profile?.verification_status === 'verified' && (
-              <div className="bg-emerald-500/[0.02] border border-emerald-500/20 rounded-xl p-4 text-center">
+              <div className="bg-emerald-500/2 border border-emerald-500/20 rounded-xl p-4 text-center">
                 <ShieldCheck className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
                 <h4 className="text-xs font-semibold text-white mb-1">Identidade Validada!</h4>
                 <p className="text-[10px] text-gray-500 font-light leading-relaxed">
@@ -352,11 +359,14 @@ export default function VerificationPanel() {
                 <Lock className="w-5 h-5 animate-pulse" />
               </div>
               <h4 className="text-xs font-bold text-white tracking-wide">Espaço Validado (Exclusivo GOLD)</h4>
-              <p className="text-[10px] text-gray-400 font-light max-w-[220px] mt-1.5 leading-relaxed mb-4">
+              <p className="text-[10px] text-gray-400 font-light max-w-55 mt-1.5 leading-relaxed mb-4">
                 O selo de auditoria de espaço e ambiente físico de atendimento está disponível apenas para parceiras **Gold Premium**.
               </p>
               <Link href="/planos">
-                <button className="px-4 py-2 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-gold-primary/20">
+                <button 
+                  title="Fazer Upgrade para Gold"
+                  className="px-4 py-2 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-gold-primary/20"
+                >
                   Fazer Upgrade para Gold
                 </button>
               </Link>
@@ -389,11 +399,14 @@ export default function VerificationPanel() {
             {!auditingRequested ? (
               <form onSubmit={handleAuditingSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs text-gray-400 font-medium">Foto ou Vídeo Curto do Espaço de Atendimento</label>
+                  <label htmlFor="space-file-input" className="text-xs text-gray-400 font-medium">Foto ou Vídeo Curto do Espaço de Atendimento</label>
                   <div className="relative border border-dashed border-dark-border hover:border-gold-primary/50 transition-colors rounded-xl p-4 bg-dark-bg/40 flex flex-col items-center justify-center gap-2 min-h-24">
                     <input 
+                      id="space-file-input"
                       type="file" 
                       accept="image/*,video/*"
+                      title="Foto ou vídeo do espaço de atendimento"
+                      placeholder="Escolha o arquivo do espaço"
                       onChange={(e) => {
                         const file = e.target.files?.[0] || null;
                         setSpaceFile(file);
@@ -427,13 +440,14 @@ export default function VerificationPanel() {
                 <button 
                   type="submit" 
                   disabled={submitting}
+                  title="Solicitar validação online"
                   className="w-full py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-semibold tracking-wide transition-all shadow-[0_4px_12px_rgba(197,168,128,0.2)] cursor-pointer"
                 >
                   {submitting ? 'Enviando arquivo...' : 'Solicitar Validação Online'}
                 </button>
               </form>
             ) : (
-              <div className="bg-emerald-500/[0.02] border border-emerald-500/20 rounded-xl p-4 text-center">
+              <div className="bg-emerald-500/2 border border-emerald-500/20 rounded-xl p-4 text-center">
                 <Sparkles className="w-8 h-8 text-gold-primary mx-auto mb-2 animate-pulse" />
                 <h4 className="text-xs font-semibold text-white mb-1">Solicitação Ativa</h4>
                 <p className="text-[10px] text-gray-500 font-light leading-relaxed">

@@ -753,19 +753,19 @@ export default function VitrineClient({
   };
 
   return (
-    <main className={`w-full bg-dark-bg flex flex-col relative overflow-hidden selection:bg-gold-primary selection:text-dark-bg ${viewMode === 'reels' ? "h-[100dvh]" : "min-h-screen pb-24 md:pb-0"}`}>
+    <main className={`w-full bg-dark-bg flex flex-col relative overflow-hidden selection:bg-gold-primary selection:text-dark-bg ${viewMode === 'reels' ? "h-dvh" : "min-h-screen pb-24 md:pb-0"}`}>
       {/* Ambient Aurora Glow Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[5%] left-[-15%] w-[600px] h-[600px] bg-wine-primary/15 blur-[140px] rounded-full animate-float-1" />
-        <div className="absolute bottom-[5%] right-[-15%] w-[700px] h-[700px] bg-gold-primary/8 blur-[150px] rounded-full animate-float-2" />
-        <div className="absolute top-[35%] left-[25%] w-[500px] h-[500px] bg-purple-900/10 blur-[130px] rounded-full animate-float-3" />
+        <div className="absolute top-[5%] left-[-15%] w-150 h-150 bg-wine-primary/15 blur-[140px] rounded-full animate-float-1" />
+        <div className="absolute bottom-[5%] right-[-15%] w-175 h-175 bg-gold-primary/8 blur-[150px] rounded-full animate-float-2" />
+        <div className="absolute top-[35%] left-[25%] w-125 h-125 bg-purple-900/10 blur-[130px] rounded-full animate-float-3" />
       </div>
 
       {/* Navigation Header */}
       <header className={cn(
         "z-40 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-all duration-300",
         viewMode === 'reels' 
-          ? "absolute top-0 inset-x-0 bg-gradient-to-b from-black/90 to-transparent border-none" 
+          ? "absolute top-0 inset-x-0 bg-linear-to-b from-black/90 to-transparent border-none" 
           : "sticky top-0 bg-black/60 backdrop-blur-lg border-b border-white/5"
       )}>
         <Logo />
@@ -949,6 +949,19 @@ export default function VitrineClient({
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.9, y: 50, opacity: 0 }}
               className="w-full max-w-lg h-full max-h-[100dvh] md:max-h-[85vh] md:aspect-[9/16] bg-black md:rounded-3xl shadow-2xl relative overflow-hidden flex flex-col justify-between"
+              onTouchStart={(e) => {
+                const touch = e.touches[0];
+                (e.currentTarget as any)._touchStartX = touch.clientX;
+              }}
+              onTouchEnd={(e) => {
+                const startX = (e.currentTarget as any)._touchStartX;
+                if (startX === undefined) return;
+                const endX = e.changedTouches[0].clientX;
+                const delta = endX - startX;
+                if (Math.abs(delta) < 50) return; // ignora swipes pequenos
+                if (delta < 0) handleNextSlide(); // swipe left → próximo
+                else handlePrevSlide(); // swipe right → anterior
+              }}
             >
               
               {/* Top Bar with Progress Indicators */}
@@ -1001,6 +1014,7 @@ export default function VitrineClient({
 
                 <button 
                   onClick={handleCloseStory}
+                  title="Fechar Story"
                   className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white/80 hover:text-white transition-all cursor-pointer"
                 >
                   <X className="w-5 h-5" />
@@ -1148,6 +1162,7 @@ export default function VitrineClient({
                 </div>
                 <button 
                   onClick={() => setIsFilterDrawerOpen(false)}
+                  title="Fechar Filtros"
                   className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />

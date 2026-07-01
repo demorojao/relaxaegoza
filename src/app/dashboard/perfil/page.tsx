@@ -821,7 +821,7 @@ export default function ProfileEditor() {
               onClick={() => handleCategoryChange('massage')}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 category === 'massage' 
-                  ? 'border-gold-primary bg-gold-primary/[0.02]' 
+                  ? 'border-gold-primary bg-gold-primary/2' 
                   : 'border-dark-border hover:border-gray-700 bg-dark-bg/60'
               }`}
             >
@@ -839,7 +839,7 @@ export default function ProfileEditor() {
               onClick={() => handleCategoryChange('escort')}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 category === 'escort' 
-                  ? 'border-wine-primary bg-wine-primary/[0.02]' 
+                  ? 'border-wine-primary bg-wine-primary/2' 
                   : 'border-dark-border hover:border-gray-700 bg-dark-bg/60'
               }`}
             >
@@ -848,7 +848,7 @@ export default function ProfileEditor() {
                 Acompanhante Adulto
               </h3>
               <p className="text-[11px] text-gray-500 font-light leading-relaxed">
-                Destinado a acompanhantes de luxo e entretenimento adulto.
+                Destinado a acompanhantes de luxo e entretenimento adult.
               </p>
             </div>
 
@@ -857,7 +857,7 @@ export default function ProfileEditor() {
               onClick={() => handleCategoryChange('both')}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 category === 'both' 
-                  ? 'border-gold-primary/70 bg-gradient-to-br from-gold-primary/[0.03] to-wine-primary/[0.03]' 
+                  ? 'border-gold-primary/70 bg-gradient-to-br from-gold-primary/3 to-wine-primary/3' 
                   : 'border-dark-border hover:border-gray-700 bg-dark-bg/60'
               }`}
             >
@@ -953,9 +953,11 @@ export default function ProfileEditor() {
             
             {/* Nome Artístico */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Nome Artístico</label>
+              <label htmlFor="stage-name-input" className="text-xs text-gray-400 font-medium">Nome Artístico</label>
               <input 
+                id="stage-name-input"
                 type="text" 
+                title="Nome Artístico"
                 value={stageName} 
                 onChange={(e) => setStageName(e.target.value)} 
                 className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -965,9 +967,11 @@ export default function ProfileEditor() {
 
             {/* Idade */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Idade (Exibida no perfil)</label>
+              <label htmlFor="age-input" className="text-xs text-gray-400 font-medium">Idade (Exibida no perfil)</label>
               <input 
+                id="age-input"
                 type="number" 
+                title="Idade"
                 value={age} 
                 onChange={(e) => setAge(Number(e.target.value))} 
                 className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -977,9 +981,11 @@ export default function ProfileEditor() {
 
             {/* Cidade */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Cidade</label>
+              <label htmlFor="city-input" className="text-xs text-gray-400 font-medium">Cidade</label>
               <input 
+                id="city-input"
                 type="text" 
+                title="Cidade"
                 value={city} 
                 onChange={(e) => setCity(e.target.value)} 
                 className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -989,11 +995,13 @@ export default function ProfileEditor() {
 
             {/* WhatsApp */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">WhatsApp de Contato (Com DDD)</label>
+              <label htmlFor="whatsapp-input" className="text-xs text-gray-400 font-medium">WhatsApp de Contato (Com DDD)</label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3.5 w-3.5 h-3.5 text-gray-500" />
                 <input 
+                  id="whatsapp-input"
                   type="text" 
+                  title="WhatsApp"
                   value={whatsapp} 
                   onChange={(e) => setWhatsapp(e.target.value)} 
                   className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white pl-10 pr-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -1004,11 +1012,13 @@ export default function ProfileEditor() {
 
             {/* Bairro */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Bairro de Atendimento</label>
+              <label htmlFor="neighborhood-input" className="text-xs text-gray-400 font-medium">Bairro de Atendimento</label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3.5 w-3.5 h-3.5 text-gray-500" />
                 <input 
+                  id="neighborhood-input"
                   type="text" 
+                  title="Bairro"
                   value={neighborhood} 
                   onChange={(e) => setNeighborhood(e.target.value)} 
                   className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white pl-10 pr-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -1019,9 +1029,11 @@ export default function ProfileEditor() {
 
             {/* Valor da Sessão */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Valor da Sessão / Hora (R$)</label>
+              <label htmlFor="rate-input" className="text-xs text-gray-400 font-medium">Valor da Sessão / Hora (R$)</label>
               <input 
+                id="rate-input"
                 type="number" 
+                title="Valor da Sessão"
                 value={rate} 
                 onChange={(e) => setRate(Number(e.target.value))} 
                 className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -1031,11 +1043,13 @@ export default function ProfileEditor() {
 
             {/* Mensagem Customizada do WhatsApp */}
             <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs text-gray-400 font-medium flex items-center gap-1">
+              <label htmlFor="whatsapp-custom-message-input" className="text-xs text-gray-400 font-medium flex items-center gap-1">
                 <span>Mensagem Personalizada do WhatsApp</span>
                 <span className="text-[10px] text-gray-500 font-light">(Opcional)</span>
               </label>
               <textarea 
+                id="whatsapp-custom-message-input"
+                title="Mensagem Customizada do WhatsApp"
                 value={whatsappCustomMessage} 
                 onChange={(e) => setWhatsappCustomMessage(e.target.value)} 
                 placeholder="Ex: Olá! Vi seu anúncio no Relaxa & Goza e gostaria de agendar um horário com você."
@@ -1166,8 +1180,10 @@ export default function ProfileEditor() {
           <div className="space-y-5">
             {/* Minhas Especialidades */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Minhas Especialidades e Formação</label>
+              <label htmlFor="specialties-input" className="text-xs text-gray-400 font-medium">Minhas Especialidades e Formação</label>
               <textarea 
+                id="specialties-input"
+                title="Minhas Especialidades e Formação"
                 value={specialties} 
                 onChange={(e) => setSpecialties(e.target.value)} 
                 rows={3}
@@ -1180,8 +1196,10 @@ export default function ProfileEditor() {
 
             {/* O que está Incluso na Sessão */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">O que está Incluso no Atendimento</label>
+              <label htmlFor="whats-included-input" className="text-xs text-gray-400 font-medium">O que está Incluso no Atendimento</label>
               <textarea 
+                id="whats-included-input"
+                title="O que está Incluso no Atendimento"
                 value={whatsIncluded} 
                 onChange={(e) => setWhatsIncluded(e.target.value)} 
                 rows={3}
@@ -1194,8 +1212,10 @@ export default function ProfileEditor() {
 
             {/* Regras de Atendimento */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Regras, Horários e Restrições de Atendimento</label>
+              <label htmlFor="rules-input" className="text-xs text-gray-400 font-medium">Regras, Horários e Restrições de Atendimento</label>
               <textarea 
+                id="rules-input"
+                title="Regras, Horários e Restrições de Atendimento"
                 value={rules} 
                 onChange={(e) => setRules(e.target.value)} 
                 rows={3}
@@ -1393,9 +1413,11 @@ export default function ProfileEditor() {
           <div className="space-y-4">
             {/* Título */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Título Curto do Anúncio (Tagline)</label>
+              <label htmlFor="ad-title-input" className="text-xs text-gray-400 font-medium">Título Curto do Anúncio (Tagline)</label>
               <input
+                id="ad-title-input"
                 type="text"
+                title="Título do Anúncio"
                 value={adTitle}
                 onChange={(e) => setAdTitle(e.target.value)}
                 className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -1407,9 +1429,11 @@ export default function ProfileEditor() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Preço do anúncio */}
               <div className="space-y-1.5">
-                <label className="text-xs text-gray-400 font-medium">Valor do Atendimento do Anúncio (R$ / Hora)</label>
+                <label htmlFor="ad-price-input" className="text-xs text-gray-400 font-medium">Valor do Atendimento do Anúncio (R$ / Hora)</label>
                 <input
+                  id="ad-price-input"
                   type="number"
+                  title="Valor do Atendimento"
                   value={adPrice}
                   onChange={(e) => setAdPrice(Number(e.target.value))}
                   className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -1419,8 +1443,10 @@ export default function ProfileEditor() {
 
               {/* Opção de Trabalho */}
               <div className="space-y-1.5">
-                <label className="text-xs text-gray-400 font-medium">Opção de Trabalho (Categoria)</label>
+                <label htmlFor="ad-category-select" className="text-xs text-gray-400 font-medium">Opção de Trabalho (Categoria)</label>
                 <select
+                  id="ad-category-select"
+                  title="Categoria do Anúncio"
                   value={category}
                   onChange={(e) => setCategory(e.target.value as any)}
                   className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
@@ -1434,8 +1460,10 @@ export default function ProfileEditor() {
 
             {/* Descrição */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Descrição Personalizada para Divulgação</label>
+              <label htmlFor="ad-description-input" className="text-xs text-gray-400 font-medium">Descrição Personalizada para Divulgação</label>
               <textarea
+                id="ad-description-input"
+                title="Descrição do Anúncio"
                 value={adDescription}
                 onChange={(e) => setAdDescription(e.target.value)}
                 rows={4}

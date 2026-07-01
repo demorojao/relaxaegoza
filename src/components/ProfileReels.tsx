@@ -268,7 +268,7 @@ export default function ProfileReels({
           {onOpenFilters && (
             <button
               onClick={onOpenFilters}
-              className="p-2 rounded-xl bg-black/35 backdrop-blur-sm border border-white/5 text-gray-300 hover:text-white relative active:scale-95 transition-transform flex-shrink-0"
+              className="p-2 rounded-xl bg-black/35 backdrop-blur-sm border border-white/5 text-gray-300 hover:text-white relative active:scale-95 transition-transform shrink-0"
               title="Abrir Filtros"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-gold-primary" />
@@ -285,7 +285,7 @@ export default function ProfileReels({
               onClick={() => { setCategoryFilter(''); setSpaceFilter(false); }}
               className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 categoryFilter === '' && !spaceFilter
-                  ? 'bg-gradient-to-r from-gold-primary/80 to-gold-dark/80 border-gold-primary/20 text-dark-bg shadow-md'
+                  ? 'bg-linear-to-r from-gold-primary/80 to-gold-dark/80 border-gold-primary/20 text-dark-bg shadow-md'
                   : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
               }`}
             >
@@ -295,7 +295,7 @@ export default function ProfileReels({
               onClick={() => { setCategoryFilter('escort'); setSpaceFilter(false); }}
               className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 categoryFilter === 'escort' && !spaceFilter
-                  ? 'bg-gradient-to-r from-wine-primary/80 to-wine-dark/80 border-wine-primary/20 text-white shadow-md'
+                  ? 'bg-linear-to-r from-wine-primary/80 to-wine-dark/80 border-wine-primary/20 text-white shadow-md'
                   : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
               }`}
             >
@@ -305,7 +305,7 @@ export default function ProfileReels({
               onClick={() => { setCategoryFilter('massage'); setSpaceFilter(false); }}
               className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 categoryFilter === 'massage' && !spaceFilter
-                  ? 'bg-gradient-to-r from-gold-primary/80 to-gold-dark/80 border-gold-primary/20 text-dark-bg shadow-md'
+                  ? 'bg-linear-to-r from-gold-primary/80 to-gold-dark/80 border-gold-primary/20 text-dark-bg shadow-md'
                   : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
               }`}
             >
@@ -315,7 +315,7 @@ export default function ProfileReels({
               onClick={() => { setSpaceFilter(true); }}
               className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 spaceFilter
-                  ? 'bg-gradient-to-r from-emerald-600/80 to-emerald-800/80 border-emerald-600/20 text-white shadow-md'
+                  ? 'bg-linear-to-r from-emerald-600/80 to-emerald-800/80 border-emerald-600/20 text-white shadow-md'
                   : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
               }`}
             >
@@ -329,7 +329,7 @@ export default function ProfileReels({
       <div 
         ref={containerRef}
         onScroll={handleScroll}
-        className="w-full max-w-md h-full md:max-h-[75vh] md:aspect-[9/16] bg-black md:rounded-3xl md:border md:border-white/10 shadow-2xl relative overflow-y-scroll snap-y snap-mandatory scrollbar-none"
+        className="w-full max-w-md h-full md:max-h-[75vh] md:aspect-9/16 bg-black md:rounded-3xl md:border md:border-white/10 shadow-2xl relative overflow-y-scroll snap-y snap-mandatory scrollbar-none"
       >
         {profiles.map((profile, index) => {
           const profileMedia = photos[profile.id] || [];
@@ -388,8 +388,8 @@ export default function ProfileReels({
                 )}
 
                 {/* Dark Vignette Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent pointer-events-none" />
-                <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/35 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 top-0 h-28 bg-linear-to-b from-black/70 to-transparent pointer-events-none" />
               </div>
 
               {/* Top Stories-like Progress Indicators */}
@@ -500,7 +500,7 @@ export default function ProfileReels({
                   href={`/perfil/${profile.id}`} 
                   className="flex flex-col items-center group mb-1"
                 >
-                  <div className="w-11 h-11 rounded-full border-[2px] border-gold-primary overflow-hidden relative shadow-lg shadow-gold-primary/20 group-hover:scale-105 transition-transform duration-300">
+                  <div className="w-11 h-11 rounded-full border-2 border-gold-primary overflow-hidden relative shadow-lg shadow-gold-primary/20 group-hover:scale-105 transition-transform duration-300">
                     <Image
                       src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'}
                       alt={profile.ad_title || profile.name}
@@ -660,6 +660,7 @@ export default function ProfileReels({
               </div>
               <button 
                 onClick={() => setShowReviewsDrawer(false)}
+                title="Fechar"
                 className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -691,7 +692,7 @@ export default function ProfileReels({
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          <div className="truncate max-w-[120px]">
+                          <div className="truncate max-w-30">
                             <span className="text-xs font-semibold text-white block truncate">{rev.client?.name || 'Cliente'}</span>
                             <span className="text-[9px] text-gray-400">{new Date(rev.created_at).toLocaleDateString('pt-BR')}</span>
                           </div>

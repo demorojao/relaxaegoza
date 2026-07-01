@@ -317,12 +317,12 @@ export default function DashboardMetrics() {
   if (profile && !profile.avatar_url) {
     return (
       <div className="max-w-md mx-auto py-16 px-4 relative z-20 selection:bg-gold-primary selection:text-dark-bg animate-fadeIn">
-        <div className="glass-effect rounded-3xl border border-dark-border/80 p-8 text-center space-y-6 bg-gradient-to-b from-dark-bg via-dark-bg/95 to-dark-bg/90 relative overflow-hidden shadow-2xl">
+        <div className="glass-effect rounded-3xl border border-dark-border/80 p-8 text-center space-y-6 bg-linear-to-b from-dark-bg via-dark-bg/95 to-dark-bg/90 relative overflow-hidden shadow-2xl">
           {/* Luz de fundo dourada sutil */}
           <div className="absolute -right-16 -top-16 w-36 h-36 bg-gold-primary/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -left-16 -bottom-16 w-36 h-36 bg-wine-primary/15 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-primary/20 to-wine-primary/20 border border-gold-primary/30 flex items-center justify-center text-gold-primary animate-pulse">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-linear-to-br from-gold-primary/20 to-wine-primary/20 border border-gold-primary/30 flex items-center justify-center text-gold-primary animate-pulse">
             <Camera className="w-8 h-8" />
           </div>
 
@@ -350,12 +350,15 @@ export default function DashboardMetrics() {
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <label className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white hover:bg-white/10 hover:border-gold-primary/40 cursor-pointer transition-all flex items-center justify-center gap-2">
+              <label htmlFor="avatar-file-input" className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white hover:bg-white/10 hover:border-gold-primary/40 cursor-pointer transition-all flex items-center justify-center gap-2">
                 <Upload className="w-4 h-4 text-gold-primary" />
                 {avatarPreview ? 'Substituir Imagem' : 'Selecionar Foto'}
                 <input 
+                  id="avatar-file-input"
                   type="file" 
                   accept="image/*" 
+                  title="Foto de Capa"
+                  placeholder="Selecione sua foto de capa"
                   onChange={handleAvatarChange} 
                   className="hidden" 
                 />
@@ -365,6 +368,7 @@ export default function DashboardMetrics() {
                 <button
                   onClick={handleUploadAvatar}
                   disabled={uploading}
+                  title="Confirmar e Salvar Foto"
                   className="w-full py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-gold-primary/20"
                 >
                   {uploading ? (
@@ -409,9 +413,9 @@ export default function DashboardMetrics() {
         <div className="space-y-4">
           {/* Alerta de Foto de Capa Ausente */}
           {!profile.avatar_url && (
-            <div className="bg-gradient-to-r from-red-500/10 to-transparent border border-red-500/20 text-red-200 text-xs px-4 py-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fadeIn">
+            <div className="bg-linear-to-r from-red-500/10 to-transparent border border-red-500/20 text-red-200 text-xs px-4 py-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fadeIn">
               <div className="space-y-1">
-                <span className="font-semibold block text-white text-sm flex items-center gap-2">
+                <span className="font-semibold text-white text-sm flex items-center gap-2">
                   <ShieldAlert className="w-5 h-5 text-red-400 shrink-0" />
                   Perfil Inativo / Ocultado da Vitrine
                 </span>
@@ -420,7 +424,10 @@ export default function DashboardMetrics() {
                 </p>
               </div>
               <Link href="/dashboard/perfil">
-                <button className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all flex-shrink-0 cursor-pointer shadow-lg shadow-red-600/15">
+                <button 
+                  title="Enviar Foto de Capa"
+                  className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-lg shadow-red-600/15"
+                >
                   Enviar Foto de Capa
                 </button>
               </Link>
@@ -429,9 +436,9 @@ export default function DashboardMetrics() {
 
           {/* Alerta de Verificação de Identidade Obrigatória */}
           {profile.avatar_url && profile.verification_status !== 'verified' && (
-            <div className="bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 text-amber-200 text-xs px-4 py-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fadeIn">
+            <div className="bg-linear-to-r from-amber-500/10 to-transparent border border-amber-500/20 text-amber-200 text-xs px-4 py-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fadeIn">
               <div className="space-y-1">
-                <span className="font-semibold block text-white text-sm flex items-center gap-2">
+                <span className="font-semibold text-white text-sm flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 animate-pulse" />
                   Verificação de Identidade Crucial
                 </span>
@@ -445,7 +452,10 @@ export default function DashboardMetrics() {
               </div>
               {profile.verification_status !== 'pending' && (
                 <Link href="/dashboard/verificacao">
-                  <button className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-dark-bg text-xs font-bold transition-all flex-shrink-0 cursor-pointer shadow-lg shadow-amber-500/15">
+                  <button 
+                    title="Verificar Identidade"
+                    className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-dark-bg text-xs font-bold transition-all shrink-0 cursor-pointer shadow-lg shadow-amber-500/15"
+                  >
                     Verificar Identidade
                   </button>
                 </Link>
@@ -529,6 +539,7 @@ export default function DashboardMetrics() {
           </div>
           <button 
             onClick={handleToggleAvailability}
+            title="Alternar Disponibilidade"
             className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${
               isAvailable ? 'bg-emerald-500' : 'bg-gray-700'
             } ${!isPaid ? 'opacity-50 cursor-pointer' : 'cursor-pointer'}`}
@@ -542,7 +553,7 @@ export default function DashboardMetrics() {
 
       {/* Alerta de bloqueio do status */}
       {showUpgradePrompt && (
-        <div className="bg-gradient-to-r from-wine-primary/20 to-transparent border border-wine-primary/40 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fadeIn">
+        <div className="bg-linear-to-r from-wine-primary/20 to-transparent border border-wine-primary/40 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fadeIn">
           <div>
             <h4 className="text-sm font-semibold text-white flex items-center gap-1.5">
               <Lock className="w-4 h-4 text-gold-primary" /> Recurso Bloqueado no Plano Bronze
@@ -552,7 +563,10 @@ export default function DashboardMetrics() {
             </p>
           </div>
           <Link href="/planos">
-            <button className="px-5 py-2.5 rounded-xl bg-gold-primary text-dark-bg text-xs font-bold hover:bg-gold-light transition-all flex-shrink-0 cursor-pointer">
+            <button 
+              title="Ver Planos de Destaque"
+              className="px-5 py-2.5 rounded-xl bg-gold-primary text-dark-bg text-xs font-bold hover:bg-gold-light transition-all shrink-0 cursor-pointer"
+            >
               Ver Planos de Destaque
             </button>
           </Link>
@@ -560,7 +574,7 @@ export default function DashboardMetrics() {
       )}
 
       {/* Seção Turbo Boost */}
-      <div className="glass-effect rounded-2xl border border-gold-primary/30 p-6 bg-gradient-to-r from-gold-primary/[0.03] to-transparent relative overflow-hidden">
+      <div className="glass-effect rounded-2xl border border-gold-primary/30 p-6 bg-linear-to-r from-gold-primary/3 to-transparent relative overflow-hidden">
         {/* Decorative subtle background pattern */}
         <div className="absolute right-0 top-0 h-full w-1/3 bg-gold-primary/5 blur-3xl rounded-full pointer-events-none" />
 
@@ -575,14 +589,17 @@ export default function DashboardMetrics() {
             </p>
           </div>
 
-          <div className="flex-shrink-0 flex items-center">
+          <div className="shrink-0 flex items-center">
             {tier === 'free' ? (
               <div className="flex flex-col items-end gap-2">
                 <span className="text-[10px] text-gray-500 font-medium flex items-center gap-1">
                   <Lock className="w-3 h-3 text-gold-primary" /> Apenas para planos Gold / Pro
                 </span>
                 <Link href="/planos">
-                  <button className="px-5 py-2.5 rounded-xl bg-gray-800 text-gray-400 hover:text-white border border-white/5 hover:border-gold-primary/40 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer">
+                  <button 
+                    title="Fazer Upgrade de Plano"
+                    className="px-5 py-2.5 rounded-xl bg-gray-800 text-gray-400 hover:text-white border border-white/5 hover:border-gold-primary/40 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
+                  >
                     Upgrade de Plano
                   </button>
                 </Link>
@@ -597,6 +614,7 @@ export default function DashboardMetrics() {
               <button 
                 onClick={handleBuyBoost}
                 disabled={boostingCheckout}
+                title="Ativar Destaque (R$ 15)"
                 className="px-6 py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-gold-primary/25 disabled:opacity-50 flex items-center gap-2 hover:scale-[1.02]"
               >
                 {boostingCheckout ? (
@@ -627,7 +645,10 @@ export default function DashboardMetrics() {
               Descubra quantas pessoas visualizaram seu anúncio e clicaram no seu WhatsApp em tempo real. Recurso disponível exclusivamente no plano **Gold Premium**.
             </p>
             <Link href="/planos">
-              <button className="px-6 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-gold-primary/20">
+              <button 
+                title="Fazer Upgrade para Gold"
+                className="px-6 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-gold-primary/20"
+              >
                 Fazer Upgrade para Gold
               </button>
             </Link>
@@ -700,7 +721,7 @@ export default function DashboardMetrics() {
                 return (
                   <div key={data.day} className="flex-1 flex flex-col items-center group h-full justify-end relative">
                     {/* Tooltip on Hover */}
-                    <div className="absolute -top-12 bg-dark-card border border-dark-border text-[10px] rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-2xl flex flex-col z-30 min-w-[80px] text-center">
+                    <div className="absolute -top-12 bg-dark-card border border-dark-border text-[10px] rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-2xl flex flex-col z-30 min-w-20 text-center">
                       <span className="text-white font-semibold">Views: {data.views}</span>
                       <span className="text-gold-primary">WhatsApp: {data.clicks}</span>
                     </div>
@@ -708,11 +729,11 @@ export default function DashboardMetrics() {
                     {/* Bars Container */}
                     <div className="w-full flex items-end justify-center gap-1 h-full max-h-[85%]">
                       <div 
-                        style={{ height: `${viewHeightPercent}%` }} 
+                        {...{ style: { height: `${viewHeightPercent}%` } }}
                         className="w-1/3 bg-gray-800 group-hover:bg-gray-700 rounded-t-sm transition-all duration-500" 
                       />
                       <div 
-                        style={{ height: `${clickHeightPercent}%` }} 
+                        {...{ style: { height: `${clickHeightPercent}%` } }}
                         className="w-1/3 bg-gold-primary group-hover:bg-gold-light rounded-t-sm transition-all duration-500" 
                       />
                     </div>
@@ -730,7 +751,7 @@ export default function DashboardMetrics() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Verification Alert Box */}
-        <div className="bg-gradient-to-r from-gold-primary/[0.04] to-transparent rounded-2xl border border-gold-primary/20 p-5 flex items-start gap-4">
+        <div className="bg-linear-to-r from-gold-primary/4 to-transparent rounded-2xl border border-gold-primary/20 p-5 flex items-start gap-4">
           <div className="p-2 rounded-xl bg-gold-primary/10 text-gold-primary mt-0.5">
             <Sparkles className="w-5 h-5" />
           </div>
@@ -749,7 +770,7 @@ export default function DashboardMetrics() {
         </div>
 
         {/* Visibility Boost Promotion */}
-        <div className="bg-gradient-to-r from-emerald-500/[0.03] to-transparent rounded-2xl border border-emerald-500/10 p-5 flex items-start gap-4">
+        <div className="bg-linear-to-r from-emerald-500/3 to-transparent rounded-2xl border border-emerald-500/10 p-5 flex items-start gap-4">
           <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 mt-0.5 animate-pulse">
             <Clock className="w-5 h-5" />
           </div>
@@ -771,7 +792,8 @@ export default function DashboardMetrics() {
         <>
           <button
             onClick={() => setIsAdModalOpen(true)}
-            className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-gold-primary to-gold-light text-dark-bg font-bold py-3.5 px-6 rounded-full shadow-[0_4px_20px_rgba(197,168,128,0.3)] hover:shadow-[0_4px_25px_rgba(197,168,128,0.5)] hover:scale-105 transition-all flex items-center gap-2 group cursor-pointer border border-gold-light/20"
+            title="Gerenciar Anúncio"
+            className="fixed bottom-6 right-6 z-40 bg-linear-to-r from-gold-primary to-gold-light text-dark-bg font-bold py-3.5 px-6 rounded-full shadow-[0_4px_20px_rgba(197,168,128,0.3)] hover:shadow-[0_4px_25px_rgba(197,168,128,0.5)] hover:scale-105 transition-all flex items-center gap-2 group cursor-pointer border border-gold-light/20"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-dark-bg opacity-75"></span>

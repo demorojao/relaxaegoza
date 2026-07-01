@@ -21,10 +21,86 @@ import {
   Bath,
   Music,
   CreditCard,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import { formatWhatsAppLink } from '@/lib/utils';
 import { getCDNUrl } from '@/lib/mediaHelper';
+
+// Componente de Conteúdo Exclusivo para o perfil público
+function PremiumSection({ providerId, providerName }: { providerId: string; providerName: string }) {
+  const [medias, setMedias] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchPremium = async () => {
+      const { data } = await supabase
+        .from('premium_media')
+        .select('id, title, description, price_cents, preview_url, media_type')
+        .eq('profile_id', providerId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(12);
+      if (data) setMedias(data);
+      setLoading(false);
+    };
+    fetchPremium();
+  }, [providerId]);
+
+  if (loading || medias.length === 0) return null;
+
+  return (
+    <div className="space-y-4 pt-6 border-t border-white/5">
+      <h3 className="text-sm font-semibold text-white uppercase tracking-widest flex items-center gap-2">
+        <Lock className="w-4 h-4 text-gold-primary" />
+        Conteúdo Exclusivo
+        <span className="text-[9px] bg-gold-primary/10 text-gold-light border border-gold-primary/20 px-2 py-0.5 rounded-full font-bold">PREMIUM</span>
+      </h3>
+      <p className="text-[11px] text-gray-500 font-light">
+        Assine o canal de {providerName} ou compre álbuns avulsos para acessar conteúdo exclusivo.
+      </p>
+      <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+        {medias.map((m) => (
+          <div key={m.id} className="relative aspect-[3/4] rounded-xl overflow-hidden border border-gold-primary/15 bg-black/60 group">
+            {/* Thumbnail com blur */}
+            {m.preview_url ? (
+              <img
+                src={getCDNUrl(m.preview_url)}
+                alt=""
+                className="w-full h-full object-cover blur-[6px] scale-110 select-none pointer-events-none"
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-gold-primary/10 to-wine-primary/10" />
+            )}
+            {/* Lock overlay */}
+            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1.5 p-2 text-center">
+              <div className="w-8 h-8 rounded-full bg-black/60 border border-gold-primary/30 flex items-center justify-center">
+                <Lock className="w-4 h-4 text-gold-primary" />
+              </div>
+              {m.price_cents ? (
+                <span className="text-[9px] bg-gold-primary/20 text-gold-light border border-gold-primary/30 px-2 py-0.5 rounded-full font-bold">
+                  R$ {(m.price_cents / 100).toFixed(2)}
+                </span>
+              ) : (
+                <span className="text-[9px] text-gray-400 font-light">Assinatura</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* CTAs */}
+      <div className="flex flex-col sm:flex-row gap-3 mt-2">
+        <button className="flex-1 py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer">
+          <Sparkles className="w-3.5 h-3.5" /> Assinar Canal (Em Breve)
+        </button>
+        <button className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer">
+          <Lock className="w-3.5 h-3.5" /> Comprar Álbum (Em Breve)
+        </button>
+      </div>
+    </div>
+  );
+}
 
 
 interface ProfileDetailsClientProps {
@@ -257,7 +333,7 @@ export default function ProfileDetailsClient({
 
       <div className="flex flex-col md:flex-row gap-8 items-start">
       {/* Avatar Principal */}
-      <div className={`w-full md:w-1/3 aspect-[4/5] sm:aspect-[3/4] max-h-[360px] md:max-h-none rounded-2xl overflow-hidden shadow-2xl relative flex-shrink-0 border-2 ${
+      <div className={`w-full md:w-1/3 aspect-4/5 sm:aspect-3/4 max-h-90 md:max-h-none rounded-2xl overflow-hidden shadow-2xl relative shrink-0 border-2 ${
         isAvailable ? 'border-emerald-500 neon-ring-active' : profile.subscription_tier === 'gold' ? 'border-gold-primary' : 'border-white/5'
       }`}>
         <Image 
@@ -350,7 +426,7 @@ export default function ProfileDetailsClient({
 
             {/* Opções de Atendimento (Público-alvo) */}
             {profile.target_audience && profile.target_audience.length > 0 && (
-              <div className="flex items-center gap-2 text-xs text-gray-400 mt-2 bg-white/[0.02] border border-white/5 p-3 rounded-xl w-fit">
+              <div className="flex items-center gap-2 text-xs text-gray-400 mt-2 bg-white/2 border border-white/5 p-3 rounded-xl w-fit">
                 <span className="font-semibold text-gray-300">Atende:</span>
                 <div className="flex flex-wrap gap-1.5">
                   {profile.target_audience.map((audience: string) => (
@@ -460,7 +536,7 @@ export default function ProfileDetailsClient({
                       </div>
                     )}
                     {parsed.included && (
-                      <div className="space-y-2.5 bg-white/[0.01] border border-white/5 rounded-xl p-4">
+                      <div className="space-y-2.5 bg-white/1 border border-white/5 rounded-xl p-4">
                         <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5 text-gold-primary" /> Incluso no Atendimento
                         </h4>
@@ -468,7 +544,7 @@ export default function ProfileDetailsClient({
                       </div>
                     )}
                     {parsed.rules && (
-                      <div className="space-y-2.5 bg-wine-primary/[0.02] border border-wine-primary/10 rounded-xl p-4">
+                      <div className="space-y-2.5 bg-wine-primary/2 border border-wine-primary/10 rounded-xl p-4">
                         <h4 className="text-xs font-bold text-wine-light uppercase tracking-wider">Regras & Restrições</h4>
                         <p className="text-gray-400 text-xs leading-relaxed font-light whitespace-pre-wrap">{parsed.rules}</p>
                       </div>
@@ -500,7 +576,7 @@ export default function ProfileDetailsClient({
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {mediaToRender.map((media: any, index: number) => (
-                <div key={index} className="relative aspect-[3/4] rounded-xl overflow-hidden group cursor-pointer border border-white/5">
+                <div key={index} className="relative aspect-3/4 rounded-xl overflow-hidden group cursor-pointer border border-white/5">
                   {media.type === 'video' ? (
                     <video 
                       src={getCDNUrl(media.url)} 
@@ -530,7 +606,10 @@ export default function ProfileDetailsClient({
           )}
         </div>
 
-        {/* Avaliações do Círculo de Confiança */}
+        {/* Conteúdo Exclusivo — Aba Premium */}
+        <PremiumSection providerId={id} providerName={profile.name} />
+
+
         <div className="space-y-6 pt-6 border-t border-white/5">
           <h3 className="text-sm font-semibold text-white uppercase tracking-widest flex items-center gap-2">
             <Trophy className="w-4 h-4 text-gold-primary" />
@@ -539,7 +618,7 @@ export default function ProfileDetailsClient({
 
           {/* Form para Deixar Avaliação */}
           {currentUser && userRole === 'client' ? (
-            <form onSubmit={handleSubmitReview} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-4">
+            <form onSubmit={handleSubmitReview} className="bg-white/2 border border-white/5 rounded-2xl p-5 space-y-4">
               <h4 className="text-xs font-semibold text-white">Deixar minha Avaliação de Segurança</h4>
               
               {reviewSuccess && (
@@ -550,10 +629,12 @@ export default function ProfileDetailsClient({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-500 uppercase font-medium">Nota Terapia (1-5)</label>
+                  <label htmlFor="rating-massage-select" className="text-[10px] text-gray-500 uppercase font-medium">Nota Terapia (1-5)</label>
                   <select 
+                    id="rating-massage-select"
                     value={ratingMassage} 
                     onChange={(e) => setRatingMassage(Number(e.target.value))}
+                    title="Nota da Terapia"
                     className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-xs text-white"
                   >
                     <option value={5}>5 ★ - Excelente</option>
@@ -565,10 +646,12 @@ export default function ProfileDetailsClient({
                 </div>
                 
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-500 uppercase font-medium">Nota Atendimento (1-5)</label>
+                  <label htmlFor="rating-service-select" className="text-[10px] text-gray-500 uppercase font-medium">Nota Atendimento (1-5)</label>
                   <select 
+                    id="rating-service-select"
                     value={ratingService} 
                     onChange={(e) => setRatingService(Number(e.target.value))}
+                    title="Nota do Atendimento"
                     className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-xs text-white"
                   >
                     <option value={5}>5 ★ - Excelente</option>
@@ -580,10 +663,12 @@ export default function ProfileDetailsClient({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-500 uppercase font-medium">Nota Espaço (1-5)</label>
+                  <label htmlFor="rating-environment-select" className="text-[10px] text-gray-500 uppercase font-medium">Nota Espaço (1-5)</label>
                   <select 
+                    id="rating-environment-select"
                     value={ratingEnvironment} 
                     onChange={(e) => setRatingEnvironment(Number(e.target.value))}
+                    title="Nota do Espaço/Ambiente"
                     className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-xs text-white"
                   >
                     <option value={5}>5 ★ - Excelente</option>

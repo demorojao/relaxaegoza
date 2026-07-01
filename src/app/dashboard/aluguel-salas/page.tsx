@@ -353,7 +353,7 @@ export default function ProviderRentingPage() {
                   <div key={booking.id} className="bg-black/35 rounded-xl border border-white/5 p-3.5 space-y-3">
                     <div className="flex items-center gap-2">
                       <div className="relative w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-white/5 bg-black/20">
-                        <img src={room?.photos?.[0] || 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6'} className="w-full h-full object-cover" />
+                        <img src={room?.photos?.[0] || 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6'} alt={room?.title || 'Foto da sala'} className="w-full h-full object-cover" />
                       </div>
                       <div className="space-y-0.5 min-w-0">
                         <h4 className="text-xs font-bold text-white truncate">{room?.title || 'Sala'}</h4>
@@ -411,13 +411,15 @@ export default function ProviderRentingPage() {
             <button 
               onClick={() => setSelectedRoom(null)}
               className="absolute top-6 right-6 p-1.5 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 cursor-pointer"
+              title="Fechar detalhes da sala"
+              aria-label="Fechar"
             >
               <X className="w-4.5 h-4.5" />
             </button>
 
             {/* Imagem principal */}
             <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-white/5 bg-black/40">
-              <img src={selectedRoom.photos?.[0]} className="w-full h-full object-cover" />
+              <img src={selectedRoom.photos?.[0]} alt={selectedRoom.title} className="w-full h-full object-cover" />
               <div className="absolute top-3 left-3 bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded uppercase tracking-wider">
                 Verificada
               </div>
@@ -466,9 +468,11 @@ export default function ProviderRentingPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {/* Data */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-gray-400 font-semibold block uppercase">Escolher Data</label>
+                    <label htmlFor="booking_date" className="text-[10px] text-gray-400 font-semibold block uppercase">Escolher Data</label>
                     <input 
+                      id="booking_date"
                       type="date"
+                      title="Escolher Data de Reserva"
                       value={bookingDate}
                       onChange={(e) => setBookingDate(e.target.value)}
                       className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-3 py-2.5 rounded-xl focus:border-emerald-500/50 focus:outline-none transition-colors"
@@ -478,9 +482,11 @@ export default function ProviderRentingPage() {
 
                   {/* Hora Início */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-gray-400 font-semibold block uppercase">Hora de Entrada</label>
+                    <label htmlFor="start_time" className="text-[10px] text-gray-400 font-semibold block uppercase">Hora de Entrada</label>
                     <input 
+                      id="start_time"
                       type="time"
+                      title="Hora de Entrada"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
                       className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-3 py-2.5 rounded-xl focus:border-emerald-500/50 focus:outline-none transition-colors"
@@ -490,9 +496,11 @@ export default function ProviderRentingPage() {
 
                   {/* Hora Fim */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-gray-400 font-semibold block uppercase">Hora de Saída</label>
+                    <label htmlFor="end_time" className="text-[10px] text-gray-400 font-semibold block uppercase">Hora de Saída</label>
                     <input 
+                      id="end_time"
                       type="time"
+                      title="Hora de Saída"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
                       className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-3 py-2.5 rounded-xl focus:border-emerald-500/50 focus:outline-none transition-colors"
