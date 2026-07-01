@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types';
-import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import ProfileGrid from '../components/ProfileGrid';
 import ProfileReels from '../components/ProfileReels';
@@ -148,6 +148,7 @@ export default function VitrineClient({
   const [storiesProfiles, setStoriesProfiles] = useState<Profile[]>(initialStories);
   const [activeStoryProfile, setActiveStoryProfile] = useState<Profile | null>(null);
   const [activeStoryPhotos, setActiveStoryPhotos] = useState<{ 
+    id?: string;
     url: string; 
     type: 'photo' | 'video'; 
     textContent?: string | null; 
@@ -660,13 +661,14 @@ export default function VitrineClient({
     try {
       const { data, error } = await supabase
         .from('stories')
-        .select('media_url, media_type, text_content, text_style')
+        .select('id, media_url, media_type, text_content, text_style')
         .eq('profile_id', profile.id)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: true });
 
       if (data && data.length > 0) {
         const slides = data.map((s: any) => ({
+          id: s.id,
           url: s.media_url,
           type: (s.media_type || 'photo') as 'photo' | 'video',
           textContent: s.text_content,
@@ -736,6 +738,37 @@ export default function VitrineClient({
     setActiveSlideIndex(0);
     setStoryProgress(0);
     setMediaReady(false);
+  };
+
+  const handleDeleteStory = async (storyId: string) => {
+    if (!storyId) return;
+    if (!confirm('Deseja realmente excluir este story permanentemente?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('stories')
+        .delete()
+        .eq('id', storyId);
+        
+      if (error) throw error;
+      
+      const updatedPhotos = activeStoryPhotos.filter(p => p.id !== storyId);
+      if (updatedPhotos.length === 0) {
+        handleCloseStory();
+      } else {
+        setActiveStoryPhotos(updatedPhotos);
+        if (activeSlideIndex >= updatedPhotos.length) {
+          setActiveSlideIndex(updatedPhotos.length - 1);
+        }
+        setStoryProgress(0);
+        setMediaReady(false);
+      }
+      
+      fetchStories();
+    } catch (err) {
+      console.error('Erro ao deletar story:', err);
+      alert('Erro ao excluir o story.');
+    }
   };
 
   // mapAdvertisers and mapCenter moved to ProfileGrid
@@ -1012,13 +1045,24 @@ export default function VitrineClient({
                   </div>
                 </div>
 
-                <button 
-                  onClick={handleCloseStory}
-                  title="Fechar Story"
-                  className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white/80 hover:text-white transition-all cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {user && user.id === activeStoryProfile.id && activeStoryPhotos[activeSlideIndex]?.id && (
+                    <button 
+                      onClick={() => handleDeleteStory(activeStoryPhotos[activeSlideIndex].id!)}
+                      title="Excluir este Story"
+                      className="p-1.5 rounded-full bg-red-500/20 hover:bg-red-600 text-red-200 hover:text-white transition-all cursor-pointer mr-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button 
+                    onClick={handleCloseStory}
+                    title="Fechar Story"
+                    className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white/80 hover:text-white transition-all cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
 
