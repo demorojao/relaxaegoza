@@ -2,8 +2,31 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Peach } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// Custom Peach Icon to avoid lucide-react version mismatches
+function Peach(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      {/* Peach body */}
+      <path d="M12 20.66C8.05 21.9 4 18.9 4 14.5 4 10.08 7.58 6.5 12 6.5s8 3.58 8 8c0 4.4-4.05 7.4-8 6.16z" />
+      {/* Crease */}
+      <path d="M12 6.5c-0.8 2.2-0.8 5 0 7.5" />
+      {/* Leaf */}
+      <path d="M12 6.5c1.5-2 3.5-2.5 5.5-2.5-1 2-2 4-5.5 4.5" />
+      {/* Stem */}
+      <path d="M12 6.5V3" />
+    </svg>
+  );
+}
 
 interface LogoProps {
   className?: string;
