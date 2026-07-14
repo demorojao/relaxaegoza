@@ -1,7 +1,20 @@
+export interface TextOverlayConfig {
+  content: string;
+  x: number; // 0-100
+  y: number; // 0-100
+  color: 'white' | 'gold' | 'wine';
+  bg: 'black-blur' | 'wine-solid' | 'none';
+}
+
 /**
  * Helper client-side para aplicar marca d'água em imagens antes do upload.
+ * Também aceita uma configuração opcional de sobreposição de texto (estilo Instagram).
  */
-export async function applyWatermark(file: File, text: string = 'Relaxa & Goza'): Promise<File> {
+export async function applyWatermark(
+  file: File, 
+  text: string = 'Relaxa & Goza',
+  textOverlay?: TextOverlayConfig
+): Promise<File> {
   // Apenas processa arquivos de imagem
   if (!file.type.startsWith('image/')) {
     return file;
@@ -28,8 +41,8 @@ export async function applyWatermark(file: File, text: string = 'Relaxa & Goza')
         // Desenha a imagem original no canvas
         ctx.drawImage(img, 0, 0);
 
+        // --- MARCA D'ÁGUA ---
         // Define o tamanho da fonte proporcional à largura da imagem
-        // (ex: 2.8% da largura da imagem, mínimo de 14px)
         const fontSize = Math.max(14, Math.floor(img.width * 0.028));
         ctx.font = `bold ${fontSize}px sans-serif`;
         
@@ -50,12 +63,56 @@ export async function applyWatermark(file: File, text: string = 'Relaxa & Goza')
         ctx.strokeText(text, posX, posY);
         ctx.fillText(text, posX, posY);
 
-        // Opcional: Adicionar uma segunda marca d'água no centro ou canto superior esquerdo com menor opacidade
+        // Segunda marca d'água no canto superior esquerdo
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.font = `italic ${Math.max(12, fontSize * 0.75)}px sans-serif`;
         ctx.fillText('relaxaegoza.com', marginX, marginY);
+
+        // --- TEXT OVERLAY (Instagram style) ---
+        if (textOverlay && textOverlay.content.trim()) {
+          const textFontSize = Math.max(22, Math.floor(img.width * 0.045)); // Fonte legível para o story
+          ctx.font = `bold ${textFontSize}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          const overlayX = (textOverlay.x / 100) * img.width;
+          const overlayY = (textOverlay.y / 100) * img.height;
+
+          // Medição para desenhar fundo
+          const textWidth = ctx.measureText(textOverlay.content).width;
+          const paddingX = textFontSize * 0.6;
+          const paddingY = textFontSize * 0.35;
+          const bgWidth = textWidth + paddingX * 2;
+          const bgHeight = textFontSize + paddingY * 2;
+
+          // Se tiver estilo de fundo, desenha um retângulo arredondado
+          if (textOverlay.bg !== 'none') {
+            ctx.fillStyle = textOverlay.bg === 'wine-solid' ? 'rgba(114, 47, 55, 0.95)' : 'rgba(0, 0, 0, 0.65)';
+            
+            const rx = overlayX - bgWidth / 2;
+            const ry = overlayY - bgHeight / 2;
+            const radius = Math.max(6, textFontSize * 0.3); // raio proporcional
+            
+            ctx.beginPath();
+            ctx.moveTo(rx + radius, ry);
+            ctx.lineTo(rx + bgWidth - radius, ry);
+            ctx.quadraticCurveTo(rx + bgWidth, ry, rx + bgWidth, ry + radius);
+            ctx.lineTo(rx + bgWidth, ry + bgHeight - radius);
+            ctx.quadraticCurveTo(rx + bgWidth, ry + bgHeight, rx + bgWidth - radius, ry + bgHeight);
+            ctx.lineTo(rx + radius, ry + bgHeight);
+            ctx.quadraticCurveTo(rx, ry + bgHeight, rx, ry + bgHeight - radius);
+            ctx.lineTo(rx, ry + radius);
+            ctx.quadraticCurveTo(rx, ry, rx + radius, ry);
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          // Define cor do texto e desenha
+          ctx.fillStyle = textOverlay.color === 'gold' ? '#F59E0B' : textOverlay.color === 'wine' ? '#EF4444' : '#FFFFFF';
+          ctx.fillText(textOverlay.content, overlayX, overlayY);
+        }
 
         // Converte o canvas de volta para Blob/File
         canvas.toBlob(
@@ -71,7 +128,7 @@ export async function applyWatermark(file: File, text: string = 'Relaxa & Goza')
             }
           },
           file.type,
-          0.85 // compressão de 85% para manter boa qualidade e reduzir tamanho de arquivo
+          0.85
         );
       };
 

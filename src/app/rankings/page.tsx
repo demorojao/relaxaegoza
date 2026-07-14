@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Sparkles, Trophy, Star, ShieldCheck, ChevronLeft, Award } from 'lucide-react';
 import Link from 'next/link';
+import { getCDNUrl } from '../../lib/mediaHelper';
 
 interface RankedProfile {
   id: string;
@@ -70,7 +71,7 @@ export default function RankingsPage() {
           return {
             id: p.id,
             name: p.name,
-            avatar_url: p.avatar_url || '/avatar-placeholder.svg',
+            avatar_url: getCDNUrl(p.avatar_url) || '/avatar-placeholder.svg',
             city: p.city,
             neighborhood: p.neighborhood || 'Jardins',
             price_per_hour: Number(p.price_per_hour),
@@ -200,7 +201,14 @@ export default function RankingsPage() {
                 <div className="glass-effect rounded-2xl border border-white/5 p-6 flex flex-col items-center text-center space-y-4 hover:border-white/10 transition-colors transform hover:-translate-y-1 duration-300">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-400">
-                      <img src={top3[1].avatar_url} alt={top3[1].name} className="w-full h-full object-cover" />
+                      <img 
+                        src={top3[1].avatar_url} 
+                        alt={top3[1].name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/avatar-placeholder.svg';
+                        }}
+                      />
                     </div>
                     <span className="absolute -bottom-2 -right-2 bg-slate-400 text-dark-bg font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
                   </div>
@@ -225,7 +233,14 @@ export default function RankingsPage() {
                   <span className="absolute -top-3.5 bg-gold-primary text-dark-bg text-[10px] uppercase font-bold px-3 py-1 rounded-full shadow-lg">Líder do Rank</span>
                   <div className="relative">
                     <div className="w-24 h-24 rounded-full overflow-hidden border-[3px] border-gold-primary shadow-[0_0_15px_rgba(197,168,128,0.3)]">
-                      <img src={top3[0].avatar_url} alt={top3[0].name} className="w-full h-full object-cover" />
+                      <img 
+                        src={top3[0].avatar_url} 
+                        alt={top3[0].name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/avatar-placeholder.svg';
+                        }}
+                      />
                     </div>
                     <span className="absolute -bottom-2 -right-2 bg-gold-primary text-dark-bg font-bold w-7 h-7 rounded-full flex items-center justify-center text-sm shadow-md">1</span>
                   </div>
@@ -251,7 +266,14 @@ export default function RankingsPage() {
                 <div className="glass-effect rounded-2xl border border-white/5 p-6 flex flex-col items-center text-center space-y-4 hover:border-white/10 transition-colors transform hover:-translate-y-1 duration-300">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-amber-700">
-                      <img src={top3[2].avatar_url} alt={top3[2].name} className="w-full h-full object-cover" />
+                      <img 
+                        src={top3[2].avatar_url} 
+                        alt={top3[2].name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/avatar-placeholder.svg';
+                        }}
+                      />
                     </div>
                     <span className="absolute -bottom-2 -right-2 bg-amber-700 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
                   </div>
@@ -282,7 +304,14 @@ export default function RankingsPage() {
                   <div className="flex items-center gap-4">
                     <span className="text-xs text-gray-500 font-bold w-4 text-center">{idx + 4}</span>
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
-                      <img src={p.avatar_url} alt={p.name} className="w-full h-full object-cover" />
+                      <img 
+                        src={p.avatar_url} 
+                        alt={p.name} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.currentTarget.src = '/avatar-placeholder.svg';
+                        }}
+                      />
                     </div>
                     <div>
                       <h4 className="text-xs font-semibold text-white">{p.name}</h4>

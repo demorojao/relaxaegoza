@@ -7,6 +7,7 @@ import Link from 'next/link';
 import ImageBlurSelector from '@/components/ImageBlurSelector';
 import { applyWatermark } from '@/lib/watermark';
 import { triggerRevalidate } from '@/lib/revalidate';
+import { uploadToR2, deleteFromR2 } from '@/lib/r2Client';
 
 export default function MediaManager() {
   const [user, setUser] = useState<any>(null);
@@ -143,17 +144,12 @@ export default function MediaManager() {
 
       if (error) throw error;
 
-      // Deletar o arquivo físico do Supabase Storage
+      // Deletar o arquivo físico do Cloudflare R2
       if (itemToDelete?.photo_url) {
-        const urlParts = itemToDelete.photo_url.split('/profile_media/');
-        if (urlParts.length > 1) {
-          const storagePath = decodeURIComponent(urlParts[1]);
-          const { error: storageError } = await supabase.storage
-            .from('profile_media')
-            .remove([storagePath]);
-          if (storageError) {
-            console.error('Erro ao deletar arquivo do storage:', storageError);
-          }
+        try {
+          await deleteFromR2(itemToDelete.photo_url);
+        } catch (storageError) {
+          console.error('Erro ao deletar arquivo do storage R2:', storageError);
         }
 
         // Remover referências a essa mídia na tabela de anúncios
@@ -239,20 +235,8 @@ export default function MediaManager() {
         }
       }
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('profile_media')
-        .upload(fileName, fileToUpload, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile_media')
-        .getPublicUrl(fileName);
-
-      finalMediaUrl = publicUrl;
+      // Upload para o Cloudflare R2
+      finalMediaUrl = await uploadToR2(fileToUpload);
 
       // Importante: is_verified começa como FALSE. Só é verificado após moderação ou biometria Rekognition.
       const { data, error } = await supabase

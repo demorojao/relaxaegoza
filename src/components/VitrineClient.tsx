@@ -1116,22 +1116,33 @@ export default function VitrineClient({
                   {/* Styled Instagram-style Text Overlay */}
                   {activeStoryPhotos[activeSlideIndex]?.textContent && (
                     <div 
+                      style={
+                        activeStoryPhotos[activeSlideIndex].textStyle?.x !== undefined
+                          ? {
+                              left: `${activeStoryPhotos[activeSlideIndex].textStyle.x}%`,
+                              top: `${activeStoryPhotos[activeSlideIndex].textStyle.y}%`,
+                              transform: 'translate(-50%, -50%)',
+                            }
+                          : undefined
+                      }
                       className={cn(
-                        "absolute left-1/2 -translate-x-1/2 max-w-[80%] text-center text-xs sm:text-sm font-semibold z-20 break-words pointer-events-none transition-all duration-300",
-                        activeStoryPhotos[activeSlideIndex].textStyle?.position === 'top' 
-                          ? 'top-[22%]' 
-                          : activeStoryPhotos[activeSlideIndex].textStyle?.position === 'bottom' 
-                            ? 'bottom-[22%]' 
-                            : 'top-1/2 -translate-y-1/2',
+                        "absolute max-w-[80%] text-center text-xs sm:text-sm font-semibold z-20 break-words pointer-events-none transition-all duration-300",
+                        activeStoryPhotos[activeSlideIndex].textStyle?.x !== undefined
+                          ? ""
+                          : activeStoryPhotos[activeSlideIndex].textStyle?.position === 'top' 
+                            ? 'left-1/2 -translate-x-1/2 top-[22%]' 
+                            : activeStoryPhotos[activeSlideIndex].textStyle?.position === 'bottom' 
+                              ? 'left-1/2 -translate-x-1/2 bottom-[22%]' 
+                              : 'left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2',
                         activeStoryPhotos[activeSlideIndex].textStyle?.color === 'gold' 
                           ? 'text-gold-light' 
                           : activeStoryPhotos[activeSlideIndex].textStyle?.color === 'wine' 
                             ? 'text-red-400 font-bold' 
                             : 'text-white',
                         activeStoryPhotos[activeSlideIndex].textStyle?.bg === 'black-blur' 
-                          ? 'bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10' 
+                          ? 'bg-black/60 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10' 
                           : activeStoryPhotos[activeSlideIndex].textStyle?.bg === 'wine-solid' 
-                            ? 'bg-wine-primary/95 px-4 py-2 rounded-xl border border-wine-light/20 shadow-lg' 
+                            ? 'bg-wine-primary/95 px-4 py-2 rounded-2xl border border-wine-light/20 shadow-lg' 
                             : 'px-2 py-0.5'
                       )}
                     >

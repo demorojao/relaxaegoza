@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { Lock, Upload, Trash2, Eye, EyeOff, ImagePlus, Video, RefreshCw, AlertCircle, CheckCircle, Sparkles, DollarSign } from 'lucide-react';
 import { getCDNUrl } from '../../../lib/mediaHelper';
+import { uploadToR2, deleteFromR2 } from '@/lib/r2Client';
 
 export default function PremiumPage() {
   const [profile, setProfile] = useState<any>(null);
@@ -79,15 +80,8 @@ export default function PremiumPage() {
     setSubmitting(true); setSuccessMsg(''); setErrorMsg('');
 
     try {
-      const ext = selectedFile.name.split('.').pop() || (mediaType === 'photo' ? 'jpg' : 'mp4');
-      const filePath = `${profile.id}/premium_${Date.now()}.${ext}`;
-
-      const { error: uploadErr } = await supabase.storage
-        .from('profile_media')
-        .upload(filePath, selectedFile, { cacheControl: '3600', upsert: true });
-      if (uploadErr) throw uploadErr;
-
-      const { data: { publicUrl } } = supabase.storage.from('profile_media').getPublicUrl(filePath);
+      // Upload para o Cloudflare R2
+      const publicUrl = await uploadToR2(selectedFile);
 
       const price = priceCents ? Math.round(parseFloat(priceCents) * 100) : null;
 
@@ -96,8 +90,8 @@ export default function PremiumPage() {
         title: title.trim() || null,
         description: description.trim() || null,
         price_cents: price,
-        media_url: filePath, // armazenar o path, não a URL pública
-        preview_url: publicUrl, // preview (pode ser blur depois)
+        media_url: publicUrl, // armazenar a URL pública do R2
+        preview_url: publicUrl, // preview
         media_type: mediaType,
       }).select().single();
 
@@ -137,8 +131,18 @@ export default function PremiumPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Deletar esta mídia premium? Ação irreversível.')) return;
+    const mediaToDelete = medias.find(m => m.id === id);
     const { error } = await supabase.from('premium_media').delete().eq('id', id);
-    if (!error) setMedias(prev => prev.filter(m => m.id !== id));
+    if (!error) {
+      setMedias(prev => prev.filter(m => m.id !== id));
+      if (mediaToDelete?.preview_url) {
+        try {
+          await deleteFromR2(mediaToDelete.preview_url);
+        } catch (storageError) {
+          console.error('Erro ao deletar arquivo do storage R2:', storageError);
+        }
+      }
+    }
   };
 
   const handleToggleActive = async (m: any) => {

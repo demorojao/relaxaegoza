@@ -27,9 +27,25 @@ import ImageBlurSelector from '@/components/ImageBlurSelector';
 import { getCDNUrl } from '@/lib/mediaHelper';
 import { Badge } from '@/components/ui/Badge';
 import { triggerRevalidate } from '@/lib/revalidate';
+import { uploadToR2 } from '@/lib/r2Client';
+
+const MASSAGE_SPECIALTIES = [
+  'Massagem Tântrica', 'Nuru', 'Relaxante', 'Massagem Nuru', 'Massagem Relaxante',
+  'Tailandesa', 'Shiatsu', 'G-Spot', 'Massagem Tantra', 'Massagem Erótica',
+  'Massagem G-Spot', 'Massagem Ananda', 'Massagem Sueca', 'Reflexologia',
+  'Drenagem Linfática', 'Massagem Desportiva', 'Massagem Quatro Mãos'
+];
+
+const ESCORT_SPECIALTIES = [
+  'Acompanhante', 'Namorada Fake', 'Acompanhante Trans', 'Acompanhante Masculino',
+  'Namorada de Aluguel', 'Acompanhante Luxo', 'BDSM / Dominação', 'Fetiches',
+  'Cosplay / Roleplay', 'Jantar & Eventos', 'Viagens'
+];
 
 export default function ProfileEditor() {
   const [loading, setLoading] = useState(true);
+  const [allSpecialtiesList, setAllSpecialtiesList] = useState<{ id: string; name: string }[]>([]);
+  const [selectedSpecialtiesIds, setSelectedSpecialtiesIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -158,6 +174,22 @@ export default function ProfileEditor() {
           setRules(rulePart);
         } else {
           setSpecialties(bioText);
+        }
+
+        // Buscar especialidades cadastradas e do perfil
+        const { data: allSpecs } = await supabase
+          .from('specialties')
+          .select('id, name');
+        if (allSpecs) {
+          setAllSpecialtiesList(allSpecs);
+        }
+
+        const { data: currentSpecs } = await supabase
+          .from('profile_specialties')
+          .select('specialty_id')
+          .eq('profile_id', user.id);
+        if (currentSpecs) {
+          setSelectedSpecialtiesIds(currentSpecs.map((s: any) => s.specialty_id));
         }
 
         // 2. Buscar Anúncio
@@ -377,26 +409,10 @@ export default function ProfileEditor() {
     try {
       let finalAvatarUrl = avatarUrl;
 
-      // Se selecionou uma nova foto de perfil, faz upload
+      // Se selecionou uma nova foto de perfil, faz upload para o Cloudflare R2
       if (avatarFile) {
-        const fileExt = avatarFile.name.split('.').pop() || 'jpg';
-        const fileName = `${user.id}/avatar_${Date.now()}.${fileExt}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('profile_media')
-          .upload(fileName, avatarFile, {
-            cacheControl: '3600',
-            upsert: true
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('profile_media')
-          .getPublicUrl(fileName);
-
-        finalAvatarUrl = publicUrl;
-        setAvatarUrl(publicUrl);
+        finalAvatarUrl = await uploadToR2(avatarFile);
+        setAvatarUrl(finalAvatarUrl);
       }
 
       const updatePayload: any = {
@@ -450,6 +466,25 @@ export default function ProfileEditor() {
         if (updatedProfile.longitude) setLongitude(Number(updatedProfile.longitude));
         
         await triggerRevalidate(updatedProfile.city, updatedProfile.neighborhood);
+      }
+
+      // Sincronizar especialidades no banco
+      await supabase
+        .from('profile_specialties')
+        .delete()
+        .eq('profile_id', user.id);
+
+      if (selectedSpecialtiesIds.length > 0) {
+        const specsToInsert = selectedSpecialtiesIds.map(specId => ({
+          profile_id: user.id,
+          specialty_id: specId
+        }));
+        const { error: specInsertError } = await supabase
+          .from('profile_specialties')
+          .insert(specsToInsert);
+        if (specInsertError) {
+          console.error("Erro ao salvar especialidades:", specInsertError);
+        }
       }
 
       setSuccess(true);
@@ -508,6 +543,25 @@ export default function ProfileEditor() {
         .eq('id', user.id);
 
       if (profileError) throw profileError;
+
+      // Sincronizar especialidades no banco
+      await supabase
+        .from('profile_specialties')
+        .delete()
+        .eq('profile_id', user.id);
+
+      if (selectedSpecialtiesIds.length > 0) {
+        const specsToInsert = selectedSpecialtiesIds.map(specId => ({
+          profile_id: user.id,
+          specialty_id: specId
+        }));
+        const { error: specInsertError } = await supabase
+          .from('profile_specialties')
+          .insert(specsToInsert);
+        if (specInsertError) {
+          console.error("Erro ao salvar especialidades:", specInsertError);
+        }
+      }
 
       // Atualizar estado local do profile
       setProfile((prev: any) => ({ ...prev, category, target_audience: targetAudience }));
@@ -568,18 +622,8 @@ export default function ProfileEditor() {
         }
       }
 
-      const { error: uploadError } = await supabase.storage
-        .from('profile_media')
-        .upload(fileName, fileToUpload, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile_media')
-        .getPublicUrl(fileName);
+      // Upload para o Cloudflare R2
+      const publicUrl = await uploadToR2(fileToUpload);
 
       // Inserir no banco de dados profile_photos
       const { data: dbData, error: dbError } = await supabase
@@ -658,18 +702,8 @@ export default function ProfileEditor() {
         }
       }
 
-      const { error: uploadError } = await supabase.storage
-        .from('profile_media')
-        .upload(fileName, fileToUpload, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile_media')
-        .getPublicUrl(fileName);
+      // Upload para o Cloudflare R2
+      const publicUrl = await uploadToR2(fileToUpload);
 
       const { data: dbData, error: dbError } = await supabase
         .from('profile_photos')
@@ -1353,7 +1387,6 @@ export default function ProfileEditor() {
               />
               <span className="text-[10px] text-gray-500 font-light block">Foque nas suas habilidades e técnicas corporais de destaque.</span>
             </div>
-
             {/* O que está Incluso na Sessão */}
             <div className="space-y-1.5">
               <label htmlFor="whats-included-input" className="text-xs text-gray-400 font-medium">O que está Incluso no Atendimento</label>
@@ -1645,6 +1678,85 @@ export default function ProfileEditor() {
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Bloco 2.5: Especialidades para Filtro de Busca */}
+        <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-4">
+          <div className="flex items-center gap-2 text-white font-medium text-sm">
+            <Sparkles className="w-4 h-4 text-gold-primary" />
+            <span>Especialidades do Anúncio (Para Filtro de Busca)</span>
+          </div>
+          <p className="text-xs text-gray-400 font-light leading-relaxed">
+            Selecione as especialidades abaixo para que os clientes te encontrem ao usarem as preferências de busca do site.
+          </p>
+
+          <div className="bg-dark-bg/40 border border-dark-border rounded-xl p-4 space-y-4">
+            {(category === 'massage' || category === 'both') && (
+              <div className="space-y-2">
+                <span className="text-[9px] uppercase font-bold text-gold-primary tracking-widest block">Massagens & Terapias</span>
+                <div className="flex flex-wrap gap-2">
+                  {allSpecialtiesList
+                    .filter(spec => MASSAGE_SPECIALTIES.includes(spec.name))
+                    .map(spec => {
+                      const isSelected = selectedSpecialtiesIds.includes(spec.id);
+                      return (
+                        <button
+                          type="button"
+                          key={spec.id}
+                          onClick={() => {
+                            setSelectedSpecialtiesIds(prev => 
+                              prev.includes(spec.id) 
+                                ? prev.filter(id => id !== spec.id) 
+                                : [...prev, spec.id]
+                            );
+                          }}
+                          className={`text-xs px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                            isSelected 
+                              ? 'bg-gold-primary/20 border-gold-primary text-gold-light font-semibold' 
+                              : 'bg-dark-bg/60 border-dark-border/40 text-gray-400 hover:border-gray-600'
+                          }`}
+                        >
+                          {spec.name}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            {(category === 'escort' || category === 'both') && (
+              <div className="space-y-2">
+                <span className="text-[9px] uppercase font-bold text-wine-light tracking-widest block">Acompanhante Adulto</span>
+                <div className="flex flex-wrap gap-2">
+                  {allSpecialtiesList
+                    .filter(spec => ESCORT_SPECIALTIES.includes(spec.name))
+                    .map(spec => {
+                      const isSelected = selectedSpecialtiesIds.includes(spec.id);
+                      return (
+                        <button
+                          type="button"
+                          key={spec.id}
+                          onClick={() => {
+                            setSelectedSpecialtiesIds(prev => 
+                              prev.includes(spec.id) 
+                                ? prev.filter(id => id !== spec.id) 
+                                : [...prev, spec.id]
+                            );
+                          }}
+                          className={`text-xs px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                            isSelected 
+                              ? 'bg-wine-primary/20 border-wine-primary text-white font-semibold' 
+                              : 'bg-dark-bg/60 border-dark-border/40 text-gray-400 hover:border-gray-600'
+                          }`}
+                        >
+                          {spec.name}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

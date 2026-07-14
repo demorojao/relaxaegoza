@@ -6,6 +6,7 @@ import { Camera, Video, Trash2, Clock, Sparkles, Upload, ShieldCheck, AlertCircl
 import Image from 'next/image';
 import { getCDNUrl } from '../../../lib/mediaHelper';
 import { applyWatermark } from '@/lib/watermark';
+import { uploadToR2, deleteFromR2 } from '@/lib/r2Client';
 
 export default function StoriesManager() {
   const [user, setUser] = useState<any>(null);
@@ -25,6 +26,10 @@ export default function StoriesManager() {
   const [textPosition, setTextPosition] = useState<'top' | 'center' | 'bottom'>('center');
   const [textColor, setTextColor] = useState<'white' | 'gold' | 'wine'>('white');
   const [textBg, setTextBg] = useState<'black-blur' | 'wine-solid' | 'none'>('black-blur');
+  const [textX, setTextX] = useState(50); // percentage 0-100
+  const [textY, setTextY] = useState(50); // percentage 0-100
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
   
   // Camera Refs
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +43,47 @@ export default function StoriesManager() {
 
   useEffect(() => {
     fetchStoriesData();
+  }, []);
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    isDraggingRef.current = true;
+  };
+
+  useEffect(() => {
+    const handleDragMove = (e: MouseEvent | TouchEvent) => {
+      if (!isDraggingRef.current || !containerRef.current) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+      // Calcular posição em porcentagem
+      let x = ((clientX - rect.left) / rect.width) * 100;
+      let y = ((clientY - rect.top) / rect.height) * 100;
+
+      // Limitar margens (5% a 95%) para o texto não sumir da tela
+      x = Math.max(8, Math.min(92, x));
+      y = Math.max(5, Math.min(95, y));
+
+      setTextX(x);
+      setTextY(y);
+    };
+
+    const handleDragEnd = () => {
+      isDraggingRef.current = false;
+    };
+
+    window.addEventListener('mousemove', handleDragMove);
+    window.addEventListener('mouseup', handleDragEnd);
+    window.addEventListener('touchmove', handleDragMove, { passive: false });
+    window.addEventListener('touchend', handleDragEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', handleDragMove);
+      window.removeEventListener('mouseup', handleDragEnd);
+      window.removeEventListener('touchmove', handleDragMove);
+      window.removeEventListener('touchend', handleDragEnd);
+    };
   }, []);
 
   useEffect(() => {
@@ -318,12 +364,23 @@ export default function StoriesManager() {
     if (!confirm('Tem certeza de que deseja deletar este story? Ele desaparecerá imediatamente da vitrine.')) return;
 
     try {
+      const storyToDelete = stories.find(s => s.id === id);
+
       const { error } = await supabase
         .from('stories')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+
+      // Deletar o arquivo físico do R2
+      if (storyToDelete?.media_url) {
+        try {
+          await deleteFromR2(storyToDelete.media_url);
+        } catch (storageError) {
+          console.error('Erro ao deletar arquivo do storage R2:', storageError);
+        }
+      }
 
       setStories(prev => prev.filter(s => s.id !== id));
       // Re-atualiza a contagem das últimas 24h
@@ -392,28 +449,21 @@ export default function StoriesManager() {
       } else if (mediaType === 'photo') {
         try {
           const watermarkText = `Relaxa & Goza - ${profile?.name || ''}`;
-          fileToUpload = await applyWatermark(selectedFile, watermarkText);
+          const textOverlayConfig = textContent ? {
+            content: textContent,
+            x: textX,
+            y: textY,
+            color: textColor,
+            bg: textBg
+          } : undefined;
+          fileToUpload = await applyWatermark(selectedFile, watermarkText, textOverlayConfig);
         } catch (watermarkErr) {
-          console.error("Erro ao aplicar marca d'água:", watermarkErr);
+          console.error("Erro ao aplicar marca d'água e texto:", watermarkErr);
         }
       }
 
-      // 2. Upload do Arquivo para o Supabase Storage Bucket `profile_media`
-      const fileExt = fileToUpload.name.split('.').pop() || (mediaType === 'photo' ? 'jpg' : 'webm');
-      const fileName = `${user.id}/story_${Date.now()}_media.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('profile_media')
-        .upload(fileName, fileToUpload, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile_media')
-        .getPublicUrl(fileName);
+      // 2. Upload do Arquivo para o Cloudflare R2
+      const publicUrl = await uploadToR2(fileToUpload);
 
       // 2. Inserir registro na tabela `stories`
       const { data: storyRow, error: insertError } = await supabase
@@ -422,8 +472,8 @@ export default function StoriesManager() {
           profile_id: user.id,
           media_url: publicUrl,
           media_type: mediaType,
-          text_content: textContent ? textContent.trim() : null,
-          text_style: textContent ? { position: textPosition, color: textColor, bg: textBg } : null
+          text_content: mediaType === 'video' && textContent ? textContent.trim() : null,
+          text_style: mediaType === 'video' && textContent ? { x: textX, y: textY, color: textColor, bg: textBg } : null
         })
         .select()
         .single();
@@ -622,23 +672,28 @@ export default function StoriesManager() {
                 {filePreview ? (
                   <div className="space-y-4">
                     {/* Visualização do arquivo selecionado Estilo Instagram */}
-                    <div className="relative rounded-2xl overflow-hidden bg-black border border-gold-primary/30 aspect-[3/4] max-w-sm mx-auto flex flex-col items-center justify-center group shadow-2xl">
+                    <div ref={containerRef} className="relative rounded-2xl overflow-hidden bg-black border border-gold-primary/30 aspect-[3/4] max-w-sm mx-auto flex flex-col items-center justify-center group shadow-2xl">
                       {mediaType === 'photo' ? (
-                        <img src={filePreview} alt="Story Preview" className="w-full h-full object-cover animate-fadeIn" />
+                        <img src={filePreview} alt="Story Preview" className="w-full h-full object-cover animate-fadeIn select-none pointer-events-none" />
                       ) : (
-                        <video src={filePreview} autoPlay loop muted playsInline className="w-full h-full object-cover animate-fadeIn" />
+                        <video src={filePreview} autoPlay loop muted playsInline className="w-full h-full object-cover animate-fadeIn select-none pointer-events-none" />
                       )}
                       
                       {/* Live Instagram Text Preview Overlay */}
                       {textContent && (
                         <div 
-                          className={`absolute left-1/2 -translate-x-1/2 max-w-[85%] text-center text-xs sm:text-sm font-semibold pointer-events-none z-10 transition-all duration-200 break-words ${
-                            textPosition === 'top' ? 'top-[20%]' : textPosition === 'center' ? 'top-1/2 -translate-y-1/2' : 'bottom-[20%]'
-                          } ${
+                          onMouseDown={handleDragStart}
+                          onTouchStart={handleDragStart}
+                          style={{
+                            left: `${textX}%`,
+                            top: `${textY}%`,
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                          className={`absolute max-w-[85%] text-center text-xs sm:text-sm font-semibold z-20 select-none cursor-grab active:cursor-grabbing break-words px-3.5 py-2 rounded-2xl transition-shadow shadow-lg ${
                             textColor === 'white' ? 'text-white' : textColor === 'gold' ? 'text-gold-light' : 'text-red-400'
                           } ${
-                            textBg === 'black-blur' ? 'bg-black/60 backdrop-blur-md px-3 py-1 rounded-xl border border-white/10' :
-                            textBg === 'wine-solid' ? 'bg-wine-primary/95 px-3 py-1 rounded-xl border border-wine-light/20 shadow-lg' : 'px-2 py-0.5'
+                            textBg === 'black-blur' ? 'bg-black/65 backdrop-blur-md border border-white/10 shadow-xl' :
+                            textBg === 'wine-solid' ? 'bg-wine-primary/95 border border-wine-light/20 shadow-xl' : 'px-2 py-0.5'
                           }`}
                         >
                           {textContent}
@@ -691,22 +746,13 @@ export default function StoriesManager() {
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2">
-                          <div>
-                            <label htmlFor="text-position-select" className="text-[8px] text-gray-400 block mb-0.5">Posição</label>
-                            <select
-                              id="text-position-select"
-                              title="Posição do texto"
-                              value={textPosition}
-                              onChange={(e) => setTextPosition(e.target.value as any)}
-                              className="w-full px-1.5 py-1 text-[10px] rounded bg-black/80 border border-white/10 text-white focus:outline-none focus:border-gold-primary cursor-pointer"
-                            >
-                              <option value="top">Topo</option>
-                              <option value="center">Centro</option>
-                              <option value="bottom">Baixo</option>
-                            </select>
+                        {textContent && (
+                          <div className="text-[9px] text-gold-light bg-gold-primary/10 border border-gold-primary/20 p-2 rounded-lg text-center flex items-center justify-center gap-1">
+                            <span>👆 Toque/clique e arraste o texto acima para qualquer posição!</span>
                           </div>
+                        )}
 
+                        <div className="grid grid-cols-2 gap-2">
                           <div>
                             <label htmlFor="text-color-select" className="text-[8px] text-gray-400 block mb-0.5">Cor Texto</label>
                             <select
@@ -731,9 +777,9 @@ export default function StoriesManager() {
                               onChange={(e) => setTextBg(e.target.value as any)}
                               className="w-full px-1.5 py-1 text-[10px] rounded bg-black/80 border border-white/10 text-white focus:outline-none focus:border-gold-primary cursor-pointer"
                             >
-                              <option value="black-blur">Escuro</option>
-                              <option value="wine-solid">Vinho</option>
-                              <option value="none">Sem Fundo</option>
+                              <option value="black-blur">Preto Translúcido</option>
+                              <option value="wine-solid">Vermelho Vinho</option>
+                              <option value="none">Apenas Texto</option>
                             </select>
                           </div>
                         </div>

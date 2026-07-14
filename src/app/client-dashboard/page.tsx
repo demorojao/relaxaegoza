@@ -6,6 +6,7 @@ import { Shield, ShieldCheck, Sparkles, User, LogOut, Heart, Star, Check, PhoneC
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
+import { uploadToR2 } from '@/lib/r2Client';
 
 export default function ClientDashboard() {
   const router = useRouter();
@@ -52,18 +53,8 @@ export default function ClientDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      // 1. Upload the Selfie file to Supabase storage
-      const selfieExt = selfieFile.name.split('.').pop() || 'jpg';
-      const selfieName = `${user.id}/client_selfie_${Date.now()}.${selfieExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from('profile_media')
-        .upload(selfieName, selfieFile, { cacheControl: '3600', upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl: selfiePublicUrl } } = supabase.storage
-        .from('profile_media')
-        .getPublicUrl(selfieName);
+      // 1. Upload the Selfie file to Cloudflare R2
+      const selfiePublicUrl = await uploadToR2(selfieFile);
 
       // 2. Update verification status in profiles table
       const { error } = await supabase

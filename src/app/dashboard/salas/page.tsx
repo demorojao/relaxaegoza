@@ -15,6 +15,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { uploadToR2 } from '@/lib/r2Client';
 
 const AMENITIES_LIST = [
   { id: 'ar_condicionado', name: 'Ar Condicionado' },
@@ -136,23 +137,10 @@ export default function HostRoomsPage() {
 
     setSubmitting(true);
     try {
-      // 1. Upload das fotos para o storage
       const uploadedUrls: string[] = [];
       for (let i = 0; i < selectedPhotos.length; i++) {
         const file = selectedPhotos[i];
-        const ext = file.name.split('.').pop() || 'jpg';
-        const fileName = `${profile.id}/room_${Date.now()}_${i}.${ext}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('profile_media')
-          .upload(fileName, file, { cacheControl: '3600', upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('profile_media')
-          .getPublicUrl(fileName);
-
+        const publicUrl = await uploadToR2(file);
         uploadedUrls.push(publicUrl);
       }
 

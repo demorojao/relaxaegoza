@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase';
 import { Shield, ShieldCheck, ShieldAlert, Upload, Sparkles, Building2, HelpCircle, Check, Clock, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { triggerRevalidate } from '@/lib/revalidate';
+import { uploadToR2 } from '@/lib/r2Client';
 
 export default function VerificationPanel() {
   const [user, setUser] = useState<any>(null);
@@ -60,33 +61,13 @@ export default function VerificationPanel() {
     setVerificationError(null);
 
     try {
-      // 1. Fazer upload da Selfie no Storage do Supabase
+      // 1. Fazer upload da Selfie no Cloudflare R2
       setVerificationStage('Enviando selfie para armazenamento seguro...');
-      const selfieExt = selfieFile.name.split('.').pop() || 'jpg';
-      const selfieName = `${user.id}/selfie_${Date.now()}.${selfieExt}`;
-      const { error: selfieUploadError } = await supabase.storage
-        .from('profile_media')
-        .upload(selfieName, selfieFile, { cacheControl: '3600', upsert: true });
+      const selfiePublicUrl = await uploadToR2(selfieFile);
 
-      if (selfieUploadError) throw selfieUploadError;
-
-      const { data: { publicUrl: selfiePublicUrl } } = supabase.storage
-        .from('profile_media')
-        .getPublicUrl(selfieName);
-
-      // 2. Fazer upload do Documento no Storage do Supabase
+      // 2. Fazer upload do Documento no Cloudflare R2
       setVerificationStage('Enviando documento para armazenamento seguro...');
-      const docExt = documentFile.name.split('.').pop() || 'jpg';
-      const docName = `${user.id}/document_${Date.now()}.${docExt}`;
-      const { error: docUploadError } = await supabase.storage
-        .from('profile_media')
-        .upload(docName, documentFile, { cacheControl: '3600', upsert: true });
-
-      if (docUploadError) throw docUploadError;
-
-      const { data: { publicUrl: docPublicUrl } } = supabase.storage
-        .from('profile_media')
-        .getPublicUrl(docName);
+      const docPublicUrl = await uploadToR2(documentFile);
 
       // Salva previamente as URLs de arquivos no banco como pending
       const { error: savePreError } = await supabase
@@ -132,18 +113,8 @@ export default function VerificationPanel() {
     setSubmitting(true);
 
     try {
-      const spaceExt = spaceFile.name.split('.').pop() || 'jpg';
-      const spaceName = `${user.id}/space_verif_${Date.now()}.${spaceExt}`;
-      
-      const { error: spaceUploadError } = await supabase.storage
-        .from('profile_media')
-        .upload(spaceName, spaceFile, { cacheControl: '3600', upsert: true });
-
-      if (spaceUploadError) throw spaceUploadError;
-
-      const { data: { publicUrl: spacePublicUrl } } = supabase.storage
-        .from('profile_media')
-        .getPublicUrl(spaceName);
+      // Upload para o Cloudflare R2
+      const spacePublicUrl = await uploadToR2(spaceFile);
 
       // Salva o link do vídeo/foto na nova coluna
       const { error } = await supabase

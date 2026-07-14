@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import HostDashboardView from '@/components/HostDashboardView';
 import AdEditorModal from '@/components/AdEditorModal';
 import { triggerRevalidate } from '@/lib/revalidate';
+import { uploadToR2 } from '@/lib/r2Client';
 
 export default function DashboardMetrics() {
   const router = useRouter();
@@ -65,21 +66,8 @@ export default function DashboardMetrics() {
     setUploading(true);
 
     try {
-      const fileExt = avatarFile.name.split('.').pop() || 'jpg';
-      const fileName = `${profile.id}/avatar_${Date.now()}.${fileExt}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('profile_media')
-        .upload(fileName, avatarFile, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile_media')
-        .getPublicUrl(fileName);
+      // Upload para o Cloudflare R2
+      const publicUrl = await uploadToR2(avatarFile);
 
       const { error: updateError } = await supabase
         .from('profiles')
