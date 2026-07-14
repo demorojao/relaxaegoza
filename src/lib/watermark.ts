@@ -12,7 +12,7 @@ export interface TextOverlayConfig {
  */
 export async function applyWatermark(
   file: File, 
-  text: string = 'Relaxa & Goza',
+  text: string = 'Relaxe & Goze',
   textOverlay?: TextOverlayConfig
 ): Promise<File> {
   // Apenas processa arquivos de imagem
@@ -68,7 +68,7 @@ export async function applyWatermark(
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.font = `italic ${Math.max(12, fontSize * 0.75)}px sans-serif`;
-        ctx.fillText('relaxaegoza.com', marginX, marginY);
+        ctx.fillText('relaxegoze.com', marginX, marginY);
 
         // --- TEXT OVERLAY (Instagram style) ---
         if (textOverlay && textOverlay.content.trim()) {

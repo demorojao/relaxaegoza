@@ -212,7 +212,7 @@ export default function HostBookingsPage() {
               // Gerar link whatsapp
               const waLink = formatWhatsAppLink(
                 profile?.whatsapp,
-                `Olá ${profile?.name || ''}, vi sua solicitação de reserva da sala ${room?.title || ''} no Relaxa & Goza.`
+                `Olá ${profile?.name || ''}, vi sua solicitação de reserva da sala ${room?.title || ''} no Relaxe & Goze.`
               );
 
               return (

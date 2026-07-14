@@ -48,7 +48,7 @@ export default function TermsOfUsePage() {
                 1. A Tese Jurídica Central (Provedor de Mídia)
               </h2>
               <p className="text-gray-400 text-xs sm:text-sm leading-relaxed font-light">
-                O <strong>Relaxa & Goza</strong> atua estritamente em conformidade com o <strong>Artigo 19 do Marco Civil da Internet (Lei nº 12.965/2014)</strong>. A plataforma é uma ferramenta de publicidade digital automatizada na modalidade Software as a Service (SaaS). 
+                O <strong>Relaxe & Goze</strong> atua estritamente em conformidade com o <strong>Artigo 19 do Marco Civil da Internet (Lei nº 12.965/2014)</strong>. A plataforma é uma ferramenta de publicidade digital automatizada na modalidade Software as a Service (SaaS). 
                 Não geramos conteúdo, não contratamos anunciantes e não gerimos agendas ou atendimentos. Os anúncios são de propriedade, responsabilidade e controle exclusivos dos seus respectivos criadores, que possuem autonomia total sobre sua publicação, edição e exclusão.
               </p>
             </section>

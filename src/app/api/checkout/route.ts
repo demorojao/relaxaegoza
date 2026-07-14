@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
 
       planName = 'Assinatura do Local - Cadastro de Salas';
       amount = 39900; // R$ 399,00 / mês
-      planDescription = 'Assinatura de salas no Relaxa & Goza (Locais de Atendimento).';
+      planDescription = 'Assinatura de salas no Relaxe & Goze (Locais de Atendimento).';
     } else {
       // Provedora (garota)
       // Verificar rank de provedora por data de criação
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
       // Aplicar 30% de desconto para as 100 primeiras
       amount = isPromoEligible ? Math.round(baseAmount * 0.7) : baseAmount;
       planName = tier === 'pro' ? 'Plano Pro (Silver)' : 'Plano Gold Premium';
-      planDescription = `Assinatura de visibilidade e recursos ${tier.toUpperCase()} no Relaxa & Goza.`;
+      planDescription = `Assinatura de visibilidade e recursos ${tier.toUpperCase()} no Relaxe & Goze.`;
     }
 
     const origin = req.headers.get('origin') || 'http://localhost:3000';

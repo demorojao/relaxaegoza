@@ -515,7 +515,7 @@ export default function ProfileReels({
                 {/* WhatsApp Quick CTA Button */}
                 {profile.whatsapp && (
                   <a
-                    href={formatWhatsAppLink(profile.whatsapp, `Olá ${profile.name}, te vi no Drops do Relaxa & Goza e gostei muito do seu perfil! Está disponível?`) || '#'}
+                    href={formatWhatsAppLink(profile.whatsapp, `Olá ${profile.name}, te vi no Drops do Relaxe & Goze e gostei muito do seu perfil! Está disponível?`) || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex flex-col items-center group"

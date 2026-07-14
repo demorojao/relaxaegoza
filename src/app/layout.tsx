@@ -17,7 +17,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Relaxa & Goza | Vitrine Exclusiva",
+  title: "Relaxe & Goze | Vitrine Exclusiva",
   description: "Portal premium de acompanhantes e massagistas.",
 };
 

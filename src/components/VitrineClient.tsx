@@ -1192,7 +1192,7 @@ export default function VitrineClient({
               
               {activeStoryProfile.whatsapp && (
                 <a 
-                  href={formatWhatsAppLink(activeStoryProfile.whatsapp, `Olá ${activeStoryProfile.name}, vi seu Stories disponível agora no Relaxa & Goza! Tudo bem?`) || '#'}
+                  href={formatWhatsAppLink(activeStoryProfile.whatsapp, `Olá ${activeStoryProfile.name}, vi seu Stories disponível agora no Relaxe & Goze! Tudo bem?`) || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1"

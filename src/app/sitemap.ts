@@ -3,7 +3,7 @@ import { getSupabaseServerClient } from '@/lib/supabaseServer';
 import { slugify, getStateFromCity } from '@/lib/slugify';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxaegoza.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxe e goze.com.br';
 
   // 1. Páginas estáticas do portal
   const staticPages = [

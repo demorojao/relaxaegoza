@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const neighborhoodFormated = neighborhood.replace('-', ' ').replace(/(^\w|\s\w)/g, m => m.toUpperCase());
   const cityFormated = city.replace('-', ' ').replace(/(^\w|\s\w)/g, m => m.toUpperCase());
   const stateFormated = state.toUpperCase();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxaegoza.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxe e goze.com.br';
 
   return {
     title: `Acompanhantes Premium no ${neighborhoodFormated} | ${cityFormated} - ${stateFormated}`,
@@ -172,7 +172,7 @@ export default async function NeighborhoodPage({ params }: Props) {
       <div className="max-w-7xl mx-auto px-6 mt-8 relative z-10 space-y-12">
         {/* Breadcrumbs - Crucial para navegação semântica de silos */}
         <nav className="flex items-center gap-2 text-xs text-gray-500">
-          <Link href="/" className="hover:text-white transition-colors">Relaxa & Goza</Link>
+          <Link href="/" className="hover:text-white transition-colors">Relaxe & Goze</Link>
           <ChevronRight className="w-3 h-3" />
           <span className="text-gray-400 uppercase font-medium">{stateSlug}</span>
           <ChevronRight className="w-3 h-3" />
@@ -265,7 +265,7 @@ export default async function NeighborhoodPage({ params }: Props) {
           {/* SGE & EEAT Semantics Showcase */}
           <div className="bg-black/20 border border-white/5 rounded-2xl p-6 space-y-4">
             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-              Garantias Relaxa & Goza para {neighborhoodName}
+              Garantias Relaxe & Goze para {neighborhoodName}
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div className="p-3 bg-white/[0.01] border border-white/5 rounded-xl text-[10px] font-semibold text-gold-light">

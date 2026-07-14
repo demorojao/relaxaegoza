@@ -5,7 +5,7 @@ import VitrineClient from '../components/VitrineClient';
 import { Profile } from '../types';
 
 export const metadata = {
-  title: 'Relaxa & Goza | Vitrine Premium',
+  title: 'Relaxe & Goze | Vitrine Premium',
   description: 'O portal de encontros mais exclusivo do Brasil. Encontre acompanhantes e massagistas de luxo.',
 };
 

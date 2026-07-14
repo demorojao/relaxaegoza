@@ -176,7 +176,7 @@ export default function NotificationsPage() {
             Central de Notificações
           </h1>
           <p className="text-xs text-gray-400 font-light">
-            Acompanhe avaliações, presentes de destaque e atualizações do Relaxa & Goza.
+            Acompanhe avaliações, presentes de destaque e atualizações do Relaxe & Goze.
           </p>
         </div>
 

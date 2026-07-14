@@ -146,7 +146,7 @@ export default function PricingPage() {
       <div className="max-w-5xl mx-auto w-full text-center mb-12 relative z-10">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-primary/10 border border-gold-primary/20 text-gold-light text-xs font-semibold tracking-wide mb-4">
           <Award className="w-3.5 h-3.5" />
-          Planos de Visibilidade Relaxa & Goza
+          Planos de Visibilidade Relaxe & Goze
         </div>
         <h1 className="text-3xl md:text-5xl font-light tracking-tight text-white mb-4">
           Multiplique seus <span className="font-serif font-medium text-gold-primary italic">Contatos e Agendamentos</span>

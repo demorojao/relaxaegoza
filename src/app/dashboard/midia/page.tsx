@@ -228,7 +228,7 @@ export default function MediaManager() {
       let fileToUpload = selectedFile;
       if (mediaType === 'photo') {
         try {
-          const watermarkText = `Relaxa & Goza - ${profile?.name || ''}`;
+          const watermarkText = `Relaxe & Goze - ${profile?.name || ''}`;
           fileToUpload = await applyWatermark(selectedFile, watermarkText);
         } catch (watermarkErr) {
           console.error("Erro ao aplicar marca d'água:", watermarkErr);

@@ -448,7 +448,7 @@ export default function StoriesManager() {
         }
       } else if (mediaType === 'photo') {
         try {
-          const watermarkText = `Relaxa & Goza - ${profile?.name || ''}`;
+          const watermarkText = `Relaxe & Goze - ${profile?.name || ''}`;
           const textOverlayConfig = textContent ? {
             content: textContent,
             x: textX,
@@ -609,7 +609,7 @@ export default function StoriesManager() {
               <AlertCircle className="w-8 h-8 text-wine-light mx-auto animate-pulse" />
               <h4 className="text-sm font-bold text-white">Recurso Indisponível no Plano Bronze</h4>
               <p className="text-xs text-gray-400 font-light leading-relaxed max-w-md mx-auto">
-                Para postar Stories efêmeros na página principal do Relaxa & Goza, você deve contratar o plano **Pro (Silver)** ou **Gold Premium**.
+                Para postar Stories efêmeros na página principal do Relaxe & Goze, você deve contratar o plano **Pro (Silver)** ou **Gold Premium**.
               </p>
               <a href="/planos" className="inline-block px-5 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase transition-all shadow-[0_4px_12px_rgba(197,168,128,0.2)] cursor-pointer">
                 Ver Planos de Upgrade
@@ -800,7 +800,7 @@ export default function StoriesManager() {
                         )}
                         <div className="flex flex-col text-left">
                           <span className="text-[10px] text-white font-bold">Seu Story</span>
-                          <span className="text-[8px] text-gray-400">Relaxa & Goza</span>
+                          <span className="text-[8px] text-gray-400">Relaxe & Goze</span>
                         </div>
                       </div>
                       

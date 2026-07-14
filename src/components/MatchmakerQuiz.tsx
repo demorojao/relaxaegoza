@@ -52,7 +52,7 @@ export default function MatchmakerQuiz({ isOpen, onClose, onComplete }: Matchmak
         <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-6 relative z-10">
           <div className="flex items-center gap-2">
             <Heart className="w-5 h-5 text-gold-primary animate-pulse" />
-            <h3 className="text-base font-semibold text-white tracking-wide">Relaxa & Goza Matchmaker</h3>
+            <h3 className="text-base font-semibold text-white tracking-wide">Relaxe & Goze Matchmaker</h3>
           </div>
           <button 
             onClick={onClose}

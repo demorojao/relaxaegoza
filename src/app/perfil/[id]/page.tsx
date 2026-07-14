@@ -71,11 +71,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!profile) {
     return {
-      title: 'Perfil Não Encontrado - Relaxa & Goza',
+      title: 'Perfil Não Encontrado - Relaxe & Goze',
     };
   }
 
-  const title = `${profile.name}, ${profile.age} anos - Relaxa & Goza`;
+  const title = `${profile.name}, ${profile.age} anos - Relaxe & Goze`;
   const location = profile.neighborhood ? `${profile.neighborhood}, ${profile.city}` : profile.city;
   const description = `${profile.name} - Atendimento de luxo em ${location}. Veja fotos reais, comodidades, avaliações e entre em contato direto pelo WhatsApp.`;
 

@@ -203,7 +203,7 @@ export default function HostDashboardView({ profile }: HostDashboardViewProps) {
         <div className="space-y-2">
           <h2 className="text-xl md:text-2xl font-bold text-white tracking-wide">Assinatura do Local Requerida</h2>
           <p className="text-xs text-gray-400 font-light leading-relaxed max-w-sm mx-auto">
-            Seja um parceiro de salas no Relaxa & Goza! Para cadastrar suas salas de atendimento e receber reservas das anunciantes da nossa vitrine, ative sua assinatura.
+            Seja um parceiro de salas no Relaxe & Goze! Para cadastrar suas salas de atendimento e receber reservas das anunciantes da nossa vitrine, ative sua assinatura.
           </p>
         </div>
 
@@ -260,7 +260,7 @@ export default function HostDashboardView({ profile }: HostDashboardViewProps) {
           <div className="flex items-center gap-2 mt-1.5 text-xs text-gray-400">
             <span className="flex items-center gap-1 text-emerald-400 font-medium">
               <Award className="w-3.5 h-3.5" />
-              Parceiro de Espaço Relaxa & Goza
+              Parceiro de Espaço Relaxe & Goze
             </span>
             <span>•</span>
             <span>{profile.city}</span>
@@ -321,7 +321,7 @@ export default function HostDashboardView({ profile }: HostDashboardViewProps) {
             <p className="text-xs text-gray-400 font-light leading-relaxed mt-1.5">
               {hasFile 
                 ? 'Sua mídia de validação está em nossa fila de auditoria. Revisamos os dados em até 2 horas.'
-                : 'Para que suas salas fiquem visíveis para as profissionais do portal Relaxa & Goza alugarem, você precisa enviar um curto vídeo ou foto de validação do local.'
+                : 'Para que suas salas fiquem visíveis para as profissionais do portal Relaxe & Goze alugarem, você precisa enviar um curto vídeo ou foto de validação do local.'
               }
             </p>
           </div>

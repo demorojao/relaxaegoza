@@ -50,9 +50,9 @@ export async function generateMetadata({ params }: Props) {
   const { state: stateSlug, city: citySlug } = await params;
   const { city: cityName } = await getOriginalLocationNames(citySlug);
   const stateFormated = stateSlug.toUpperCase();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxaegoza.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxe e goze.com.br';
 
-  const title = `Acompanhantes e Massagistas Premium em ${cityName} - ${stateFormated} | Relaxa & Goza`;
+  const title = `Acompanhantes e Massagistas Premium em ${cityName} - ${stateFormated} | Relaxe & Goze`;
   const description = `Conheça as melhores acompanhantes de luxo e massagistas de elite em ${cityName} (${stateFormated}). Fotos reais e verificadas, local próprio discreto e contato via WhatsApp.`;
 
   return {
@@ -158,7 +158,7 @@ export default async function CityPage({ params }: Props) {
       <div className="max-w-7xl mx-auto px-6 mt-8 relative z-10 space-y-12">
         {/* Breadcrumbs com o Estado */}
         <nav className="flex items-center gap-2 text-xs text-gray-500">
-          <Link href="/" className="hover:text-white transition-colors">Relaxa & Goza</Link>
+          <Link href="/" className="hover:text-white transition-colors">Relaxe & Goze</Link>
           <ChevronRight className="w-3 h-3" />
           <span className="text-gray-400 uppercase font-medium">{stateSlug}</span>
           <ChevronRight className="w-3 h-3" />
@@ -227,7 +227,7 @@ export default async function CityPage({ params }: Props) {
               Informações sobre Atendimentos em {cityName}
             </h2>
             <p className="text-gray-400 text-xs leading-relaxed font-light">
-              O mercado de serviços premium de bem-estar e entretenimento em {cityName} ({stateSlug.toUpperCase()}) destaca-se pela alta qualidade de suas profissionais e infraestruturas discretas. O Relaxa & Goza atua como o principal catálogo técnico e seguro da região, oferecendo transparência total para os clientes e segurança jurídica e física para os anunciantes.
+              O mercado de serviços premium de bem-estar e entretenimento em {cityName} ({stateSlug.toUpperCase()}) destaca-se pela alta qualidade de suas profissionais e infraestruturas discretas. O Relaxe & Goze atua como o principal catálogo técnico e seguro da região, oferecendo transparência total para os clientes e segurança jurídica e física para os anunciantes.
             </p>
             
             {avgPrice > 0 && (

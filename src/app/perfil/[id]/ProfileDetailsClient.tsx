@@ -639,7 +639,7 @@ export default function ProfileDetailsClient({
           
           {(() => {
             const whatsappMessage = profile.whatsapp_custom_message
-              || `Olá ${profile.name}! Vi seu anúncio no Relaxa & Goza e gostaria de agendar um horário.`;
+              || `Olá ${profile.name}! Vi seu anúncio no Relaxe & Goze e gostaria de agendar um horário.`;
             const whatsappLink = formatWhatsAppLink(profile.whatsapp, whatsappMessage) || '#';
             return (
               <a 

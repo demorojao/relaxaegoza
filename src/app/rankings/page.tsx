@@ -135,7 +135,7 @@ export default function RankingsPage() {
         </Link>
         <div className="font-semibold text-white tracking-wide truncate flex-1 text-center pr-6 sm:pr-0 flex items-center justify-center gap-1.5 text-xs sm:text-base">
           <Trophy className="w-4 h-4 text-gold-primary animate-pulse shrink-0" />
-          <span>Rankings Relaxa & Goza</span>
+          <span>Rankings Relaxe & Goze</span>
         </div>
       </div>
 

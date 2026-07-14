@@ -615,7 +615,7 @@ export default function ProfileEditor() {
       if (isImage) {
         try {
           const { applyWatermark } = await import('@/lib/watermark');
-          const watermarkText = `Relaxa & Goza - ${stageName || ''}`;
+          const watermarkText = `Relaxe & Goze - ${stageName || ''}`;
           fileToUpload = await applyWatermark(file, watermarkText);
         } catch (watermarkErr) {
           console.error("Erro ao aplicar marca d'água:", watermarkErr);
@@ -695,7 +695,7 @@ export default function ProfileEditor() {
       if (isImage) {
         try {
           const { applyWatermark } = await import('@/lib/watermark');
-          const watermarkText = `Relaxa & Goza - ${stageName || ''}`;
+          const watermarkText = `Relaxe & Goze - ${stageName || ''}`;
           fileToUpload = await applyWatermark(file, watermarkText);
         } catch (watermarkErr) {
           console.error("Erro ao aplicar marca d'água:", watermarkErr);
@@ -1246,7 +1246,7 @@ export default function ProfileEditor() {
                 title="Mensagem Customizada do WhatsApp"
                 value={whatsappCustomMessage} 
                 onChange={(e) => setWhatsappCustomMessage(e.target.value)} 
-                placeholder="Ex: Olá! Vi seu anúncio no Relaxa & Goza e gostaria de agendar um horário com você."
+                placeholder="Ex: Olá! Vi seu anúncio no Relaxe & Goze e gostaria de agendar um horário com você."
                 rows={2}
                 className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors resize-none leading-relaxed"
               />
@@ -1513,7 +1513,7 @@ export default function ProfileEditor() {
               className="rounded border-white/20 text-gold-primary focus:ring-0 focus:ring-offset-0 bg-black/40 accent-gold-primary w-5 h-5 cursor-pointer mt-0.5"
             />
             <label htmlFor="image-consent-checkbox" className="text-xs text-gray-300 font-light leading-relaxed cursor-pointer select-none">
-              Eu declaro que possuo direito de uso sobre todas as imagens enviadas e dou autorização de publicação no portal <strong>Relaxa & Goza</strong>. Estou ciente de que a publicação de imagens de terceiros sem autorização é de minha inteira responsabilidade legal.
+              Eu declaro que possuo direito de uso sobre todas as imagens enviadas e dou autorização de publicação no portal <strong>Relaxe & Goze</strong>. Estou ciente de que a publicação de imagens de terceiros sem autorização é de minha inteira responsabilidade legal.
             </label>
           </div>
         </div>

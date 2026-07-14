@@ -8,7 +8,7 @@ interface WatermarkProps {
   children: React.ReactNode;
 }
 
-export default function Watermark({ text = 'Relaxa & Goza', className = '', children }: WatermarkProps) {
+export default function Watermark({ text = 'Relaxe & Goze', className = '', children }: WatermarkProps) {
   useEffect(() => {
     // Bloqueia clique direito e drag de imagens
     const handleContextMenu = (e: MouseEvent) => {
