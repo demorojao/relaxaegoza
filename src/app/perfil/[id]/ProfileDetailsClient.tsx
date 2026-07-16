@@ -28,6 +28,7 @@ import {
   FileImage
 } from 'lucide-react';
 import { formatWhatsAppLink } from '@/lib/utils';
+import { triggerRevalidate } from '@/lib/revalidate';
 import { getCDNUrl } from '@/lib/mediaHelper';
 import ReportModal from '@/components/ReportModal';
 import Watermark from '@/components/Watermark';
@@ -388,6 +389,10 @@ export default function ProfileDetailsClient({
       
       // Recarregar avaliações
       await fetchReviews();
+      
+      // Revalidar cache do Next.js no servidor
+      await triggerRevalidate(profile.city, profile.neighborhood, id);
+      
       setTimeout(() => setReviewSuccess(false), 3000);
     } catch (err) {
       alert('Erro ao enviar avaliação. Certifique-se de que é um cliente cadastrado.');

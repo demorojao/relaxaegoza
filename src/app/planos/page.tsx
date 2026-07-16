@@ -264,10 +264,25 @@ export default function PricingPage() {
         })}
       </div>
 
+      {/* Suporte Financeiro (Prevenção de MED) */}
+      <div className="max-w-xl mx-auto w-full mb-10 bg-dark-card/40 border border-dark-border/40 rounded-2xl p-5 text-center relative z-10">
+        <p className="text-xs text-gray-400 font-light mb-3">
+          Dificuldades no pagamento ou precisa de liberação imediata? Fale diretamente com o nosso <strong>Departamento Financeiro</strong>.
+        </p>
+        <a 
+          href={`https://wa.me/${process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '5500000000000'}?text=${encodeURIComponent('Olá! Preciso de suporte com o pagamento / liberação de plano no portal.')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-gold-primary hover:text-gold-light transition-colors cursor-pointer"
+        >
+          Falar com o Suporte Financeiro via WhatsApp &rarr;
+        </a>
+      </div>
+
       {/* Footer warning */}
       <div className="max-w-3xl mx-auto w-full text-center relative z-10 text-[11px] text-gray-500 font-light leading-relaxed">
         <Shield className="w-5 h-5 text-gray-600 mx-auto mb-2" />
-        Cobranças são 100% discretas na fatura do cartão. Não armazenamos informações de cartões de crédito em nossos servidores.
+        Todas as transações são processadas de forma segura e discreta em nosso CNPJ de Publicidade e Tecnologia.
       </div>
       
     </div>

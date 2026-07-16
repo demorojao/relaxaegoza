@@ -28,9 +28,23 @@ export async function applyWatermark(
       img.src = event.target?.result as string;
       
       img.onload = () => {
+        let targetWidth = img.width;
+        let targetHeight = img.height;
+        const maxDimension = 1200;
+
+        if (targetWidth > maxDimension || targetHeight > maxDimension) {
+          if (targetWidth > targetHeight) {
+            targetHeight = Math.round((targetHeight * maxDimension) / targetWidth);
+            targetWidth = maxDimension;
+          } else {
+            targetWidth = Math.round((targetWidth * maxDimension) / targetHeight);
+            targetHeight = maxDimension;
+          }
+        }
+
         const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
         const ctx = canvas.getContext('2d');
         
         if (!ctx) {
@@ -38,12 +52,12 @@ export async function applyWatermark(
           return;
         }
 
-        // Desenha a imagem original no canvas
-        ctx.drawImage(img, 0, 0);
+        // Desenha a imagem original no canvas redimensionado
+        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
         // --- MARCA D'ÁGUA ---
-        // Define o tamanho da fonte proporcional à largura da imagem
-        const fontSize = Math.max(14, Math.floor(img.width * 0.028));
+        // Define o tamanho da fonte proporcional à largura da imagem redimensionada
+        const fontSize = Math.max(14, Math.floor(canvas.width * 0.028));
         ctx.font = `bold ${fontSize}px sans-serif`;
         
         // Estilos para a marca d'água (semi-transparente)
@@ -54,10 +68,10 @@ export async function applyWatermark(
         ctx.textBaseline = 'bottom';
 
         // Posição: Canto inferior direito com uma pequena margem (2% do tamanho)
-        const marginX = img.width * 0.02;
-        const marginY = img.height * 0.02;
-        const posX = img.width - marginX;
-        const posY = img.height - marginY;
+        const marginX = canvas.width * 0.02;
+        const marginY = canvas.height * 0.02;
+        const posX = canvas.width - marginX;
+        const posY = canvas.height - marginY;
 
         // Desenha a sombra da borda e depois o texto
         ctx.strokeText(text, posX, posY);
@@ -72,13 +86,13 @@ export async function applyWatermark(
 
         // --- TEXT OVERLAY (Instagram style) ---
         if (textOverlay && textOverlay.content.trim()) {
-          const textFontSize = Math.max(22, Math.floor(img.width * 0.045)); // Fonte legível para o story
+          const textFontSize = Math.max(22, Math.floor(canvas.width * 0.045)); // Fonte legível para o story
           ctx.font = `bold ${textFontSize}px sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
 
-          const overlayX = (textOverlay.x / 100) * img.width;
-          const overlayY = (textOverlay.y / 100) * img.height;
+          const overlayX = (textOverlay.x / 100) * canvas.width;
+          const overlayY = (textOverlay.y / 100) * canvas.height;
 
           // Medição para desenhar fundo
           const textWidth = ctx.measureText(textOverlay.content).width;

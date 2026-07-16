@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, Sparkles } from 'lucide-react';
-import { cacheLife } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 import { Suspense } from 'react';
 import { getSupabaseServerClient } from '@/lib/supabaseServer';
 import { getStateFromCity } from '@/lib/slugify';
@@ -15,7 +15,8 @@ interface Props {
 
 async function getCachedProfile(id: string) {
   'use cache';
-  cacheLife('seconds');
+  cacheLife('days');
+  cacheTag(`profile-${id}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
     .from('profiles')
@@ -30,7 +31,8 @@ async function getCachedProfile(id: string) {
 
 async function getCachedPhotos(profileId: string) {
   'use cache';
-  cacheLife('seconds');
+  cacheLife('days');
+  cacheTag(`profile-${profileId}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
     .from('profile_photos')
@@ -41,7 +43,8 @@ async function getCachedPhotos(profileId: string) {
 
 async function getCachedReviews(providerId: string) {
   'use cache';
-  cacheLife('seconds');
+  cacheLife('days');
+  cacheTag(`profile-${providerId}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
     .from('reviews')
@@ -55,7 +58,8 @@ async function getCachedReviews(providerId: string) {
 
 async function getCachedAd(profileId: string) {
   'use cache';
-  cacheLife('seconds');
+  cacheLife('days');
+  cacheTag(`profile-${profileId}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
     .from('ads')

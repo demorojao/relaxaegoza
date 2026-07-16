@@ -20,7 +20,8 @@ import {
   X,
   Zap,
   Lock,
-  Bell
+  Bell,
+  LifeBuoy
 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -100,6 +101,9 @@ export default function DashboardLayout({
     fetchRole();
   }, []);
 
+  const supportPhone = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '5500000000000';
+  const supportUrl = `https://wa.me/${supportPhone}?text=${encodeURIComponent('Olá! Preciso de suporte com o financeiro / pagamentos do portal.')}`;
+
   const providerItems = [
     {
       name: 'Métricas & Painel',
@@ -145,6 +149,11 @@ export default function DashboardLayout({
       name: 'Planos de Anúncio',
       icon: CreditCard,
       path: '/planos'
+    },
+    {
+      name: 'Suporte Financeiro',
+      icon: LifeBuoy,
+      path: supportUrl
     }
   ];
 
@@ -198,11 +207,14 @@ export default function DashboardLayout({
               {menuItems.map((item) => {
                 const isActive = pathname === item.path;
                 const Icon = item.icon;
+                const isExternal = item.path.startsWith('http');
                 return (
                   <Link 
                     key={item.name} 
                     href={item.path}
                     onClick={() => setMenuOpen(false)}
+                    target={isExternal ? "_blank" : undefined}
+                    rel={isExternal ? "noopener noreferrer" : undefined}
                   >
                     <span className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all ${
                       isActive 
@@ -257,8 +269,14 @@ export default function DashboardLayout({
               menuItems.map((item) => {
                 const isActive = pathname === item.path;
                 const Icon = item.icon;
+                const isExternal = item.path.startsWith('http');
                 return (
-                  <Link key={item.name} href={item.path}>
+                  <Link 
+                    key={item.name} 
+                    href={item.path}
+                    target={isExternal ? "_blank" : undefined}
+                    rel={isExternal ? "noopener noreferrer" : undefined}
+                  >
                     <span className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                       isActive 
                         ? 'bg-gold-primary/10 text-gold-light border-l-2 border-gold-primary' 

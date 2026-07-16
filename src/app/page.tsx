@@ -5,8 +5,8 @@ import VitrineClient from '../components/VitrineClient';
 import { Profile } from '../types';
 
 export const metadata = {
-  title: 'Relaxe & Goze | Vitrine Premium',
-  description: 'O portal de encontros mais exclusivo do Brasil. Encontre acompanhantes e massagistas de luxo.',
+  title: 'Relaxe & Goze | Acompanhantes, Massagistas e Garotas de Programa Premium',
+  description: 'O principal portal de classificados premium do Brasil. Encontre acompanhantes, massagistas sensuais e garotas de programa de luxo na sua região com fotos 100% reais e contato via WhatsApp.',
 };
 
 export default async function Home() {
