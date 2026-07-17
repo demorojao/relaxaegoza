@@ -1,0 +1,12 @@
+{
+  "api-catalog": {
+    "version": "1.0",
+    "apis": [
+      {
+        "name": "Relaxe & Goze API",
+        "description": "Portal e vitrine de luxo de acompanhantes e massagistas",
+        "service-desc": "/docs/api"
+      }
+    ]
+  }
+}
