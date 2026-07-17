@@ -147,6 +147,11 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
                     ? Number(profile.avg_rating).toFixed(1) 
                     : '4.9'}
                 </span>
+                {profile.reviews_count !== undefined && profile.reviews_count > 0 && (
+                  <span className="text-[8px] sm:text-[10px] text-gray-400 font-light ml-0.5">
+                    ({profile.reviews_count})
+                  </span>
+                )}
               </div>
             </div>
 

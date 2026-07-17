@@ -313,14 +313,16 @@ export default function ProfileDetailsClient({
   const checkCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      setCurrentUser(user);
       const { data } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, verification_status')
         .eq('id', user.id)
         .single();
       if (data) {
         setUserRole(data.role);
+        setCurrentUser({ ...user, verification_status: data.verification_status });
+      } else {
+        setCurrentUser(user);
       }
     }
   };
@@ -365,6 +367,10 @@ export default function ProfileDetailsClient({
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
+    if (currentUser.verification_status !== 'verified') {
+      alert('Somente clientes verificados podem enviar avaliações.');
+      return;
+    }
     setSubmittingReview(true);
 
     try {
@@ -890,8 +896,9 @@ export default function ProfileDetailsClient({
 
           {/* Form para Deixar Avaliação */}
           {currentUser && userRole === 'client' ? (
-            <form onSubmit={handleSubmitReview} className="bg-white/2 border border-white/5 rounded-2xl p-5 space-y-4">
-              <h4 className="text-xs font-semibold text-white">Deixar minha Avaliação de Segurança</h4>
+            currentUser.verification_status === 'verified' ? (
+              <form onSubmit={handleSubmitReview} className="bg-white/2 border border-white/5 rounded-2xl p-5 space-y-4">
+                <h4 className="text-xs font-semibold text-white">Deixar minha Avaliação de Segurança</h4>
               
               {reviewSuccess && (
                 <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 animate-fadeIn">
@@ -998,7 +1005,16 @@ export default function ProfileDetailsClient({
               >
                 {submittingReview ? 'Enviando...' : 'Publicar Avaliação'}
               </button>
-            </form>
+              </form>
+            ) : (
+              <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-4.5 text-center">
+                <p className="text-xs text-amber-300/90 leading-relaxed font-light">
+                  Sua conta de cliente ainda não foi verificada. 
+                  Apenas <strong>clientes verificados por selfie</strong> podem deixar avaliações para evitar avaliações falsas e fraudes. 
+                  Acesse o seu <Link href="/dashboard" className="text-gold-primary hover:underline font-semibold mx-1">Painel de Cliente</Link> para enviar sua selfie de verificação.
+                </p>
+              </div>
+            )
           ) : !currentUser ? (
             <div className="bg-black/30 border border-white/5 rounded-xl p-4 text-center">
               <p className="text-xs text-gray-500">

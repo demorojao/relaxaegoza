@@ -19,6 +19,7 @@ export interface Profile {
   verification_status?: 'none' | 'pending' | 'verified' | 'rejected';
   specialties?: ProfileSpecialty[];
   avg_rating?: number;
+  reviews_count?: number;
   bio?: string;
   whatsapp?: string;
   neighborhood?: string;

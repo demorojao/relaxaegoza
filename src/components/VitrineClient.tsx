@@ -390,9 +390,14 @@ export default function VitrineClient({
       if (isBoostedA !== isBoostedB) return isBoostedB - isBoostedA;
 
       // 2.5. Pontos de Avaliação (avg_rating)
-      const ratingA = (a as any).avg_rating || 0;
-      const ratingB = (b as any).avg_rating || 0;
+      const ratingA = a.avg_rating || 0;
+      const ratingB = b.avg_rating || 0;
       if (ratingA !== ratingB) return ratingB - ratingA;
+
+      // 2.6. Quantidade de Comentários/Avaliações (reviews_count)
+      const reviewsA = a.reviews_count || 0;
+      const reviewsB = b.reviews_count || 0;
+      if (reviewsA !== reviewsB) return reviewsB - reviewsA;
 
       // 3. Se ambas possuem Boost, ordenar pela recência (quem expira mais tarde = pagou por último)
       if (isBoostedA && isBoostedB) {
