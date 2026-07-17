@@ -17,9 +17,14 @@ export default function Logo({ className }: LogoProps) {
         <div className="absolute inset-0 bg-gold-primary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
         <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-gold-primary group-hover:text-gold-light group-hover:scale-110 transition-all duration-300 relative z-10" />
       </div>
-      <span className="text-sm sm:text-base md:text-lg font-bold tracking-tight text-white transition-colors">
-        Relaxe<span className="font-serif text-gold-primary group-hover:text-gold-light transition-colors"> & </span>Goze
-      </span>
+      <div className="flex flex-col items-start leading-none gap-0.5">
+        <span className="text-sm sm:text-base md:text-lg font-bold tracking-tight text-white transition-colors leading-none">
+          Relaxe<span className="font-serif text-gold-primary group-hover:text-gold-light transition-colors"> & </span>Goze
+        </span>
+        <span className="text-[7.5px] sm:text-[8px] tracking-[0.18em] text-gold-primary/80 uppercase font-light leading-none">
+          Portal Privê de Luxo
+        </span>
+      </div>
     </Link>
   );
 }

@@ -42,6 +42,12 @@ export default function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 relative z-10 space-y-3">
+      {/* Luxury Badging Line */}
+      <div className="flex justify-center md:justify-start items-center gap-1.5 px-1 py-0.5 text-[9px] sm:text-[10px] text-gray-500 font-light tracking-wide">
+        <span className="w-1 h-1 rounded-full bg-gold-primary shrink-0 animate-pulse" />
+        <span>Vitrine de alto padrão para acompanhantes de luxo e massoterapeutas de elite</span>
+      </div>
+
       {/* Abas Principais: Anúncios vs Modelos */}
       <div className="w-full border-b border-white/5 pb-2 mb-1">
         <div className="inline-flex bg-black/50 border border-white/5 p-1 rounded-xl gap-1">
