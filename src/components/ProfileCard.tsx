@@ -142,7 +142,11 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
               
               <div className="flex items-center gap-0.5 text-gold-primary shrink-0">
                 <Star className="w-2.5 sm:w-3 h-2.5 sm:h-3 fill-gold-primary" />
-                <span className="font-medium text-[9px] sm:text-[11px]">4.9</span>
+                <span className="font-medium text-[9px] sm:text-[11px]">
+                  {profile.avg_rating && profile.avg_rating > 0 
+                    ? Number(profile.avg_rating).toFixed(1) 
+                    : '4.9'}
+                </span>
               </div>
             </div>
 
