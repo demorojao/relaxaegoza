@@ -68,8 +68,8 @@ export default function PricingPage() {
   };
 
   const showDiscount = !loadingCount && providerCount < 100;
-  const proPrice = showDiscount ? 'R$ 349,30' : 'R$ 499,00';
-  const goldPrice = showDiscount ? 'R$ 629,30' : 'R$ 899,00';
+  const proPrice = showDiscount ? 'R$ 209,30' : 'R$ 299,00';
+  const goldPrice = showDiscount ? 'R$ 315,00' : 'R$ 450,00';
 
   const plans = [
     {
@@ -154,7 +154,7 @@ export default function PricingPage() {
           Multiplique seus <span className="font-serif font-medium text-gold-primary italic">Contatos e Agendamentos</span>
         </h1>
         <p className="text-sm md:text-base text-gray-400 font-light max-w-xl mx-auto leading-relaxed">
-          Escolha o nível ideal de presença digital para o seu anúncio no portal. Destaque-se na geolocalização e transmita total segurança com selos de verificação.
+          O Relaxe & Goze é um portal exclusivo de alto padrão voltado a profissionais de luxo e massoterapeutas de elite. Escolha o nível de presença digital ideal para o seu anúncio.
         </p>
       </div>
 

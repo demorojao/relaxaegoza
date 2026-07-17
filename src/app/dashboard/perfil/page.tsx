@@ -1084,6 +1084,9 @@ export default function ProfileEditor() {
                 className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
                 required
               />
+              <p className="text-[10px] text-gold-primary/80 font-medium">
+                * O Relaxe & Goze é um portal exclusivo de alto padrão. O valor mínimo aceito é R$ 300,00/h.
+              </p>
             </div>
 
             {/* Mensagem Customizada do WhatsApp */}
