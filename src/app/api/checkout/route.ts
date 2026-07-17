@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Profissional de destino nao encontrada.' }, { status: 404 });
       }
 
-      amountCents = 5000; // R$ 50,00
+      amountCents = 14900; // R$ 149,00
       isBoostFlag = true;
       isGiftFlag = true;
       targetProfileIdValue = targetProfileId;
@@ -72,11 +72,11 @@ export async function POST(req: NextRequest) {
 
       const hours = Number(boostHours || 2);
       if (hours === 2) {
-        amountCents = 1500; // R$ 15,00
+        amountCents = 4900; // R$ 49,00
       } else if (hours === 6) {
-        amountCents = 3500; // R$ 35,00
+        amountCents = 9900; // R$ 99,00
       } else if (hours === 12) {
-        amountCents = 6000; // R$ 60,00
+        amountCents = 17900; // R$ 179,00
       } else {
         return NextResponse.json({ error: 'Duração de Boost inválida.' }, { status: 400 });
       }
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Você é um dos 100 primeiros parceiros! Seu plano de salas é 100% gratuito.' }, { status: 400 });
         }
 
-        amountCents = 45000; // R$ 450,00
+        amountCents = 89900; // R$ 899,00
         tierValue = tier;
         description = `Hospedagem de Classificado Online - ID ${user.id}`;
       } else {
@@ -121,8 +121,8 @@ export async function POST(req: NextRequest) {
         const isPromoEligible = !providerRankError && providerRank !== null && providerRank <= 100;
 
         const baseAmount = {
-          pro: 29900,
-          gold: 45000
+          pro: 49900,
+          gold: 89900
         }[tier as 'pro' | 'gold'];
 
         // Aplicar 30% de desconto para as 100 primeiras

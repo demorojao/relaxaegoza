@@ -68,8 +68,8 @@ export default function PricingPage() {
   };
 
   const showDiscount = !loadingCount && providerCount < 100;
-  const proPrice = showDiscount ? 'R$ 209,30' : 'R$ 299,00';
-  const goldPrice = showDiscount ? 'R$ 315,00' : 'R$ 450,00';
+  const proPrice = showDiscount ? 'R$ 349,30' : 'R$ 499,00';
+  const goldPrice = showDiscount ? 'R$ 629,30' : 'R$ 899,00';
 
   const plans = [
     {

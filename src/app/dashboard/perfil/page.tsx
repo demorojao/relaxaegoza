@@ -291,6 +291,12 @@ export default function ProfileEditor() {
       return;
     }
 
+    // Validar Valor Mínimo da Sessão (Premium/Luxo)
+    if (Number(rate) < 300) {
+      alert('O Relaxe & Goze é um portal exclusivo de alto padrão (Premium/Luxo). O valor mínimo de sessão aceito é de R$ 300,00 por hora.');
+      return;
+    }
+
     // Se o perfil é verificado e o usuário mudou nome, idade ou avatar, avisar antes
     const isVerified = profile?.verification_status === 'verified';
     const changedSensitive = isVerified && (

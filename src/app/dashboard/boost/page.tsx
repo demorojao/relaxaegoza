@@ -5,9 +5,9 @@ import { supabase } from '../../../lib/supabase';
 import { Zap, Clock, TrendingUp, Sparkles, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 const BOOST_PACKAGES = [
-  { hours: 2, label: '2 horas', description: 'Impulso rápido para o horário de pico', icon: '⚡', price: 'R$ 15', highlight: false },
-  { hours: 6, label: '6 horas', description: 'Meio dia no topo da vitrine', icon: '🔥', price: 'R$ 35', highlight: true },
-  { hours: 12, label: '12 horas', description: 'Um dia inteiro em destaque', icon: '👑', price: 'R$ 60', highlight: false },
+  { hours: 2, label: '2 horas', description: 'Impulso rápido para o horário de pico', icon: '⚡', price: 'R$ 49', highlight: false },
+  { hours: 6, label: '6 horas', description: 'Meio dia no topo da vitrine', icon: '🔥', price: 'R$ 99', highlight: true },
+  { hours: 12, label: '12 horas', description: 'Um dia inteiro em destaque', icon: '👑', price: 'R$ 179', highlight: false },
 ];
 
 function TimeCountdown({ expiresAt }: { expiresAt: string }) {
