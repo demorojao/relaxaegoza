@@ -424,13 +424,13 @@ export default function VitrineClient({
   };
 
   useEffect(() => {
-    const hasActiveFilters = cityFilter || neighborhoodFilter || categoryFilter || ageFilter || priceFilter || selectedSpecialties.length > 0 || spaceFilter || genderFilter || currentTab !== 'ads';
+    const hasActiveFilters = cityFilter || neighborhoodFilter || categoryFilter || ageFilter || priceFilter || selectedSpecialties.length > 0 || spaceFilter || verifiedFilter || genderFilter || currentTab !== 'ads';
     if (hasActiveFilters) {
       fetchProfiles();
     } else {
       setProfiles(sortProfiles(initialProfiles, userCoords));
     }
-  }, [cityFilter, neighborhoodFilter, categoryFilter, ageFilter, priceFilter, selectedSpecialties, spaceFilter, genderFilter, initialProfiles, userCoords, currentTab]);
+  }, [cityFilter, neighborhoodFilter, categoryFilter, ageFilter, priceFilter, selectedSpecialties, spaceFilter, verifiedFilter, genderFilter, initialProfiles, userCoords, currentTab]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
