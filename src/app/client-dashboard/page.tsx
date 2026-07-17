@@ -32,6 +32,10 @@ export default function ClientDashboard() {
         .single();
       
       if (data) {
+        if (data.role === 'provider' || data.role === 'host') {
+          router.push('/dashboard');
+          return;
+        }
         setProfile(data);
       }
     } else {

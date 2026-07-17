@@ -676,7 +676,16 @@ export default function StoriesManager() {
                       {mediaType === 'photo' ? (
                         <img src={filePreview} alt="Story Preview" className="w-full h-full object-cover animate-fadeIn select-none pointer-events-none" />
                       ) : (
-                        <video src={filePreview} autoPlay loop muted playsInline className="w-full h-full object-cover animate-fadeIn select-none pointer-events-none" />
+                        <video 
+                          src={filePreview} 
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline 
+                          className="w-full h-full object-cover animate-fadeIn select-none pointer-events-none" 
+                          disablePictureInPicture={true}
+                          onContextMenu={(e) => e.preventDefault()}
+                        />
                       )}
                       
                       {/* Live Instagram Text Preview Overlay */}

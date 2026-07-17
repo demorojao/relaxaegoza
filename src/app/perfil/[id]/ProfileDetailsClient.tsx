@@ -835,6 +835,9 @@ export default function ProfileDetailsClient({
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       controls
                       playsInline
+                      controlsList="nodownload"
+                      disablePictureInPicture={true}
+                      onContextMenu={(e) => e.preventDefault()}
                     />
                   ) : (
                     <Watermark className="w-full h-full">

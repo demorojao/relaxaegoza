@@ -389,6 +389,11 @@ export default function VitrineClient({
       const isBoostedB = b.boost_expires_at && new Date(b.boost_expires_at) > new Date() ? 1 : 0;
       if (isBoostedA !== isBoostedB) return isBoostedB - isBoostedA;
 
+      // 2.5. Pontos de Avaliação (avg_rating)
+      const ratingA = (a as any).avg_rating || 0;
+      const ratingB = (b as any).avg_rating || 0;
+      if (ratingA !== ratingB) return ratingB - ratingA;
+
       // 3. Se ambas possuem Boost, ordenar pela recência (quem expira mais tarde = pagou por último)
       if (isBoostedA && isBoostedB) {
         const timeA = new Date(a.boost_expires_at!).getTime();
@@ -1090,6 +1095,7 @@ export default function VitrineClient({
                       className="w-full h-full object-contain select-none pointer-events-none"
                       onContextMenu={(e) => e.preventDefault()}
                       controlsList="nodownload"
+                      disablePictureInPicture={true}
                       onCanPlay={() => setMediaReady(true)}
                       onTimeUpdate={(e) => {
                         if (!mediaReady) return;

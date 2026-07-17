@@ -654,7 +654,14 @@ export default function AdminDashboardClient({
                           <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Mídia do Espaço (Vídeo/Foto)</span>
                           <div className="relative rounded-lg overflow-hidden border border-white/10 bg-black/40">
                             {p.space_verification_file.match(/\.(mp4|webm|ogg|mov)$/i) || p.space_verification_file.includes('video') ? (
-                              <video src={p.space_verification_file} className="w-full max-h-60 object-contain rounded-lg" controls />
+                              <video 
+                                src={p.space_verification_file} 
+                                className="w-full max-h-60 object-contain rounded-lg" 
+                                controls 
+                                controlsList="nodownload"
+                                disablePictureInPicture={true}
+                                onContextMenu={(e) => e.preventDefault()}
+                              />
                             ) : (
                               <div 
                                 className="relative aspect-video w-full rounded-lg overflow-hidden cursor-zoom-in group min-h-[180px]"

@@ -252,7 +252,16 @@ export default function PremiumPage() {
               <div className="relative aspect-video rounded-xl overflow-hidden border border-gold-primary/30 bg-black max-w-sm mx-auto">
                 {mediaType === 'photo'
                   ? <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
-                  : <video src={filePreview} autoPlay loop muted playsInline className="w-full h-full object-cover" />}
+                  : <video 
+                      src={filePreview} 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline 
+                      className="w-full h-full object-cover" 
+                      disablePictureInPicture={true}
+                      onContextMenu={(e) => e.preventDefault()}
+                    />}
                 <button type="button" onClick={() => { setSelectedFile(null); setFilePreview(null); }}
                   className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-red-600 rounded-full text-white transition-all cursor-pointer">
                   <Trash2 className="w-3.5 h-3.5" />

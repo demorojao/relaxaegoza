@@ -92,7 +92,11 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (is_boost) {
-        const durationHours = is_gift ? 6 : 2;
+        let durationHours = 2;
+        if (tier === 'boost_6h') durationHours = 6;
+        else if (tier === 'boost_12h') durationHours = 12;
+        else if (tier === 'boost_2h') durationHours = 2;
+        else if (is_gift) durationHours = 6;
 
         const { data: currentProfile } = await supabaseService
           .from('profiles')

@@ -5,9 +5,9 @@ import { supabase } from '../../../lib/supabase';
 import { Zap, Clock, TrendingUp, Sparkles, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 const BOOST_PACKAGES = [
-  { hours: 6, label: '6 horas', description: 'Impulso rápido para o horário de pico', icon: '⚡', highlight: false },
-  { hours: 12, label: '12 horas', description: 'Meio dia no topo da vitrine', icon: '🔥', highlight: true },
-  { hours: 24, label: '24 horas', description: 'Um dia inteiro em destaque', icon: '👑', highlight: false },
+  { hours: 2, label: '2 horas', description: 'Impulso rápido para o horário de pico', icon: '⚡', price: 'R$ 15', highlight: false },
+  { hours: 6, label: '6 horas', description: 'Meio dia no topo da vitrine', icon: '🔥', price: 'R$ 35', highlight: true },
+  { hours: 12, label: '12 horas', description: 'Um dia inteiro em destaque', icon: '👑', price: 'R$ 60', highlight: false },
 ];
 
 function TimeCountdown({ expiresAt }: { expiresAt: string }) {
@@ -58,17 +58,26 @@ export default function BoostPage() {
     }
     setBoosting(true); setSuccessMsg(''); setErrorMsg('');
     try {
-      const { data, error } = await supabase.rpc('boost_ad', { p_hours: hours });
-      if (error) throw error;
-      const result = data as any;
-      if (result?.success) {
-        setSuccessMsg(`✅ Boost de ${hours}h ativado! Anúncio no topo da vitrine.`);
-        setProfile((prev: any) => ({ ...prev, boost_expires_at: result.boost_expires_at }));
-      } else {
-        setErrorMsg(result?.error || 'Erro ao ativar boost.');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isBoost: true, boostHours: hours })
+      });
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.error) {
+        setErrorMsg(data.error);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Erro ao ativar boost.');
+      setErrorMsg(err.message || 'Erro ao iniciar o checkout do Boost.');
     } finally {
       setBoosting(false);
     }
@@ -150,13 +159,13 @@ export default function BoostPage() {
                 <h4 className="text-sm font-bold text-white">{pkg.label}</h4>
                 <p className="text-[10px] text-gray-500 mt-0.5 font-light">{pkg.description}</p>
               </div>
-              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full font-bold">Grátis (Beta)</span>
+              <span className="text-[11px] bg-gold-primary/10 text-gold-light border border-gold-primary/30 px-3 py-1 rounded-full font-bold">{pkg.price}</span>
               <button
                 onClick={() => handleBoost(pkg.hours)}
                 disabled={boosting || isFree}
                 className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 ${pkg.highlight ? 'bg-gold-primary hover:bg-gold-light text-dark-bg' : 'bg-white/10 hover:bg-white/20 text-white'}`}
               >
-                {boosting ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Ativando...</> : <><Zap className="w-3.5 h-3.5" /> Ativar {pkg.label}</>}
+                {boosting ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Processando...</> : <><Zap className="w-3.5 h-3.5" /> Adquirir {pkg.label}</>}
               </button>
             </div>
           ))}
@@ -169,10 +178,11 @@ export default function BoostPage() {
           <Clock className="w-3.5 h-3.5 text-gold-primary" /> Como funciona o Boost?
         </h4>
         <ul className="space-y-2 text-[11px] text-gray-400 font-light leading-relaxed">
-          <li className="flex items-start gap-2"><span className="text-gold-primary mt-0.5">→</span> Seu anúncio sobe para o topo durante toda a duração.</li>
-          <li className="flex items-start gap-2"><span className="text-gold-primary mt-0.5">→</span> Se já tem boost ativo, o tempo é somado ao existente.</li>
-          <li className="flex items-start gap-2"><span className="text-gold-primary mt-0.5">→</span> Anúncios Gold Premium sempre têm prioridade sobre Pro.</li>
-          <li className="flex items-start gap-2"><span className="text-gold-primary mt-0.5 text-emerald-400">→</span> Durante o período <strong className="text-emerald-400">Beta</strong>, todos os boosts são gratuitos.</li>
+          <li className="flex items-start gap-2"><span className="text-gold-primary mt-0.5">→</span> Seu anúncio sobe para o topo durante toda a duração contratada.</li>
+          <li className="flex items-start gap-2"><span className="text-gold-primary mt-0.5">→</span> Se você já possui um boost ativo, a nova duração é somada ao tempo restante.</li>
+          <li className="flex items-start gap-2"><span className="text-gold-primary mt-0.5">→</span> Anúncios Gold Premium sempre têm prioridade sobre anúncios Pro na listagem.</li>
+          <li className="flex items-start gap-2"><span className="text-gold-primary mt-0.5">→</span> <strong>Sistema de Leilão:</strong> A última profissional a realizar o pagamento do Boost fica no topo de sua região.</li>
+          <li className="flex items-start gap-2"><span className="text-gold-primary mt-0.5">→</span> <strong>Destaque por Avaliações:</strong> Os pontos de avaliação dos clientes (nota média das avaliações) são utilizados como critério de classificação e desempate. Profissionais com melhores avaliações ganham prioridade no ranking da vitrine e na página de anúncios dentro do seu respectivo nível de destaque atual.</li>
         </ul>
       </div>
     </div>

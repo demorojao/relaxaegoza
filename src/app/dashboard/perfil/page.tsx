@@ -115,8 +115,6 @@ export default function ProfileEditor() {
   const [adVideos, setAdVideos] = useState<string[]>([]);
   const [adIsActive, setAdIsActive] = useState(true);
   const [profilePhotosList, setProfilePhotosList] = useState<any[]>([]);
-  const [uploadingAdMedia, setUploadingAdMedia] = useState(false);
-  const [uploadingProfileMedia, setUploadingProfileMedia] = useState(false);
 
   const massageAmenities = ['Maca Profissional', 'Óleos Essenciais Importados', 'Música de Relaxamento', 'Chuveiro Aquecido'];
   const escortAmenities = ['Ar Condicionado', 'Estacionamento Discreto', 'Drinks Cortesia', 'Wi-Fi de Alta Velocidade'];
@@ -579,152 +577,7 @@ export default function ProfileEditor() {
     }
   };
 
-  const handleUploadAdMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const isImage = file.type.startsWith('image/');
-    const typeKey = isImage ? 'photo' : 'video';
-    const maxSize = isImage ? 5 * 1024 * 1024 : 15 * 1024 * 1024;
-
-    if (file.size > maxSize) {
-      alert(`O arquivo é muito grande. O limite máximo é ${isImage ? '5MB' : '15MB'}.`);
-      return;
-    }
-
-    const tier = profile?.subscription_tier || 'free';
-    const limitPhotos = tier === 'free' ? 3 : tier === 'pro' ? 10 : 20;
-    const limitVideos = tier === 'free' ? 0 : tier === 'pro' ? 10 : 15;
-
-    if (typeKey === 'photo' && adPhotos.length >= limitPhotos) {
-      alert(`Limite atingido! Seu plano ${tier.toUpperCase()} permite apenas ${limitPhotos} fotos.`);
-      return;
-    }
-    if (typeKey === 'video' && adVideos.length >= limitVideos) {
-      alert(`Limite atingido! Seu plano ${tier.toUpperCase()} permite apenas ${limitVideos} vídeos.`);
-      return;
-    }
-
-    setUploadingAdMedia(true);
-
-    try {
-      const fileExt = file.name.split('.').pop() || 'jpg';
-      const fileName = `${user.id}/${Date.now()}_ad_media.${fileExt}`;
-      
-      let fileToUpload = file;
-      if (isImage) {
-        try {
-          const { applyWatermark } = await import('@/lib/watermark');
-          const watermarkText = `Relaxe & Goze - ${stageName || ''}`;
-          fileToUpload = await applyWatermark(file, watermarkText);
-        } catch (watermarkErr) {
-          console.error("Erro ao aplicar marca d'água:", watermarkErr);
-        }
-      }
-
-      // Upload para o Cloudflare R2
-      const publicUrl = await uploadToR2(fileToUpload);
-
-      // Inserir no banco de dados profile_photos
-      const { data: dbData, error: dbError } = await supabase
-        .from('profile_photos')
-        .insert({
-          profile_id: user.id,
-          photo_url: publicUrl,
-          media_type: typeKey,
-          is_verified: false
-        })
-        .select()
-        .single();
-
-      if (dbError) throw dbError;
-
-      // Adicionar no array do anúncio
-      if (typeKey === 'photo') {
-        setAdPhotos(prev => [...prev, publicUrl]);
-      } else {
-        // Disparar transcodificação
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          fetch('/api/media/transcode', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.access_token}`
-            },
-            body: JSON.stringify({
-              videoUrl: publicUrl,
-              photoId: dbData.id,
-              tableType: 'profile_photos'
-            })
-          }).catch(e => console.error('Erro ao transcodificar:', e));
-        }
-        setAdVideos(prev => [...prev, publicUrl]);
-      }
-
-      // Adicionar na lista local
-      setProfilePhotosList(prev => [...prev, dbData]);
-    } catch (err: any) {
-      alert('Erro ao carregar mídia do anúncio: ' + (err?.message || err));
-    } finally {
-      setUploadingAdMedia(false);
-    }
-  };
-
-  // Upload independente de mídia para a galeria do perfil (sem vincular ao anúncio automaticamente)
-  const handleUploadProfileMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const isImage = file.type.startsWith('image/');
-    const typeKey = isImage ? 'photo' : 'video';
-    const maxSize = isImage ? 5 * 1024 * 1024 : 15 * 1024 * 1024;
-
-    if (file.size > maxSize) {
-      alert(`O arquivo é muito grande. O limite máximo é ${isImage ? '5MB' : '15MB'}.`);
-      return;
-    }
-
-    setUploadingProfileMedia(true);
-
-    try {
-      const fileExt = file.name.split('.').pop() || 'jpg';
-      const fileName = `${user.id}/${Date.now()}_media.${fileExt}`;
-
-      let fileToUpload = file;
-      if (isImage) {
-        try {
-          const { applyWatermark } = await import('@/lib/watermark');
-          const watermarkText = `Relaxe & Goze - ${stageName || ''}`;
-          fileToUpload = await applyWatermark(file, watermarkText);
-        } catch (watermarkErr) {
-          console.error("Erro ao aplicar marca d'água:", watermarkErr);
-        }
-      }
-
-      // Upload para o Cloudflare R2
-      const publicUrl = await uploadToR2(fileToUpload);
-
-      const { data: dbData, error: dbError } = await supabase
-        .from('profile_photos')
-        .insert({
-          profile_id: user.id,
-          photo_url: publicUrl,
-          media_type: typeKey,
-          is_verified: false
-        })
-        .select()
-        .single();
-
-      if (dbError) throw dbError;
-
-      setProfilePhotosList(prev => [...prev, dbData]);
-    } catch (err: any) {
-      alert('Erro ao carregar mídia do perfil: ' + (err?.message || err));
-    } finally {
-      setUploadingProfileMedia(false);
-    }
-  };
 
   const toggleAdPhoto = (photoUrl: string) => {
     const tier = profile?.subscription_tier || 'free';
@@ -886,32 +739,20 @@ export default function ProfileEditor() {
 
         {/* Bloco 1: Galeria Geral do Perfil */}
         <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-dark-border/20 pb-4">
+          <div className="flex items-center justify-between border-b border-dark-border/20 pb-4">
             <div className="flex items-center gap-2 text-white font-medium text-sm">
               <FileImage className="w-4 h-4 text-gold-primary" />
               <span>Galeria Geral do Perfil</span>
             </div>
-
-            <label className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white hover:bg-white/10 cursor-pointer transition-all flex items-center gap-1.5">
-              <Upload className="w-3.5 h-3.5 text-gold-primary" />
-              {uploadingProfileMedia ? 'Enviando...' : 'Enviar Foto / Vídeo'}
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleUploadProfileMedia}
-                disabled={uploadingProfileMedia}
-                className="hidden"
-              />
-            </label>
           </div>
 
           <p className="text-[11px] text-gray-500 font-light leading-relaxed">
-            Estas fotos e vídeos formam a sua galeria pública e são exibidas diretamente no seu perfil para os clientes.
+            Estas fotos e vídeos formam a sua galeria pública e são exibidas diretamente no seu perfil para os clientes. Para gerenciar, excluir ou enviar novas fotos e vídeos para a sua galeria, utilize a aba <strong className="text-gold-light">Fotos & Galeria</strong> no menu lateral.
           </p>
 
           {profilePhotosList.filter(m => m.media_type === 'photo' || !m.media_type).length === 0 ? (
             <div className="text-center py-8 text-xs text-gray-500 font-light border border-dashed border-dark-border/40 rounded-xl">
-              Nenhuma foto na sua galeria. Clique em "Enviar Foto / Vídeo" acima para começar.
+              Nenhuma foto na sua galeria. Acesse a aba "Fotos & Galeria" no menu lateral para enviar.
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
@@ -970,7 +811,15 @@ export default function ProfileEditor() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {profilePhotosList.filter(m => m.media_type === 'video').map(video => (
                   <div key={video.id} className="relative aspect-video rounded-xl overflow-hidden border border-dark-border group">
-                    <video src={getCDNUrl(video.photo_url)} className="w-full h-full object-cover" controls playsInline />
+                    <video 
+                      src={getCDNUrl(video.photo_url)} 
+                      className="w-full h-full object-cover" 
+                      controls 
+                      playsInline 
+                      controlsList="nodownload"
+                      disablePictureInPicture={true}
+                      onContextMenu={(e) => e.preventDefault()}
+                    />
                     <button
                       type="button"
                       onClick={async () => {
@@ -1762,24 +1611,11 @@ export default function ProfileEditor() {
 
         {/* Bloco 3: Mídias do Anúncio (Seleção e Upload Rápido) */}
         <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-dark-border/20 pb-4">
+          <div className="flex items-center justify-between border-b border-dark-border/20 pb-4">
             <div className="flex items-center gap-2 text-white font-medium text-sm">
               <Camera className="w-4 h-4 text-gold-primary" />
               <span>Fotos e Vídeos em Destaque do Anúncio</span>
             </div>
-
-            {/* Direct Media Upload */}
-            <label className="px-4 py-2 rounded-xl bg-gold-primary text-dark-bg hover:bg-gold-light text-xs font-bold uppercase tracking-wider cursor-pointer transition-all flex items-center gap-1.5 shadow-[0_4px_12px_rgba(197,168,128,0.2)]">
-              <Upload className="w-3.5 h-3.5" />
-              {uploadingAdMedia ? 'Fazendo Upload...' : 'Carregar Nova Foto / Vídeo'}
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleUploadAdMedia}
-                disabled={uploadingAdMedia}
-                className="hidden"
-              />
-            </label>
           </div>
 
           <div className="space-y-6">
@@ -1794,7 +1630,7 @@ export default function ProfileEditor() {
 
               {profilePhotosList.filter(m => m.media_type === 'photo' || !m.media_type).length === 0 ? (
                 <div className="text-center py-8 text-xs text-gray-500 font-light border border-dashed border-dark-border/40 rounded-xl">
-                  Nenhuma foto na sua galeria. Clique em "Carregar Nova Foto / Vídeo" acima para enviar.
+                  Nenhuma foto na sua galeria. Acesse a aba "Fotos & Galeria" no menu lateral para enviar.
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
@@ -1878,7 +1714,7 @@ export default function ProfileEditor() {
                 </div>
               ) : profilePhotosList.filter(m => m.media_type === 'video').length === 0 ? (
                 <div className="text-center py-8 text-xs text-gray-500 font-light border border-dashed border-dark-border/40 rounded-xl">
-                  Nenhum vídeo na sua galeria. Clique em "Carregar Nova Foto / Vídeo" acima para enviar.
+                  Nenhum vídeo na sua galeria. Acesse a aba "Fotos & Galeria" no menu lateral para enviar.
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">

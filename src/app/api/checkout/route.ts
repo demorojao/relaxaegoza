@@ -5,7 +5,7 @@ import { createEfiPixCharge } from '@/lib/efi';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { tier, isBoost, isGift, targetProfileId } = body;
+    const { tier, isBoost, isGift, targetProfileId, boostHours } = body;
 
     const supabase = getSupabaseServerClient();
     const supabaseService = getSupabaseServiceClient();
@@ -64,15 +64,25 @@ export async function POST(req: NextRequest) {
       // Regra do Payload: Descrição puramente corporativa/técnica para a API do banco
       description = `Servicos de Publicidade Digital - ID ${user?.id || 'GUEST'}`;
     }
-    // 2. Caso: Boost comum (2 Horas)
+    // 2. Caso: Boost comum (2, 6 ou 12 Horas)
     else if (isBoost) {
       if (!profile.subscription_tier || !['pro', 'gold'].includes(profile.subscription_tier)) {
         return NextResponse.json({ error: 'Você precisa ter uma assinatura ativa (Pro ou Gold) para comprar um Boost.' }, { status: 400 });
       }
 
-      amountCents = 1500; // R$ 15,00
+      const hours = Number(boostHours || 2);
+      if (hours === 2) {
+        amountCents = 1500; // R$ 15,00
+      } else if (hours === 6) {
+        amountCents = 3500; // R$ 35,00
+      } else if (hours === 12) {
+        amountCents = 6000; // R$ 60,00
+      } else {
+        return NextResponse.json({ error: 'Duração de Boost inválida.' }, { status: 400 });
+      }
+
       isBoostFlag = true;
-      tierValue = 'boost';
+      tierValue = `boost_${hours}h`;
       description = `Servicos de Publicidade Digital - ID ${user.id}`;
     }
     // 3. Caso: Assinatura de Planos (Pro/Gold)

@@ -365,6 +365,7 @@ export default function ProfileReels({
                       className="w-full h-full object-cover pointer-events-none select-none"
                       onContextMenu={(e) => e.preventDefault()}
                       controlsList="nodownload"
+                      disablePictureInPicture={true}
                       preload={isActive ? "auto" : "metadata"}
                       onClick={() => setIsPlaying(!isPlaying)}
                     />

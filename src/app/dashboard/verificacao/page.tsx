@@ -393,7 +393,14 @@ export default function VerificationPanel() {
                     {spaceFilePreview ? (
                       <div className="flex flex-col items-center gap-2">
                         {spaceFile?.type.startsWith('video/') ? (
-                          <video src={spaceFilePreview} className="w-32 h-24 object-cover rounded-lg border border-gold-primary/30" controls />
+                          <video 
+                            src={spaceFilePreview} 
+                            className="w-32 h-24 object-cover rounded-lg border border-gold-primary/30" 
+                            controls 
+                            controlsList="nodownload"
+                            disablePictureInPicture={true}
+                            onContextMenu={(e) => e.preventDefault()}
+                          />
                         ) : (
                           <img src={spaceFilePreview} alt="Space Preview" className="w-32 h-24 object-cover rounded-lg border border-gold-primary/30" />
                         )}

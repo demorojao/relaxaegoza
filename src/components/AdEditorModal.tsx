@@ -389,6 +389,8 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
                           src={getCDNUrl(item.photo_url)} 
                           className="w-full h-full object-cover select-none pointer-events-none" 
                           muted 
+                          disablePictureInPicture={true}
+                          onContextMenu={(e) => e.preventDefault()}
                         />
                         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                           <Video className="w-6 h-6 text-white opacity-60" />

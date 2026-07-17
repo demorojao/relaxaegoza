@@ -151,6 +151,10 @@ export default function DashboardMetrics() {
         .single();
       
       if (data) {
+        if (data.role === 'client') {
+          router.push('/client-dashboard');
+          return;
+        }
         setProfile(data);
         setIsAvailable(data.is_available_now || false);
 
