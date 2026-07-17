@@ -115,7 +115,9 @@ export default function PricingPage() {
       period: '/mês',
       description: 'O nível máximo de visibilidade, segurança e retenção de clientes do portal.',
       features: [
-        'Fotos e Vídeos ilimitados',
+        '1 Boost de 6h grátis por semana (Não Acumulativo) 🚀',
+        'Galeria de Fotos Ilimitada & Exclusividade de Vídeos',
+        'Exclusividade de Vídeo nos Stories Efêmeros 🎥',
         'Prioridade máxima nas buscas da cidade',
         'Botão "Disponível Agora" ativo (Borda Neon)',
         'Selo de Espaço Validado via Vídeo (Online)',

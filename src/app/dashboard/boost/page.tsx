@@ -43,7 +43,7 @@ export default function BoostPage() {
     if (user) {
       const { data } = await supabase
         .from('profiles')
-        .select('id, name, subscription_tier, boost_expires_at')
+        .select('id, name, subscription_tier, boost_expires_at, last_free_boost_at')
         .eq('id', user.id).single();
       if (data) setProfile(data);
     }
@@ -78,6 +78,35 @@ export default function BoostPage() {
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Erro ao iniciar o checkout do Boost.');
+    } finally {
+      setBoosting(false);
+    }
+  };
+
+  const lastFreeBoost = profile?.last_free_boost_at;
+  const isGold = (profile?.subscription_tier || 'free') === 'gold';
+  const isFreeBoostAvailable = isGold && (!lastFreeBoost || new Date(lastFreeBoost).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const handleClaimFreeBoost = async () => {
+    if (!profile || !isFreeBoostAvailable) return;
+    setBoosting(true); setSuccessMsg(''); setErrorMsg('');
+    try {
+      const { data, error } = await supabase.rpc('claim_free_boost');
+      if (error) {
+        setErrorMsg(error.message);
+      } else if (data?.success) {
+        setSuccessMsg('Boost semanal gratuito de 6 horas ativado com sucesso!');
+        // Atualizar perfil localmente com o novo boost
+        setProfile((prev: any) => ({
+          ...prev,
+          boost_expires_at: data.boost_expires_at,
+          last_free_boost_at: new Date().toISOString()
+        }));
+      } else if (data?.error) {
+        setErrorMsg(data.error);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro ao ativar o Boost gratuito.');
     } finally {
       setBoosting(false);
     }
@@ -125,6 +154,49 @@ export default function BoostPage() {
           </div>
         )}
       </div>
+
+      {isGold && (
+        <div className="bg-gold-primary/5 border border-gold-primary/20 rounded-2xl p-6 space-y-4 animate-fadeIn">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] bg-gold-primary/20 text-gold-light border border-gold-primary/30 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                  Benefício Gold Premium
+                </span>
+                <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                  Semanal e Não Acumulativo
+                </span>
+              </div>
+              <h3 className="text-sm font-semibold text-white mt-1">Meu Boost Semanal Grátis (6 Horas)</h3>
+              <p className="text-xs text-gray-400 leading-relaxed font-light">
+                Você tem direito a <strong>1 Boost de 6 horas gratuito por semana</strong> para subir ao topo. Ele expira ao final de 7 dias se não for utilizado e não acumula.
+              </p>
+            </div>
+            
+            <button
+              onClick={handleClaimFreeBoost}
+              disabled={boosting || !isFreeBoostAvailable}
+              className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                isFreeBoostAvailable
+                  ? 'bg-gold-primary text-dark-bg hover:bg-gold-light shadow-[0_4px_12px_rgba(197,168,128,0.2)]'
+                  : 'bg-white/5 text-gray-500 border border-white/5 cursor-not-allowed font-medium'
+              }`}
+            >
+              {boosting ? 'Ativando...' : isFreeBoostAvailable ? 'Ativar Boost Grátis' : 'Já Utilizado'}
+            </button>
+          </div>
+
+          {!isFreeBoostAvailable && lastFreeBoost && (
+            <div className="text-[10px] text-gray-500 flex items-center gap-1.5 pt-1 border-t border-white/5">
+              <Clock className="w-3.5 h-3.5 text-gray-600" />
+              <span>
+                Último resgate em: <strong>{new Date(lastFreeBoost).toLocaleString('pt-BR')}</strong>. 
+                Próxima ativação disponível a partir de: <strong>{new Date(new Date(lastFreeBoost).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleString('pt-BR')}</strong>.
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {successMsg && (
         <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs px-4 py-3 rounded-xl flex items-center gap-2">

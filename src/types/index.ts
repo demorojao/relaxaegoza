@@ -31,6 +31,7 @@ export interface Profile {
   target_audience?: string[]; // Homens, Mulheres, Casais, etc.
   gender?: 'Feminino' | 'Masculino' | 'Trans' | string;
   boost_expires_at?: string | null;
+  last_free_boost_at?: string | null;
   available_until?: string | null;
   created_at?: string;
   ad_title?: string;
