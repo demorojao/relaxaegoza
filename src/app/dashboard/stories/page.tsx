@@ -556,15 +556,37 @@ export default function StoriesManager() {
   }
 
   const tier = profile?.subscription_tier || 'free';
-  const isBronze = tier === 'free';
-  const isPro = tier === 'pro';
   const isGold = tier === 'gold';
+  const isBronze = false;
+  const isPro = false;
+  const limitText = 'Ilimitado (Gold Premium)';
 
-  const limitText = isBronze 
-    ? 'Bloqueado no Bronze' 
-    : isPro 
-      ? `${storiesInLast24h} / 3 postados (últimas 24h)` 
-      : 'Ilimitado (Gold Premium)';
+  if (!isGold) {
+    return (
+      <div className="max-w-md mx-auto py-16 px-6 text-center space-y-6">
+        <div className="mx-auto w-16 h-16 bg-gold-primary/10 border border-gold-primary/20 rounded-full flex items-center justify-center text-gold-primary animate-pulse">
+          <Camera className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold text-white">Stories Efêmeros</h2>
+          <p className="text-xs text-gray-400 leading-relaxed font-light">
+            A ferramenta de Stories e postagem de vídeos é um benefício exclusivo para anunciantes do plano <strong className="text-gold-light">Gold Premium</strong>.
+          </p>
+          <p className="text-xs text-gray-500 font-light">
+            Faça um upgrade no seu plano hoje para começar a publicar stories diários e vídeos na galeria, aumentando em até 10x as suas visitas.
+          </p>
+        </div>
+        <div className="pt-4">
+          <a
+            href="/planos"
+            className="inline-block px-8 py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold transition-all shadow-lg shadow-gold-primary/10 cursor-pointer"
+          >
+            Fazer Upgrade para Gold
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 relative z-20 pb-16 selection:bg-gold-primary selection:text-dark-bg">

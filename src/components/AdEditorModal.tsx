@@ -94,7 +94,7 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
 
   // Calculate limits based on tier
   const maxPhotos = tier === 'gold' ? 20 : tier === 'pro' ? 10 : 3;
-  const maxVideos = tier === 'gold' ? 15 : tier === 'pro' ? 10 : 0;
+  const maxVideos = tier === 'gold' ? 15 : 0;
 
   useEffect(() => {
     if (isOpen && profile?.id) {
@@ -365,7 +365,7 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
                 <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl flex items-start gap-3">
                   <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                   <p className="text-[10px] text-gray-400 leading-relaxed">
-                    O plano **{tierName}** não permite adicionar vídeos aos anúncios. Faça upgrade para o plano **Silver Pro** ou **Gold Premium** para habilitar o upload e a exibição de vídeos na vitrine!
+                    O plano **{tierName}** não permite adicionar vídeos aos anúncios. Faça upgrade para o plano **Gold Premium** para habilitar o upload e a exibição de vídeos na vitrine!
                   </p>
                 </div>
               ) : videosList.length === 0 ? (
