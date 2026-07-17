@@ -58,6 +58,39 @@
           }
         }
       }
+    },
+    "/api/protected": {
+      "get": {
+        "summary": "Canal de Dados Pago para Agentes de IA",
+        "description": "Retorna informações úteis e dados do portal em formato estruturado. Requer pagamento via protocolo x402.",
+        "x-payment-info": {
+          "intent": "charge",
+          "method": "card",
+          "amount": 0.01,
+          "currency": "USD",
+          "description": "Acesso pago à listagem de profissionais por requisição"
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "message": { "type": "string" },
+                    "data": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Pagamento Requerido (Desafio x402)"
+          }
+        }
+      }
     }
   },
   "x-service-info": {
