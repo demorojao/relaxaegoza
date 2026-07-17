@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import AgeVerificationModal from "../components/AgeVerificationModal";
+import WebMcpProvider from "../components/WebMcpProvider";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -33,6 +34,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-dark-bg text-gray-100 font-sans">
         <AgeVerificationModal />
+        <WebMcpProvider />
         {children}
       </body>
     </html>

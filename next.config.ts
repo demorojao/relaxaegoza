@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Link',
-            value: '</.well-known/api-catalog>; rel="api-catalog"',
+            value: '</.well-known/api-catalog>; rel="api-catalog", </docs/api>; rel="service-doc", </openapi.json>; rel="service-desc", </auth.md>; rel="describedby", </.well-known/agent-skills/index.json>; rel="describedby"',
           },
         ],
       },
