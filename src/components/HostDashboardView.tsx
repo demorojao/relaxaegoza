@@ -231,7 +231,7 @@ export default function HostDashboardView({ profile }: HostDashboardViewProps) {
           <div className="border-t border-dark-border/20 pt-4 flex justify-between items-center">
             <div>
               <span className="text-[10px] text-gray-500 block uppercase font-bold">Valor da Assinatura</span>
-              <span className="text-sm font-bold text-white">R$ 329,90 / mês</span>
+              <span className="text-sm font-bold text-white">R$ 450,00 / mês</span>
             </div>
             <button
               onClick={handleHostSubscribe}

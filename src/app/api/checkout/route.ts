@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Você é um dos 100 primeiros parceiros! Seu plano de salas é 100% gratuito.' }, { status: 400 });
         }
 
-        amountCents = 32990; // R$ 329,90
+        amountCents = 45000; // R$ 450,00
         tierValue = tier;
         description = `Hospedagem de Classificado Online - ID ${user.id}`;
       } else {
@@ -121,8 +121,8 @@ export async function POST(req: NextRequest) {
         const isPromoEligible = !providerRankError && providerRank !== null && providerRank <= 100;
 
         const baseAmount = {
-          pro: 26000,
-          gold: 32990
+          pro: 29900,
+          gold: 45000
         }[tier as 'pro' | 'gold'];
 
         // Aplicar 30% de desconto para as 100 primeiras
