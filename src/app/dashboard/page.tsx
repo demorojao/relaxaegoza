@@ -35,6 +35,8 @@ export default function DashboardMetrics() {
   const [isAdModalOpen, setIsAdModalOpen] = useState(false);
   const [boostingCheckout, setBoostingCheckout] = useState(false);
   const [boostTimeLeft, setBoostTimeLeft] = useState<string | null>(null);
+  const [ad, setAd] = useState<any>(null);
+  const [renewing, setRenewing] = useState(false);
   const [realTrafficData, setRealTrafficData] = useState<any[]>([
     { day: 'Dom', views: 0, clicks: 0 },
     { day: 'Seg', views: 0, clicks: 0 },
@@ -158,6 +160,14 @@ export default function DashboardMetrics() {
         setProfile(data);
         setIsAvailable(data.is_available_now || false);
 
+        // Buscar anúncio ativo do usuário
+        const { data: adData } = await supabase
+          .from('ads')
+          .select('*')
+          .eq('profile_id', user.id)
+          .maybeSingle();
+        setAd(adData);
+
         // Buscar dados reais de tráfego do Supabase (últimos 7 dias)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
@@ -205,6 +215,28 @@ export default function DashboardMetrics() {
       router.push('/login');
     }
     setLoading(false);
+  };
+
+  const handleRenewAd = async () => {
+    if (!ad || !profile) return;
+    setRenewing(true);
+    try {
+      const nowString = new Date().toISOString();
+      const { error } = await supabase
+        .from('ads')
+        .update({ updated_at: nowString })
+        .eq('id', ad.id);
+
+      if (error) throw error;
+
+      setAd((prev: any) => ({ ...prev, updated_at: nowString }));
+      await triggerRevalidate(profile.city, profile.neighborhood);
+      alert('Anúncio renovado com sucesso por mais 7 dias!');
+    } catch (err: any) {
+      alert('Erro ao renovar anúncio: ' + (err.message || err));
+    } finally {
+      setRenewing(false);
+    }
   };
 
   const handleToggleAvailability = async () => {
@@ -474,6 +506,28 @@ export default function DashboardMetrics() {
             <span className="font-semibold block text-white text-sm">Turbo Boost Ativado! 🚀</span>
             Seu perfil agora está em destaque absoluto no topo de sua categoria pelos próximos 120 minutos. Aproveite o aumento nos contatos!
           </div>
+        </div>
+      )}
+
+      {/* Alerta de Anúncio Expirado (Acima de 7 dias sem atualização) */}
+      {ad && (new Date().getTime() - new Date(ad.updated_at || ad.created_at).getTime() > 7 * 24 * 60 * 60 * 1000) && (
+        <div className="bg-linear-to-r from-red-500/10 to-transparent border border-red-500/20 text-red-200 text-xs px-4 py-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fadeIn">
+          <div className="space-y-1">
+            <span className="font-semibold text-white text-sm flex items-center gap-2">
+              <Clock className="w-5 h-5 text-red-400 shrink-0" />
+              Anúncio Expirado por Inatividade
+            </span>
+            <p className="text-gray-400 font-light leading-relaxed">
+              Para garantir que apenas profissionais ativas e disponíveis sejam exibidas, todos os anúncios expiram automaticamente após 7 dias de inatividade. Seu anúncio está oculto na vitrine.
+            </p>
+          </div>
+          <button 
+            onClick={handleRenewAd}
+            disabled={renewing}
+            className="px-5 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold transition-all shrink-0 cursor-pointer shadow-lg shadow-gold-primary/15 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {renewing ? 'Renovando...' : '🔄 Renovar Grátis por 7 dias'}
+          </button>
         </div>
       )}
 
