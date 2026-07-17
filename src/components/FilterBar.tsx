@@ -48,7 +48,7 @@ export default function FilterBar({
         <span>Vitrine de alto padrão para acompanhantes de luxo e massoterapeutas de elite</span>
       </div>
 
-      {/* Abas Principais: Anúncios vs Modelos */}
+      {/* Abas Principais: Anúncios vs Profissionais */}
       <div className="w-full border-b border-white/5 pb-2 mb-1">
         <div className="inline-flex bg-black/50 border border-white/5 p-1 rounded-xl gap-1">
           <button
@@ -69,7 +69,7 @@ export default function FilterBar({
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <span>👤 Modelos</span>
+            <span>👤 Profissionais</span>
           </button>
         </div>
       </div>

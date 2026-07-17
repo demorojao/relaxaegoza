@@ -252,6 +252,27 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
             <div className="w-6 h-6 border-2 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
             <span className="text-xs">Carregando dados do anúncio...</span>
           </div>
+        ) : tier === 'free' ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6">
+            <div className="w-16 h-16 bg-wine-primary/15 rounded-full flex items-center justify-center text-gold-primary border border-wine-primary/30">
+              <Sparkles className="w-8 h-8" />
+            </div>
+            <div className="max-w-md space-y-2">
+              <h3 className="text-lg font-bold text-white">Anúncios não disponíveis no plano Bronze</h3>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Profissionais no plano Bronze (Grátis) não podem publicar anúncios ativos na vitrine principal de anúncios do portal. Seu perfil será exibido exclusivamente na aba de <strong>Profissionais</strong>.
+              </p>
+              <p className="text-xs text-gold-primary font-medium">
+                Faça o upgrade para o plano <strong>Pro</strong> ou <strong>Gold</strong> para ativar seu anúncio e começar a receber contatos via WhatsApp.
+              </p>
+            </div>
+            <a 
+              href="/planos"
+              className="px-6 py-3 bg-gold-primary hover:bg-gold-light text-dark-bg font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-gold-primary/10"
+            >
+              Ver Planos de Divulgação
+            </a>
+          </div>
         ) : (
           <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-6 relative z-10">
             {errorMsg && (

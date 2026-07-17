@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { supabase } from '../../../lib/supabase';
 import { 
   UserSquare2, 
@@ -1384,6 +1385,29 @@ export default function ProfileEditor() {
           </button>
         </div>
       </form>
+    ) : (profile?.subscription_tier === 'free' || !profile?.subscription_tier) ? (
+      <div className="glass-effect rounded-2xl border border-dark-border/60 p-8 text-center space-y-6">
+        <div className="w-16 h-16 bg-wine-primary/15 rounded-full flex items-center justify-center text-gold-primary border border-wine-primary/30 mx-auto">
+          <Sparkles className="w-8 h-8" />
+        </div>
+        <div className="max-w-md mx-auto space-y-2">
+          <h3 className="text-lg font-bold text-white">Anúncios não disponíveis no plano Bronze</h3>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            Profissionais no plano Bronze (Grátis) não podem publicar anúncios ativos na vitrine principal de anúncios do portal. Seu perfil será exibido exclusivamente na aba de <strong>Profissionais</strong>.
+          </p>
+          <p className="text-xs text-gold-primary font-medium">
+            Faça o upgrade para o plano <strong>Pro</strong> ou <strong>Gold</strong> para ativar seu anúncio e começar a receber contatos via WhatsApp.
+          </p>
+        </div>
+        <div>
+          <Link 
+            href="/planos"
+            className="inline-flex px-6 py-3 bg-gold-primary hover:bg-gold-light text-dark-bg font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-gold-primary/10"
+          >
+            Ver Planos de Divulgação
+          </Link>
+        </div>
+      </div>
     ) : (
       <form onSubmit={handleSaveAd} className="space-y-8">
         {/* Bloco 0: Placa do Plano & Ativação do Anúncio */}
