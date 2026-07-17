@@ -52,8 +52,8 @@ export async function generateMetadata({ params }: Props) {
   const stateFormated = stateSlug.toUpperCase();
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxe e goze.com.br';
 
-  const title = `Acompanhantes, Garotas de Programa e Massagistas em ${cityName} - ${stateFormated} | Relaxe & Goze`;
-  const description = `Encontre acompanhantes, garotas de programa independentes e massagistas sensuais em ${cityName} (${stateFormated}). Perfis de elite com fotos reais verificadas por selfie e WhatsApp direto.`;
+  const title = `Acompanhantes de Luxo e Massagistas de Elite em ${cityName} - ${stateFormated} | Relaxe & Goze`;
+  const description = `Conecte-se com acompanhantes de luxo, massagistas de elite e profissionais VIP em ${cityName} (${stateFormated}). Perfis de alto padrão com fotos reais verificadas por selfie e WhatsApp direto.`;
 
   return {
     title,
@@ -168,10 +168,10 @@ export default async function CityPage({ params }: Props) {
         {/* Hero / Header SEO */}
         <div className="text-center sm:text-left space-y-4 max-w-3xl">
           <h1 className="text-4xl sm:text-5xl font-semibold text-white tracking-tight leading-tight">
-            Acompanhantes, Garotas de Programa e Massagistas em <span className="text-gold-primary font-serif font-normal">{cityName} - {stateSlug.toUpperCase()}</span>
+            Acompanhantes de Luxo e Massagistas de Elite em <span className="text-gold-primary font-serif font-normal">{cityName} - {stateSlug.toUpperCase()}</span>
           </h1>
           <p className="text-gray-400 text-sm sm:text-base leading-relaxed font-light font-sans">
-            Encontre as melhores profissionais de elite e serviços de massagem luxo em {cityName} ({stateSlug.toUpperCase()}). 
+            Encontre acompanhantes de luxo, profissionais VIP e serviços de massagem de alto padrão em {cityName} ({stateSlug.toUpperCase()}). 
             Navegue por perfis com fotos 100% reais e verificadas por selfie, agende atendimentos com total discrição e segurança direto pelo WhatsApp.
           </p>
         </div>

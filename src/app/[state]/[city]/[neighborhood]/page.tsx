@@ -61,8 +61,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxe e goze.com.br';
 
   return {
-    title: `Acompanhantes, Garotas de Programa e Massagistas no ${neighborhoodFormated} em ${cityFormated} - ${stateFormated} | Relaxe & Goze`,
-    description: `Encontre acompanhantes, garotas de programa, massagistas sensuais e profissionais de elite no bairro ${neighborhoodFormated} em ${cityFormated} (${stateFormated}). Fotos reais, privacidade total e agendamento via WhatsApp.`,
+    title: `Acompanhantes de Luxo e Massagistas de Elite no ${neighborhoodFormated} - ${cityFormated} ${stateFormated} | Relaxe & Goze`,
+    description: `Conecte-se com acompanhantes de luxo, massoterapeutas de elite e profissionais VIP de alto padrão no bairro ${neighborhoodFormated} em ${cityFormated} (${stateFormated}). Fotos 100% reais, discrição absoluta e atendimento exclusivo.`,
     alternates: {
       canonical: `${baseUrl}/${state}/${city}/${neighborhood}`,
     },
@@ -184,11 +184,11 @@ export default async function NeighborhoodPage({ params }: Props) {
         {/* Hero / Header SEO */}
         <div className="text-center sm:text-left space-y-4 max-w-3xl">
           <h1 className="text-4xl sm:text-5xl font-semibold text-white tracking-tight leading-tight">
-            Acompanhantes, Garotas de Programa e Massagistas no <span className="text-gold-primary font-serif font-normal">{neighborhoodFormated}</span>
+            Acompanhantes de Luxo e Massagistas de Elite no <span className="text-gold-primary font-serif font-normal">{neighborhoodFormated}</span>
           </h1>
           <p className="text-gray-400 text-sm sm:text-base leading-relaxed font-light font-sans">
-            Encontre profissionais de elite e terapias luxuosas que atendem diretamente no bairro {neighborhoodName} ({cityName}). 
-            Exibimos apenas perfis ativos com galeria de fotos autêntica, garantindo discrição total e facilidade de agendamento pelo WhatsApp.
+            Encontre acompanhantes de luxo, profissionais VIP e terapias exclusivas que atendem diretamente no bairro {neighborhoodName} ({cityName}). 
+            Exibimos apenas perfis de alto padrão com galeria de fotos autêntica, garantindo discrição total e facilidade de agendamento pelo WhatsApp.
           </p>
         </div>
 

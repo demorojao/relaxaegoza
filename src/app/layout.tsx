@@ -17,8 +17,8 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Relaxe & Goze | Vitrine Exclusiva",
-  description: "Portal premium de acompanhantes e massagistas.",
+  title: "Relaxe & Goze | Acompanhantes de Luxo e Massagens de Elite VIP",
+  description: "O portal de classificados de alto padrão mais exclusivo do Brasil. Conecte-se com acompanhantes de luxo e massoterapeutas de elite com discrição absoluta.",
 };
 
 export default function RootLayout({
