@@ -70,6 +70,7 @@ export default function ProfileEditor() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [blurImageSrc, setBlurImageSrc] = useState<string | null>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<{ file: File; result: string } | null>(null);
 
   // Segmentação por Categoria Principal e Gênero
   const [category, setCategory] = useState<'massage' | 'escort' | 'both'>('massage');
@@ -236,12 +237,7 @@ export default function ProfileEditor() {
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
-      if (confirm('Deseja borrar o rosto na foto de perfil para proteger sua privacidade?')) {
-        setBlurImageSrc(result);
-      } else {
-        setAvatarFile(file);
-        setAvatarPreview(result);
-      }
+      setPendingAvatarFile({ file, result });
     };
     reader.readAsDataURL(file);
   };
@@ -1804,6 +1800,45 @@ export default function ProfileEditor() {
         onConfirm={handleBlurConfirm}
         onCancel={() => setBlurImageSrc(null)}
       />
+    )}
+
+    {pendingAvatarFile && (
+      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-[#121214] border border-white/10 rounded-2xl max-w-sm w-full p-6 text-center space-y-6 shadow-2xl animate-scaleUp">
+          <div className="mx-auto w-12 h-12 bg-gold-primary/10 border border-gold-primary/20 rounded-full flex items-center justify-center text-gold-primary animate-pulse">
+            <EyeOff className="w-6 h-6" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-base font-semibold text-white">Privacidade da Foto</h3>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Deseja borrar o rosto nesta foto de perfil antes de publicar? Isso ajuda a proteger a sua privacidade e identidade no portal.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 pt-2">
+            <button
+              onClick={() => {
+                setBlurImageSrc(pendingAvatarFile.result);
+                setPendingAvatarFile(null);
+              }}
+              type="button"
+              className="w-full py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold transition-all shadow-lg shadow-gold-primary/10 cursor-pointer"
+            >
+              Sim, borrar rosto
+            </button>
+            <button
+              onClick={() => {
+                setAvatarFile(pendingAvatarFile.file);
+                setAvatarPreview(pendingAvatarFile.result);
+                setPendingAvatarFile(null);
+              }}
+              type="button"
+              className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition-all border border-white/10 cursor-pointer"
+            >
+              Não, manter foto original
+            </button>
+          </div>
+        </div>
+      </div>
     )}
   </div>
 );

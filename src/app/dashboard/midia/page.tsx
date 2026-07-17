@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
-import { Image as ImageIcon, Video, Trash2, Sparkles, Upload, Lock, AlertTriangle, ArrowRight, ShieldCheck, FileImage } from 'lucide-react';
+import { Image as ImageIcon, Video, Trash2, Sparkles, Upload, Lock, AlertTriangle, ArrowRight, ShieldCheck, FileImage, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import ImageBlurSelector from '@/components/ImageBlurSelector';
 import { applyWatermark } from '@/lib/watermark';
@@ -23,6 +23,7 @@ export default function MediaManager() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [blurImageSrc, setBlurImageSrc] = useState<string | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<{ file: File; result: string } | null>(null);
 
   useEffect(() => {
     fetchMediaData();
@@ -84,12 +85,7 @@ export default function MediaManager() {
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
-        if (confirm('Deseja borrar o rosto nesta foto para proteger sua privacidade?')) {
-          setBlurImageSrc(result);
-        } else {
-          setSelectedFile(file);
-          setFilePreview(result);
-        }
+        setPendingPhotoFile({ file, result });
       };
       reader.readAsDataURL(file);
     } else {
@@ -502,6 +498,45 @@ export default function MediaManager() {
           onConfirm={handleBlurConfirm}
           onCancel={() => setBlurImageSrc(null)}
         />
+      )}
+
+      {pendingPhotoFile && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#121214] border border-white/10 rounded-2xl max-w-sm w-full p-6 text-center space-y-6 shadow-2xl animate-scaleUp">
+            <div className="mx-auto w-12 h-12 bg-gold-primary/10 border border-gold-primary/20 rounded-full flex items-center justify-center text-gold-primary animate-pulse">
+              <EyeOff className="w-6 h-6" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold text-white">Privacidade da Foto</h3>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Deseja borrar o rosto nesta foto antes de publicar? Isso ajuda a proteger a sua privacidade e identidade na vitrine.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setBlurImageSrc(pendingPhotoFile.result);
+                  setPendingPhotoFile(null);
+                }}
+                type="button"
+                className="w-full py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold transition-all shadow-lg shadow-gold-primary/10 cursor-pointer"
+              >
+                Sim, borrar rosto
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedFile(pendingPhotoFile.file);
+                  setFilePreview(pendingPhotoFile.result);
+                  setPendingPhotoFile(null);
+                }}
+                type="button"
+                className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition-all border border-white/10 cursor-pointer"
+              >
+                Não, manter foto original
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
