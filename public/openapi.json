@@ -1,0 +1,70 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Relaxe & Goze API",
+    "description": "API do portal privê de luxo para agendamento, anúncios e assinaturas de acompanhantes e massoterapeutas de elite.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/api/checkout": {
+      "post": {
+        "summary": "Criar Sessão de Checkout de Assinatura",
+        "description": "Gera uma sessão de checkout do Stripe para os planos Pro e Gold.",
+        "x-payment-info": {
+          "intent": "session",
+          "method": "stripe",
+          "amount": 299.00,
+          "currency": "BRL",
+          "description": "Assinatura do plano de divulgação profissional (Pro / Gold)"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "priceId": {
+                    "type": "string",
+                    "description": "ID do preço do Stripe"
+                  }
+                },
+                "required": ["priceId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sessão criada com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "URL da página de checkout do Stripe"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-service-info": {
+    "categories": [
+      "directory",
+      "booking",
+      "payments"
+    ]
+  }
+}
