@@ -6,6 +6,9 @@
 
 -- Tabela: public.profile_photos
 DROP POLICY IF EXISTS "Provedores gerenciam suas fotos" ON public.profile_photos;
+DROP POLICY IF EXISTS "Provedores inserem suas fotos" ON public.profile_photos;
+DROP POLICY IF EXISTS "Provedores atualizam suas fotos" ON public.profile_photos;
+DROP POLICY IF EXISTS "Provedores deletam suas fotos" ON public.profile_photos;
 
 CREATE POLICY "Provedores inserem suas fotos" ON public.profile_photos 
   FOR INSERT WITH CHECK (auth.uid() = profile_id);
@@ -19,6 +22,9 @@ CREATE POLICY "Provedores deletam suas fotos" ON public.profile_photos
 
 -- Tabela: public.profile_specialties
 DROP POLICY IF EXISTS "Provedores gerenciam suas especialidades" ON public.profile_specialties;
+DROP POLICY IF EXISTS "Provedores inserem suas especialidades" ON public.profile_specialties;
+DROP POLICY IF EXISTS "Provedores atualizam suas especialidades" ON public.profile_specialties;
+DROP POLICY IF EXISTS "Provedores deletam suas especialidades" ON public.profile_specialties;
 
 CREATE POLICY "Provedores inserem suas especialidades" ON public.profile_specialties 
   FOR INSERT WITH CHECK (auth.uid() = profile_id);
@@ -32,6 +38,9 @@ CREATE POLICY "Provedores deletam suas especialidades" ON public.profile_special
 
 -- Tabela: public.stories
 DROP POLICY IF EXISTS "Provedores gerenciam seus próprios stories" ON public.stories;
+DROP POLICY IF EXISTS "Provedores inserem seus próprios stories" ON public.stories;
+DROP POLICY IF EXISTS "Provedores atualizam seus próprios stories" ON public.stories;
+DROP POLICY IF EXISTS "Provedores deletam seus próprios stories" ON public.stories;
 
 CREATE POLICY "Provedores inserem seus próprios stories" ON public.stories 
   FOR INSERT WITH CHECK (auth.uid() = profile_id);
@@ -45,6 +54,8 @@ CREATE POLICY "Provedores deletam seus próprios stories" ON public.stories
 
 -- Tabela: public.reviews
 DROP POLICY IF EXISTS "Clientes gerenciam suas próprias reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Clientes atualizam suas próprias reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Clientes deletam suas próprias reviews" ON public.reviews;
 
 CREATE POLICY "Clientes atualizam suas próprias reviews" ON public.reviews 
   FOR UPDATE USING (auth.uid() = client_id) WITH CHECK (auth.uid() = client_id);
