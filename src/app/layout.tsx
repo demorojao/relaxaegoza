@@ -4,6 +4,8 @@ import "./globals.css";
 import AgeVerificationModal from "../components/AgeVerificationModal";
 import WebMcpProvider from "../components/WebMcpProvider";
 
+import MediaProtection from "../components/MediaProtection";
+
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
@@ -33,6 +35,7 @@ export default function RootLayout({
       className={`${cormorant.variable} ${plusJakarta.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-dark-bg text-gray-100 font-sans">
+        <MediaProtection />
         <AgeVerificationModal />
         <WebMcpProvider />
         {children}

@@ -51,7 +51,8 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
         )}
       >
         {/* Container da Imagem */}
-        <div className="relative w-full aspect-[3/3.8] overflow-hidden shrink-0">
+        <div className="relative w-full aspect-[3/3.8] overflow-hidden shrink-0 protected-media">
+          <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
           <Image
             src={getCDNUrl(displayAvatar) || '/avatar-placeholder.svg'}
             alt={displayName}

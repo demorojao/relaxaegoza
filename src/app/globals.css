@@ -184,6 +184,35 @@ body {
   animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Proteção de Mídia e Prevenção de Salvamento de Fotos */
+.protected-media {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+.protected-media img,
+.protected-media video {
+  pointer-events: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Camada Transparente Escudo de Proteção (Overlay Shield) */
+.protected-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: transparent;
+  cursor: default;
+}
+
 /* Prevenir impressão da página (Ctrl+P / PDF) */
 @media print {
   body {

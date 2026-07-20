@@ -352,7 +352,8 @@ export default function ProfileReels({
               className="w-full h-full relative snap-start snap-always bg-neutral-950 flex flex-col justify-end overflow-hidden"
             >
               {/* Media Display (Photo or Video) */}
-              <div className="absolute inset-0 w-full h-full z-0 flex items-center justify-center select-none">
+              <div className="absolute inset-0 w-full h-full z-0 flex items-center justify-center select-none protected-media">
+                <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
                 {currentMedia ? (
                   currentMedia.type === 'video' ? (
                     <video
@@ -364,7 +365,7 @@ export default function ProfileReels({
                       playsInline
                       className="w-full h-full object-cover pointer-events-none select-none"
                       onContextMenu={(e) => e.preventDefault()}
-                      controlsList="nodownload"
+                      controlsList="nodownload nofullscreen noremoteplayback"
                       disablePictureInPicture={true}
                       preload={isActive ? "auto" : "metadata"}
                       onClick={() => setIsPlaying(!isPlaying)}

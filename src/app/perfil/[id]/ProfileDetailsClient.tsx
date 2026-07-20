@@ -497,9 +497,11 @@ export default function ProfileDetailsClient({
 
       <div className="flex flex-col md:flex-row gap-8 items-start">
       {/* Avatar Principal */}
-      <div className={`w-full md:w-1/3 aspect-4/5 sm:aspect-3/4 max-h-90 md:max-h-none rounded-2xl overflow-hidden shadow-2xl relative shrink-0 border-2 ${
+      <div className={`w-full md:w-1/3 aspect-4/5 sm:aspect-3/4 max-h-90 md:max-h-none rounded-2xl overflow-hidden shadow-2xl relative shrink-0 border-2 protected-media ${
         isAvailable ? 'border-emerald-500 neon-ring-active' : profile.subscription_tier === 'gold' ? 'border-gold-primary' : 'border-white/5'
       }`}>
+        {/* Overlay shield para impedir clique e salvamento direto da imagem */}
+        <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
         <Image 
           src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'} 
           alt={profile.name}
@@ -834,14 +836,16 @@ export default function ProfileDetailsClient({
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {mediaToRender.map((media: any, index: number) => (
-                <div key={index} className="relative aspect-3/4 rounded-xl overflow-hidden group cursor-pointer border border-white/5">
+                <div key={index} className="relative aspect-3/4 rounded-xl overflow-hidden group cursor-pointer border border-white/5 protected-media">
+                  {/* Overlay shield de proteção */}
+                  <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
                   {media.type === 'video' ? (
                     <video 
                       src={getCDNUrl(media.url)} 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       controls
                       playsInline
-                      controlsList="nodownload"
+                      controlsList="nodownload nofullscreen noremoteplayback"
                       disablePictureInPicture={true}
                       onContextMenu={(e) => e.preventDefault()}
                     />
@@ -859,7 +863,7 @@ export default function ProfileDetailsClient({
                     </Watermark>
                   )}
                   {media.is_verified && (
-                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-emerald-500/20 text-emerald-400 z-10">
+                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-emerald-500/20 text-emerald-400 z-10 pointer-events-none">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                   )}
