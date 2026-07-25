@@ -107,6 +107,11 @@ export default function DashboardLayout({
 
   const providerItems = [
     {
+      name: 'Perfil',
+      icon: UserCircle,
+      path: '/dashboard/perfil'
+    },
+    {
       name: 'Métricas & Painel',
       icon: LayoutDashboard,
       path: '/dashboard'
@@ -115,11 +120,6 @@ export default function DashboardLayout({
       name: 'Notificações',
       icon: Bell,
       path: '/dashboard/notificacoes'
-    },
-    {
-      name: 'Perfil',
-      icon: UserCircle,
-      path: '/dashboard/perfil'
     },
     {
       name: 'Fotos & Galeria',
