@@ -76,6 +76,43 @@ export default function AdminDashboardClient({
   const [reports, setReports] = useState<any[]>([]);
   const [loadingReports, setLoadingReports] = useState(false);
 
+  // Estado de Autenticação Obrigatória
+  const [authenticating, setAuthenticating] = useState(true);
+
+  // Verificação Obrigatória da Sessão e Role no Carregamento
+  useEffect(() => {
+    const verifyAdminSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          alert('Acesso Negado: É necessário fazer login como Administrador para acessar o painel.');
+          router.push('/login');
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error || !profile || profile.role !== 'admin') {
+          alert('Acesso Proibido: Sua conta não tem permissões de Administrador.');
+          await supabase.auth.signOut();
+          router.push('/login');
+          return;
+        }
+
+        setAuthenticating(false);
+      } catch (err) {
+        console.error('Erro de validação admin:', err);
+        router.push('/login');
+      }
+    };
+
+    verifyAdminSession();
+  }, [router]);
+
   // 1. Timer de Auto-Lock por Inatividade (15 minutos)
   useEffect(() => {
     let inactivityTimer: NodeJS.Timeout;
@@ -516,6 +553,18 @@ export default function AdminDashboardClient({
                           p.id.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesRole && matchesSearch;
   });
+
+  // Tela de Validação de Credenciais Admin
+  if (authenticating) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-4">
+        <div className="w-10 h-10 border-4 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
+        <span className="text-xs text-gray-400 font-light tracking-wide">
+          Verificando sessão e privilégios de Administrador...
+        </span>
+      </div>
+    );
+  }
 
   // Tela de Bloqueio por Inatividade (Auto-Lock)
   if (isLocked) {

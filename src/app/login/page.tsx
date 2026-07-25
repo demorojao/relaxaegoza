@@ -170,6 +170,13 @@ export default function LoginPage() {
           throw new Error('Perfil não encontrado no banco de dados.');
         }
 
+        // SE FOR ADMIN: Redireciona diretamente para o painel de moderação sem exigir seleção de aba cliente/profissional
+        if (profile.role === 'admin') {
+          const secretKey = process.env.NEXT_PUBLIC_ADMIN_ACCESS_SECRET || 'aura-master-secure-2026';
+          router.push(`/dashboard-interno-moderacao-aura?key=${secretKey}`);
+          return;
+        }
+
         // Validação de segurança: garantir que o papel real corresponda à seleção da interface
         if (profile.role !== role) {
           // Deslogar sessão criada para não deixar o usuário logado de forma inconsistente
