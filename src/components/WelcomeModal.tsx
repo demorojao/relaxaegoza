@@ -13,7 +13,7 @@ export default function WelcomeModal() {
 
     const checkAndShow = () => {
       const hasSeenWelcome = localStorage.getItem('rg_welcome_seen');
-      const isAgeVerified = localStorage.getItem('ageVerified');
+      const isAgeVerified = sessionStorage.getItem('ageVerified');
       
       if (isAgeVerified && !hasSeenWelcome) {
         setTimeout(() => {

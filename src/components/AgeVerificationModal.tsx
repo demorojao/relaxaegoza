@@ -9,15 +9,18 @@ export default function AgeVerificationModal() {
 
   useEffect(() => {
     setMounted(true);
-    const isVerified = localStorage.getItem('ageVerified');
-    if (!isVerified) {
+    // Limpa gravações antigas em localStorage para forçar em todas as sessões
+    localStorage.removeItem('ageVerified');
+    
+    const isVerifiedInSession = sessionStorage.getItem('ageVerified');
+    if (!isVerifiedInSession) {
       setIsOpen(true);
       document.body.style.overflow = 'hidden';
     }
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem('ageVerified', 'true');
+    sessionStorage.setItem('ageVerified', 'true');
     window.dispatchEvent(new Event('ageVerifiedSuccess'));
     setIsOpen(false);
     document.body.style.overflow = 'unset';
