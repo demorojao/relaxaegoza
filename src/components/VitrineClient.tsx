@@ -820,49 +820,51 @@ export default function VitrineClient({
       )}>
         <Logo />
         
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-          <Link href="/rankings" className="flex items-center gap-1 text-xs text-gold-light hover:text-white transition-colors font-semibold" title="Rankings">
+        <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
+          <Link href="/rankings" className="flex items-center gap-1 text-xs text-gold-light hover:text-white transition-colors font-semibold shrink-0" title="Rankings">
             <Trophy className="w-4 h-4 text-gold-primary" />
             <span className="hidden sm:inline">Rankings</span>
           </Link>
           
           {user ? (
-            <div className={cn("flex items-center gap-2 sm:gap-3", viewMode === 'reels' && "hidden md:flex")}>
+            <div className={cn("flex items-center gap-1.5 sm:gap-3 shrink-0", viewMode === 'reels' && "hidden md:flex")}>
               {userRole === 'provider' && (
                 <Button 
                   variant="gold" 
                   size="sm"
                   onClick={() => setIsAdModalOpen(true)}
-                  className="shadow-md shadow-gold-primary/10 hover:scale-[1.02] transition-transform"
+                  className="shadow-md shadow-gold-primary/10 hover:scale-[1.02] transition-transform text-xs px-2.5 sm:px-3 shrink-0"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-dark-bg" />
-                  <span>Gerenciar Anúncio</span>
+                  <Sparkles className="w-3.5 h-3.5 text-dark-bg shrink-0" />
+                  <span className="hidden sm:inline">Gerenciar Anúncio</span>
+                  <span className="sm:hidden">Anúncio</span>
                 </Button>
               )}
-              <Link href={userRole === 'provider' ? '/dashboard' : '/client-dashboard'}>
-                <Button variant="dark" size="sm">
-                  <LayoutDashboard className="w-3.5 h-3.5" />
+              <Link href={userRole === 'provider' ? '/dashboard' : '/client-dashboard'} className="shrink-0">
+                <Button variant="dark" size="sm" className="px-2.5 sm:px-3">
+                  <LayoutDashboard className="w-3.5 h-3.5 shrink-0" />
                   <span className="hidden sm:inline">Meu Painel</span>
                 </Button>
               </Link>
               <button 
                 onClick={handleLogout}
-                className="p-2 rounded-xl text-gray-400 hover:text-red-400 hover:bg-white/5 transition-all cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-red-400/90 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all cursor-pointer shrink-0 text-xs font-semibold"
                 title="Sair da Conta"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Sair</span>
               </button>
             </div>
           ) : (
-            <div className={cn("flex items-center gap-1 sm:gap-2", viewMode === 'reels' && "hidden md:flex")}>
-              <Link href="/login">
-                <Button variant="ghost" size="sm" title="Entrar">
-                  <LogIn className="w-3.5 h-3.5" />
+            <div className={cn("flex items-center gap-1.5 sm:gap-2 shrink-0", viewMode === 'reels' && "hidden md:flex")}>
+              <Link href="/login" className="shrink-0">
+                <Button variant="ghost" size="sm" title="Entrar" className="px-2.5 sm:px-3">
+                  <LogIn className="w-3.5 h-3.5 shrink-0" />
                   <span className="hidden sm:inline">Entrar</span>
                 </Button>
               </Link>
-              <Link href="/cadastro">
-                <Button variant="gold" size="sm">
+              <Link href="/cadastro" className="shrink-0">
+                <Button variant="gold" size="sm" className="px-2.5 sm:px-3">
                   <span className="sm:hidden">+ Anunciar</span>
                   <span className="hidden sm:inline">Anunciar / Cadastrar</span>
                 </Button>

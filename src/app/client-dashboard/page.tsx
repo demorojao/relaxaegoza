@@ -125,15 +125,18 @@ export default function ClientDashboard() {
 
 
       {/* Header Fixo */}
-      <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-lg border-b border-white/5 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-black/70 backdrop-blur-lg border-b border-white/5 px-4 sm:px-6 py-3.5 flex items-center justify-between">
         <Logo />
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <Link href="/" className="text-xs text-gray-400 hover:text-white transition-colors hidden sm:block">
+            Ir para a Vitrine
+          </Link>
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-400 transition-colors font-medium cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all cursor-pointer shrink-0"
           >
-            <LogOut className="w-4 h-4" />
-            Sair da Conta
+            <LogOut className="w-3.5 h-3.5 text-red-400 shrink-0" />
+            <span className="text-xs">Sair</span>
           </button>
         </div>
       </header>

@@ -22,7 +22,8 @@ import {
   Zap,
   Lock,
   Bell,
-  LifeBuoy
+  LifeBuoy,
+  LogOut
 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -236,15 +237,26 @@ export default function DashboardLayout({
             </nav>
           </div>
 
-          <div className="border-t border-dark-border/20 pt-5 mt-8">
+          <div className="border-t border-dark-border/20 pt-5 mt-8 space-y-4">
             <Link 
               href="/" 
               className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
               onClick={() => setMenuOpen(false)}
             >
               <ArrowLeft className="w-4 h-4" />
-              Voltar para a Home
+              Voltar para a Vitrine
             </Link>
+
+            <button 
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.href = '/';
+              }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all cursor-pointer"
+            >
+              <LogOut className="w-4 h-4 text-red-400 shrink-0" />
+              Sair da Conta
+            </button>
           </div>
         </div>
       )}
@@ -298,12 +310,23 @@ export default function DashboardLayout({
           </nav>
         </div>
 
-        {/* Back Link */}
-        <div className="border-t border-dark-border/20 pt-5">
+        {/* Back Link & Logout */}
+        <div className="border-t border-dark-border/20 pt-5 space-y-3">
           <Link href="/" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            Voltar para a Home
+            Voltar para a Vitrine
           </Link>
+
+          <button 
+            onClick={async () => {
+              await supabase.auth.signOut();
+              window.location.href = '/';
+            }}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5 text-red-400 shrink-0" />
+            Sair da Conta
+          </button>
         </div>
       </aside>
 
