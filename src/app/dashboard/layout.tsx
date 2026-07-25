@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { 
   LayoutDashboard, 
+  UserCircle,
   UserSquare2, 
   ImagePlus, 
   ShieldCheck, 
@@ -116,8 +117,8 @@ export default function DashboardLayout({
       path: '/dashboard/notificacoes'
     },
     {
-      name: 'Estruturar Perfil',
-      icon: UserSquare2,
+      name: 'Perfil',
+      icon: UserCircle,
       path: '/dashboard/perfil'
     },
     {
