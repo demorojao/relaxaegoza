@@ -64,7 +64,9 @@ export async function POST(req: NextRequest) {
       isDirectNotification,
       notificationTitle,
       notificationContent,
-      targetRole
+      targetRole,
+      isResetPassword,
+      newPassword
     } = await req.json();
 
     // Se for listagem simples de denúncias, não exige PIN de segurança
@@ -153,6 +155,48 @@ export async function POST(req: NextRequest) {
 
       if (notifErr) throw notifErr;
       return NextResponse.json({ success: true });
+    }
+
+    // Reset Manual de Senha pelo Admin (Exige PIN)
+    if (isResetPassword) {
+      const adminPin = req.headers.get('x-admin-pin');
+      const expectedPin = process.env.ADMIN_SECURITY_PIN || '9847';
+      if (!adminPin || adminPin !== expectedPin) {
+        return NextResponse.json({ error: 'PIN de Segurança Inválido ou não fornecido.' }, { status: 403 });
+      }
+
+      if (!profileId || !newPassword || newPassword.length < 6) {
+        return NextResponse.json({ error: 'ID do usuário e nova senha de no mínimo 6 caracteres são obrigatórios.' }, { status: 400 });
+      }
+
+      const { error: resetErr } = await supabaseService.auth.admin.updateUserById(
+        profileId,
+        { password: newPassword }
+      );
+
+      if (resetErr) throw resetErr;
+
+      // Notificar o usuário no painel dele
+      await supabaseService.from('profile_notifications').insert({
+        profile_id: profileId,
+        title: '🔐 Senha Redefinida pela Administração',
+        content: 'A sua senha foi redefinida pela equipe de suporte/administração. Caso não tenha solicitado essa alteração, entre em contato imediatamente.',
+        type: 'system_update',
+        is_read: false
+      });
+
+      try {
+        await supabaseService.from('admin_audit_logs').insert({
+          admin_id: user.id,
+          action: 'ADMIN_RESET_PASSWORD',
+          target_profile_id: profileId,
+          ip_address: clientIp
+        });
+      } catch (e) {
+        console.warn('Erro ao salvar audit log:', e);
+      }
+
+      return NextResponse.json({ success: true, message: 'Senha alterada com sucesso.' });
     }
 
     // Ações de alteração/mutação exigem validação do PIN de Segurança Admin

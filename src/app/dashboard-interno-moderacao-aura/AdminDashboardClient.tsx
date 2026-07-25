@@ -647,6 +647,47 @@ export default function AdminDashboardClient({
     }
   };
 
+  const handleAdminResetPassword = (profileId: string, profileName: string) => {
+    const newPass = prompt(`Digite a nova senha para o usuário "${profileName}" (no mínimo 6 caracteres):`);
+    if (!newPass) return;
+    if (newPass.length < 6) {
+      alert('A nova senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    requestPinAuthorization(`Redefinir Senha de ${profileName}`, async (pin) => {
+      setActionLoading(`${profileId}-reset-pass`);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const response = await fetch('/api/internal-ops/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'x-admin-secret': adminSecret,
+            'x-admin-pin': pin
+          },
+          body: JSON.stringify({
+            isResetPassword: true,
+            profileId,
+            newPassword: newPass
+          })
+        });
+
+        const res = await response.json();
+        if (!response.ok) throw new Error(res.error || 'Erro ao redefinir a senha.');
+
+        alert(`Senha do usuário ${profileName} redefinida com sucesso!`);
+      } catch (err: any) {
+        alert(err.message || 'Erro ao redefinir senha.');
+      } finally {
+        setActionLoading(null);
+      }
+    });
+  };
+
   // Filtragem dos dados
   const pendingProfiles = profiles.filter(p => 
     p.verification_status === 'pending' || 
@@ -1888,21 +1929,36 @@ export default function AdminDashboardClient({
                             <label className="text-[10px] text-gray-500 font-bold uppercase block">Último IP de Acesso</label>
                             <span className="text-xs font-mono text-white mt-1 block">{p.last_ip || 'Nenhum IP registrado'}</span>
                           </div>
-                          {p.last_ip && (
+
+                          <div className="flex flex-wrap items-center gap-2">
                             <Button
                               variant="dark"
                               type="button"
-                              onClick={() => {
-                                if (confirm(`Tem certeza que deseja banir o IP ${p.last_ip}?`)) {
-                                  handleBanIp(p.last_ip, `Banido a partir do perfil de ${p.name}`);
-                                }
-                              }}
-                              className="border border-red-500/30 hover:bg-red-500/10 text-red-400 py-2 text-[10px] cursor-pointer"
+                              onClick={() => handleAdminResetPassword(p.id, p.name)}
+                              disabled={actionLoading !== null}
+                              isLoading={actionLoading === `${p.id}-reset-pass`}
+                              className="border border-gold-primary/30 hover:bg-gold-primary/10 text-gold-light py-2 text-[10px] cursor-pointer"
                             >
-                              <ShieldAlert className="w-3.5 h-3.5 mr-1" />
-                              Banir IP do Usuário
+                              <KeyRound className="w-3.5 h-3.5 mr-1 text-gold-primary" />
+                              Redefinir Senha (Requer PIN)
                             </Button>
-                          )}
+
+                            {p.last_ip && (
+                              <Button
+                                variant="dark"
+                                type="button"
+                                onClick={() => {
+                                  if (confirm(`Tem certeza que deseja banir o IP ${p.last_ip}?`)) {
+                                    handleBanIp(p.last_ip, `Banido a partir do perfil de ${p.name}`);
+                                  }
+                                }}
+                                className="border border-red-500/30 hover:bg-red-500/10 text-red-400 py-2 text-[10px] cursor-pointer"
+                              >
+                                <ShieldAlert className="w-3.5 h-3.5 mr-1" />
+                                Banir IP do Usuário
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
 
