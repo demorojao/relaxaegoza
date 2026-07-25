@@ -59,7 +59,12 @@ export async function POST(req: NextRequest) {
       isReportPunish,
       reportId,
       isBoostGrant,
-      boostHours
+      boostHours,
+      isBroadcastNotification,
+      isDirectNotification,
+      notificationTitle,
+      notificationContent,
+      targetRole
     } = await req.json();
 
     // Se for listagem simples de denúncias, não exige PIN de segurança
@@ -81,6 +86,75 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, reports });
     }
 
+    // Disparo de Notificação em Massa (Broadcast)
+    if (isBroadcastNotification) {
+      const adminPin = req.headers.get('x-admin-pin');
+      const expectedPin = process.env.ADMIN_SECURITY_PIN || '9847';
+      if (!adminPin || adminPin !== expectedPin) {
+        return NextResponse.json({ error: 'PIN de Segurança Inválido ou não fornecido.' }, { status: 403 });
+      }
+
+      if (!notificationTitle || !notificationContent) {
+        return NextResponse.json({ error: 'Título e conteúdo da notificação são obrigatórios.' }, { status: 400 });
+      }
+
+      let query = supabaseService.from('profiles').select('id');
+      if (targetRole && targetRole !== 'all') {
+        query = query.eq('role', targetRole);
+      }
+      const { data: targetProfiles, error: fetchErr } = await query;
+      if (fetchErr) throw fetchErr;
+
+      if (targetProfiles && targetProfiles.length > 0) {
+        const notificationsToInsert = targetProfiles.map(p => ({
+          profile_id: p.id,
+          title: notificationTitle,
+          content: notificationContent,
+          type: 'system_update',
+          is_read: false
+        }));
+
+        const { error: insertErr } = await supabaseService
+          .from('profile_notifications')
+          .insert(notificationsToInsert);
+
+        if (insertErr) throw insertErr;
+      }
+
+      try {
+        await supabaseService.from('admin_audit_logs').insert({
+          admin_id: user.id,
+          action: 'BROADCAST_NOTIFICATION',
+          details: { title: notificationTitle, targetRole, count: targetProfiles?.length || 0 },
+          ip_address: clientIp
+        });
+      } catch (err) {
+        console.warn('Erro ao salvar audit log:', err);
+      }
+
+      return NextResponse.json({ success: true, count: targetProfiles?.length || 0 });
+    }
+
+    // Disparo de Notificação Individual Direta
+    if (isDirectNotification) {
+      if (!profileId || !notificationTitle || !notificationContent) {
+        return NextResponse.json({ error: 'Perfil de destino, título e conteúdo são obrigatórios.' }, { status: 400 });
+      }
+
+      const { error: notifErr } = await supabaseService
+        .from('profile_notifications')
+        .insert({
+          profile_id: profileId,
+          title: notificationTitle,
+          content: notificationContent,
+          type: 'system_update',
+          is_read: false
+        });
+
+      if (notifErr) throw notifErr;
+      return NextResponse.json({ success: true });
+    }
+
     // Ações de alteração/mutação exigem validação do PIN de Segurança Admin
     const requiresPin = isProfileUpdate || isBan || isReportPunish || isBoostGrant || (isProfileUpdate && updateFields?.subscription_tier);
     if (requiresPin) {
@@ -91,7 +165,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Concessão Manual de Boost pelo Admin
+    // Concessão Manual de Boost pelo Admin + Notificação Individual Automática
     if (isBoostGrant) {
       if (!profileId || !boostHours) {
         return NextResponse.json({ error: 'Perfil de destino ou quantidade de horas inválida.' }, { status: 400 });
@@ -119,6 +193,19 @@ export async function POST(req: NextRequest) {
         .eq('id', profileId);
 
       if (boostError) throw boostError;
+
+      // Disparar Notificação Individual Automática para o Anunciante
+      try {
+        await supabaseService.from('profile_notifications').insert({
+          profile_id: profileId,
+          title: '🚀 Boost de Destaque Ativado!',
+          content: `Um Administrador concedeu um Boost de Destaque por ${boostHours} horas no seu perfil. Seu anúncio está no topo da vitrine!`,
+          type: 'gift_boost',
+          is_read: false
+        });
+      } catch (err) {
+        console.warn('Erro ao enviar notificação de boost:', err);
+      }
 
       // Log de Auditoria
       try {
@@ -280,6 +367,21 @@ export async function POST(req: NextRequest) {
 
       if (updateError) throw updateError;
 
+      // Se alterou o plano, envia notificação
+      if (updateFields.subscription_tier) {
+        try {
+          await supabaseService.from('profile_notifications').insert({
+            profile_id: profileId,
+            title: '⭐ Plano Atualizado!',
+            content: `O seu plano de assinatura foi alterado para ${updateFields.subscription_tier.toUpperCase()} pela equipe de moderação.`,
+            type: 'system_update',
+            is_read: false
+          });
+        } catch (err) {
+          console.warn('Erro ao notificar alteração de plano:', err);
+        }
+      }
+
       // Log de Auditoria
       try {
         await supabaseService.from('admin_audit_logs').insert({
@@ -305,6 +407,21 @@ export async function POST(req: NextRequest) {
         .eq('id', profileId);
 
       if (updateError) throw updateError;
+
+      // Notificação Automática de Espaço Físico
+      try {
+        await supabaseService.from('profile_notifications').insert({
+          profile_id: profileId,
+          title: isVerified ? '🏠 Espaço Físico Verificado!' : '⚠️ Verificação de Espaço Não Aprovada',
+          content: isVerified
+            ? 'A foto/vídeo do seu espaço físico foi aprovada com sucesso pela moderação. O selo de ambiente verificado está visível no seu anúncio!'
+            : 'A solicitação de verificação do seu espaço não foi aprovada. Por favor, envie uma nova foto ou vídeo legível.',
+          type: 'system_update',
+          is_read: false
+        });
+      } catch (err) {
+        console.warn('Erro ao notificar verificação de espaço:', err);
+      }
     } else {
       // Moderação de Selo de Perfil Verificado (Foto/Selfie)
       if (!['verified', 'rejected', 'none'].includes(status)) {
@@ -317,6 +434,23 @@ export async function POST(req: NextRequest) {
         .eq('id', profileId);
 
       if (updateError) throw updateError;
+
+      // Notificação Automática de Identidade
+      if (status === 'verified' || status === 'rejected') {
+        try {
+          await supabaseService.from('profile_notifications').insert({
+            profile_id: profileId,
+            title: status === 'verified' ? '✅ Perfil Verificado com Sucesso!' : '⚠️ Documento/Selfie Rejeitado',
+            content: status === 'verified'
+              ? 'Sua selfie e documento de identidade foram analisados e APROVADOS! Seu selo oficial de verificação está ativo no seu perfil.'
+              : 'Sua verificação de identidade não foi aprovada pela moderação. Por favor, envie fotos nítidas do seu documento e selfie para nova análise.',
+            type: 'system_update',
+            is_read: false
+          });
+        } catch (err) {
+          console.warn('Erro ao notificar verificação de identidade:', err);
+        }
+      }
     }
 
     return NextResponse.json({ success: true });

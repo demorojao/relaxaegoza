@@ -27,7 +27,10 @@ import {
   Zap,
   Lock,
   Unlock,
-  KeyRound
+  KeyRound,
+  Bell,
+  Send,
+  Megaphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -48,7 +51,7 @@ export default function AdminDashboardClient({
   adminSecret
 }: AdminDashboardClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'pending' | 'rooms' | 'all' | 'photos' | 'banned' | 'reports'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'rooms' | 'all' | 'photos' | 'banned' | 'reports' | 'broadcast'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'provider' | 'client' | 'host'>('all');
   const [profiles, setProfiles] = useState<any[]>(initialProfiles);
@@ -62,6 +65,17 @@ export default function AdminDashboardClient({
   const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
   const [editFields, setEditFields] = useState<any>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Estados de Notificação em Massa (Broadcast) e Notificação Direta Individual
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastContent, setBroadcastContent] = useState('');
+  const [broadcastTarget, setBroadcastTarget] = useState<'provider' | 'client' | 'all'>('provider');
+  const [broadcastSuccess, setBroadcastSuccess] = useState('');
+
+  const [directNotifModal, setDirectNotifModal] = useState<{ open: boolean; profileId: string; profileName: string }>({ open: false, profileId: '', profileName: '' });
+  const [directTitle, setDirectTitle] = useState('');
+  const [directContent, setDirectContent] = useState('');
+  const [directLoading, setDirectLoading] = useState(false);
 
   // Estados de Segurança PIN e Auto-Lock
   const [isLocked, setIsLocked] = useState(false);
@@ -532,6 +546,93 @@ export default function AdminDashboardClient({
     }
   };
 
+  const handleBroadcastSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!broadcastTitle || !broadcastContent) {
+      alert('Preencha o título e a mensagem da notificação.');
+      return;
+    }
+
+    const targetText = broadcastTarget === 'provider' ? 'todas as Profissionais/Anunciantes' : broadcastTarget === 'client' ? 'todos os Clientes' : 'todos os Usuários cadastrados';
+
+    requestPinAuthorization(`Disparar Notificação em Massa para ${targetText}`, async (pin) => {
+      setActionLoading('broadcast');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const response = await fetch('/api/internal-ops/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'x-admin-secret': adminSecret,
+            'x-admin-pin': pin
+          },
+          body: JSON.stringify({
+            isBroadcastNotification: true,
+            notificationTitle: broadcastTitle,
+            notificationContent: broadcastContent,
+            targetRole: broadcastTarget
+          })
+        });
+
+        const res = await response.json();
+        if (!response.ok) throw new Error(res.error || 'Erro ao disparar notificação.');
+
+        setBroadcastSuccess(`Notificação enviada com sucesso para ${res.count} usuários!`);
+        setBroadcastTitle('');
+        setBroadcastContent('');
+        setTimeout(() => setBroadcastSuccess(''), 6000);
+      } catch (err: any) {
+        alert(err.message || 'Erro ao disparar notificação em massa.');
+      } finally {
+        setActionLoading(null);
+      }
+    });
+  };
+
+  const handleDirectNotifSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!directTitle || !directContent) {
+      alert('Preencha o título e a mensagem.');
+      return;
+    }
+
+    setDirectLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/internal-ops/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'x-admin-secret': adminSecret
+        },
+        body: JSON.stringify({
+          isDirectNotification: true,
+          profileId: directNotifModal.profileId,
+          notificationTitle: directTitle,
+          notificationContent: directContent
+        })
+      });
+
+      const res = await response.json();
+      if (!response.ok) throw new Error(res.error || 'Erro ao enviar notificação.');
+
+      alert(`Notificação enviada com sucesso para ${directNotifModal.profileName}!`);
+      setDirectNotifModal({ open: false, profileId: '', profileName: '' });
+      setDirectTitle('');
+      setDirectContent('');
+    } catch (err: any) {
+      alert(err.message || 'Erro ao enviar notificação.');
+    } finally {
+      setDirectLoading(false);
+    }
+  };
+
   // Filtragem dos dados
   const pendingProfiles = profiles.filter(p => 
     p.verification_status === 'pending' || 
@@ -746,6 +847,17 @@ export default function AdminDashboardClient({
               }`}
             >
               Denúncias ({reports.filter(r => r.status === 'pending').length})
+            </button>
+            <button
+              onClick={() => setActiveTab('broadcast')}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'broadcast' 
+                  ? 'bg-gold-primary text-dark-bg font-bold shadow' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Megaphone className="w-3.5 h-3.5" />
+              Notificações
             </button>
           </div>
 
@@ -1309,6 +1421,103 @@ export default function AdminDashboardClient({
             </div>
           )}
         </div>
+      ) : activeTab === 'broadcast' ? (
+        /* Aba de Disparo de Notificações em Massa (Broadcast) */
+        <Card variant="glass" className="p-6 md:p-8 space-y-6 max-w-3xl mx-auto border-gold-primary/30 bg-black/40">
+          <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+            <div className="w-10 h-10 bg-gold-primary/10 rounded-xl flex items-center justify-center text-gold-primary border border-gold-primary/20">
+              <Megaphone className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-wide">Disparo de Notificações em Massa</h2>
+              <p className="text-xs text-gray-400 font-light">
+                Envie avisos, comunicados e ofertas diretamente para a central de notificações dos usuários.
+              </p>
+            </div>
+          </div>
+
+          {broadcastSuccess && (
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-xs rounded-xl flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-400" />
+              <span>{broadcastSuccess}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleBroadcastSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-300">Público Alvo de Destino</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBroadcastTarget('provider')}
+                  className={`py-2.5 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+                    broadcastTarget === 'provider'
+                      ? 'bg-gold-primary text-dark-bg border-gold-primary font-bold shadow'
+                      : 'bg-black/40 border-white/10 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Todas as Profissionais
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBroadcastTarget('client')}
+                  className={`py-2.5 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+                    broadcastTarget === 'client'
+                      ? 'bg-gold-primary text-dark-bg border-gold-primary font-bold shadow'
+                      : 'bg-black/40 border-white/10 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Todos os Clientes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBroadcastTarget('all')}
+                  className={`py-2.5 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+                    broadcastTarget === 'all'
+                      ? 'bg-gold-primary text-dark-bg border-gold-primary font-bold shadow'
+                      : 'bg-black/40 border-white/10 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Todos os Usuários
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-300">Título do Alerta / Notificação</label>
+              <input
+                type="text"
+                placeholder="Ex: 📢 Novidades na Plataforma Relaxe & Goze!"
+                value={broadcastTitle}
+                onChange={(e) => setBroadcastTitle(e.target.value)}
+                required
+                className="w-full bg-black/60 border border-white/10 text-white text-xs p-3 rounded-xl focus:border-gold-primary focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-300">Conteúdo da Mensagem</label>
+              <textarea
+                rows={4}
+                placeholder="Escreva a mensagem que aparecerá na caixa de notificações de todos os usuários selecionados..."
+                value={broadcastContent}
+                onChange={(e) => setBroadcastContent(e.target.value)}
+                required
+                className="w-full bg-black/60 border border-white/10 text-white text-xs p-3 rounded-xl focus:border-gold-primary focus:outline-none resize-none leading-relaxed"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              isLoading={actionLoading === 'broadcast'}
+              variant="gold"
+              className="w-full py-3 text-xs font-bold uppercase tracking-wider cursor-pointer"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Disparar Notificação em Massa (Exige PIN)
+            </Button>
+          </form>
+        </Card>
       ) : (
         /* Gerenciar Todos os Anunciantes/Clientes/Hosts */
         <div className="grid grid-cols-1 gap-4">
@@ -1376,6 +1585,16 @@ export default function AdminDashboardClient({
                         >
                           Ver Perfil ↗
                         </a>
+
+                        <button
+                          type="button"
+                          onClick={() => setDirectNotifModal({ open: true, profileId: p.id, profileName: p.name })}
+                          className="ml-2 px-2 py-0.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/25 rounded text-[9px] font-semibold transition-all flex items-center gap-1 cursor-pointer"
+                          title="Enviar notificação individual para este usuário"
+                        >
+                          <Bell className="w-3 h-3" />
+                          Notificar
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1724,6 +1943,78 @@ export default function AdminDashboardClient({
                 Confirmar
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Notificação Individual Direta */}
+      {directNotifModal.open && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="max-w-md w-full bg-dark-card border border-gold-primary/30 p-6 rounded-2xl shadow-2xl space-y-5 relative">
+            <button
+              onClick={() => setDirectNotifModal({ open: false, profileId: '', profileName: '' })}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+              <div className="w-9 h-9 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 border border-blue-500/20">
+                <Bell className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">
+                  Notificar {directNotifModal.profileName}
+                </h3>
+                <p className="text-[10px] text-gray-400">Mensagem individual direta para a central de alertas do usuário.</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleDirectNotifSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[11px] text-gray-300 font-semibold">Título da Notificação</label>
+                <input
+                  type="text"
+                  placeholder="Ex: 📢 Aviso Importante da Moderação"
+                  value={directTitle}
+                  onChange={(e) => setDirectTitle(e.target.value)}
+                  required
+                  className="w-full bg-black/60 border border-white/10 text-white text-xs p-3 rounded-xl focus:border-gold-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] text-gray-300 font-semibold">Mensagem / Conteúdo</label>
+                <textarea
+                  rows={3}
+                  placeholder="Escreva a notificação que esta profissional/cliente irá receber..."
+                  value={directContent}
+                  onChange={(e) => setDirectContent(e.target.value)}
+                  required
+                  className="w-full bg-black/60 border border-white/10 text-white text-xs p-3 rounded-xl focus:border-gold-primary focus:outline-none resize-none leading-relaxed"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="dark"
+                  onClick={() => setDirectNotifModal({ open: false, profileId: '', profileName: '' })}
+                  className="text-xs border border-white/10"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  isLoading={directLoading}
+                  variant="gold"
+                  className="text-xs font-bold uppercase cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5 mr-1.5" />
+                  Enviar Notificação
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
