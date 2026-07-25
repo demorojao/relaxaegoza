@@ -1,8 +1,9 @@
 import { supabase } from './supabase';
 
 /**
- * Faz o upload de um arquivo para o Cloudflare R2 usando uma URL assinada.
- * Bypassa os limites de tamanho do servidor Next.js enviando direto do navegador do cliente.
+ * Faz o upload de um arquivo para o Cloudflare R2 usando a API segura do servidor Next.js.
+ * Envia o arquivo via FormData para o servidor que faz o upload de servidor para servidor no R2,
+ * evitando problemas de CORS e falhas de presigned URL no navegador.
  */
 export async function uploadToR2(file: File): Promise<string> {
   // 1. Obter a sessão atual para autenticar a requisição na API
@@ -11,37 +12,27 @@ export async function uploadToR2(file: File): Promise<string> {
     throw new Error('Sessão expirada. Faça login novamente.');
   }
 
-  // 2. Solicitar URL assinada para a API
-  const response = await fetch('/api/media/presign', {
+  // 2. Preparar FormData para envio
+  const formData = new FormData();
+  formData.append('file', file);
+
+  // 3. Enviar para a API de upload do servidor
+  const response = await fetch('/api/media/upload', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       'Authorization': `Bearer ${session.access_token}`,
     },
-    body: JSON.stringify({
-      fileName: file.name,
-      contentType: file.type,
-    }),
+    body: formData,
   });
 
   if (!response.ok) {
-    const errData = await response.json();
-    throw new Error(errData.error || 'Erro ao gerar link de upload assinado.');
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || 'Erro ao realizar upload do arquivo.');
   }
 
-  const { presignedUrl, publicUrl } = await response.json();
-
-  // 3. Fazer o upload do arquivo diretamente para o Cloudflare R2 usando PUT
-  const uploadResponse = await fetch(presignedUrl, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': file.type,
-    },
-    body: file,
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error('Erro ao enviar o arquivo para o servidor de armazenamento R2.');
+  const { publicUrl } = await response.json();
+  if (!publicUrl) {
+    throw new Error('Servidor não retornou uma URL válida para o arquivo.');
   }
 
   return publicUrl;
@@ -66,7 +57,7 @@ export async function deleteFromR2(fileUrl: string): Promise<void> {
   });
 
   if (!response.ok) {
-    const errData = await response.json();
+    const errData = await response.json().catch(() => ({}));
     throw new Error(errData.error || 'Erro ao deletar o arquivo do armazenamento R2.');
   }
 }

@@ -84,7 +84,7 @@ function CheckoutContent() {
       <div className="flex flex-col items-center justify-center p-6 select-none min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-3 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
-          <p className="text-xs text-gray-400 font-light tracking-wide">Iniciando cobrança Pix Efí...</p>
+          <p className="text-xs text-gray-400 font-light tracking-wide">Iniciando cobrança Pix...</p>
         </div>
       </div>
     );
@@ -237,10 +237,15 @@ export default function CheckoutPage() {
         <CheckoutContent />
       </Suspense>
 
-      {/* Safety Badge */}
-      <div className="max-w-md mx-auto w-full text-center relative z-10 text-[10px] text-gray-600 font-light flex items-center justify-center gap-1.5 mt-4">
-        <ShieldCheck className="w-4 h-4 text-gray-600" />
-        Ambiente de Pagamento Seguro e Integrado à Receita Federal
+      {/* Safety Badge & PushinPay Disclaimer */}
+      <div className="max-w-md mx-auto w-full text-center relative z-10 space-y-1.5 mt-4">
+        <div className="text-[10px] text-gray-500 font-light flex items-center justify-center gap-1.5">
+          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          Ambiente de Pagamento Seguro via Pix PushinPay
+        </div>
+        <p className="text-[9px] text-gray-600 font-light leading-normal px-4">
+          A PUSHIN PAY atua exclusivamente como processadora de pagamentos e não possui qualquer responsabilidade pela entrega, suporte, conteúdo, qualidade ou cumprimento das obrigações relacionadas aos produtos ou serviços oferecidos pelo vendedor.
+        </p>
       </div>
     </div>
   );

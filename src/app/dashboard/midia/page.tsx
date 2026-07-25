@@ -8,6 +8,7 @@ import ImageBlurSelector from '@/components/ImageBlurSelector';
 import { applyWatermark } from '@/lib/watermark';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { uploadToR2, deleteFromR2 } from '@/lib/r2Client';
+import { getCDNUrl } from '@/lib/mediaHelper';
 
 export default function MediaManager() {
   const [user, setUser] = useState<any>(null);
@@ -466,7 +467,7 @@ export default function MediaManager() {
                   ) : (
                     <div 
                       className="absolute inset-0 bg-cover bg-center"
-                      style={{ backgroundImage: `url('${m.photo_url}')` }}
+                      style={{ backgroundImage: `url('${getCDNUrl(m.photo_url)}')` }}
                     />
                   )}
 

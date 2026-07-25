@@ -469,6 +469,35 @@ export default function ProfileEditor() {
         await triggerRevalidate(updatedProfile.city, updatedProfile.neighborhood);
       }
 
+      // Se mudou a foto de perfil, sincronizar também com as fotos do anúncio na tabela ads
+      if (avatarFile && finalAvatarUrl) {
+        const { data: existingAd } = await supabase
+          .from('ads')
+          .select('photos')
+          .eq('profile_id', user.id)
+          .maybeSingle();
+
+        if (existingAd) {
+          const currentPhotos = existingAd.photos || [];
+          let updatedPhotos = [...currentPhotos];
+          if (updatedPhotos.length === 0) {
+            updatedPhotos = [finalAvatarUrl];
+          } else {
+            if (updatedPhotos[0] === avatarUrl || updatedPhotos.includes(avatarUrl)) {
+              updatedPhotos = updatedPhotos.map(p => p === avatarUrl ? finalAvatarUrl : p);
+            } else {
+              updatedPhotos[0] = finalAvatarUrl;
+            }
+          }
+          await supabase
+            .from('ads')
+            .update({ photos: updatedPhotos })
+            .eq('profile_id', user.id);
+            
+          setAdPhotos(updatedPhotos);
+        }
+      }
+
       // Sincronizar especialidades no banco
       await supabase
         .from('profile_specialties')

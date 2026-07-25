@@ -11,13 +11,6 @@ import { Profile } from '@/types';
 import ProfileCard from '@/components/ProfileCard';
 import Logo from '@/components/Logo';
 
-export const unstable_instant = {
-  prefetch: 'runtime',
-  samples: [
-    { params: { state: 'sp', city: 'sao-paulo', neighborhood: 'jardins' } }
-  ]
-}; // Garantir navegação instantânea para melhorar Core Web Vitals (INP)
-
 interface Props {
   params: Promise<{ state: string; city: string; neighborhood: string }>;
 }
@@ -92,11 +85,6 @@ export default async function NeighborhoodPage({ params }: Props) {
   }
 
   const filteredProfiles = (profilesData as unknown as Profile[]) || [];
-
-  // Retornar 404 se não houver perfis correspondentes
-  if (filteredProfiles.length === 0) {
-    notFound();
-  }
 
   // Buscar apenas cidade e bairro de forma otimizada para os links semânticos (bairros irmãos)
   const { data: siblingsData } = await supabase
@@ -201,11 +189,17 @@ export default async function NeighborhoodPage({ params }: Props) {
             <span className="text-xs text-gray-500 font-light">{filteredProfiles.length} resultados</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-            {filteredProfiles.map(profile => (
-              <ProfileCard key={profile.id} profile={profile} />
-            ))}
-          </div>
+          {filteredProfiles.length === 0 ? (
+            <div className="text-center py-20 bg-black/20 rounded-2xl border border-white/5">
+              <p className="text-gray-500 text-sm">Nenhum anúncio cadastrado ativo nesta localização no momento.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+              {filteredProfiles.map(profile => (
+                <ProfileCard key={profile.id} profile={profile} />
+              ))}
+            </div>
+          )}
         </section>
 
         {/* EEAT Block (Otimização Semântica baseada nas intenções de busca locais) */}

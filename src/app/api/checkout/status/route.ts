@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServer';
 import { headers } from 'next/headers';
+import { getPushinPayPixStatus } from '@/lib/pushinpay';
+import { fulfillPayment } from '@/lib/paymentFulfillment';
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,7 +21,7 @@ export async function GET(req: NextRequest) {
     // Buscar o status do pagamento pelo UUID
     const { data: payment, error } = await supabaseService
       .from('payments')
-      .select('status, amount_cents, pix_copia_e_cola, pix_qr_code, is_gift, target_profile_id')
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -27,8 +29,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Pagamento não encontrado.' }, { status: 404 });
     }
 
+    let currentStatus = payment.status;
+
+    // Se o banco indicar 'pending', consultar status na PushinPay para resposta instantânea
+    if (currentStatus === 'pending' && payment.txid) {
+      const pushinData = await getPushinPayPixStatus(payment.txid);
+      if (pushinData && pushinData.status === 'paid') {
+        await fulfillPayment(payment);
+        currentStatus = 'paid';
+      }
+    }
+
     return NextResponse.json({
-      status: payment.status,
+      status: currentStatus,
       amountCents: payment.amount_cents,
       pixCopiaECola: payment.pix_copia_e_cola,
       pixQrCode: payment.pix_qr_code,

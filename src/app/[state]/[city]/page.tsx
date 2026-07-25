@@ -10,13 +10,6 @@ import { Profile } from '@/types';
 import ProfileCard from '@/components/ProfileCard';
 import Logo from '@/components/Logo';
 
-export const unstable_instant = {
-  prefetch: 'runtime',
-  samples: [
-    { params: { state: 'sp', city: 'sao-paulo' } }
-  ]
-}; // Garantir navegação instantânea para melhorar Core Web Vitals (INP)
-
 interface Props {
   params: Promise<{ state: string; city: string }>;
 }

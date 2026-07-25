@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabaseServer';
-import { createEfiPixCharge } from '@/lib/efi';
+import { createPushinPayPixCharge } from '@/lib/pushinpay';
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,7 +61,6 @@ export async function POST(req: NextRequest) {
       isGiftFlag = true;
       targetProfileIdValue = targetProfileId;
       tierValue = 'boost';
-      // Regra do Payload: Descrição puramente corporativa/técnica para a API do banco
       description = `Servicos de Publicidade Digital - ID ${user?.id || 'GUEST'}`;
     }
     // 2. Caso: Boost comum (2, 6 ou 12 Horas)
@@ -132,23 +131,29 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Criação da cobrança Pix na Efí
-    const pixData = await createEfiPixCharge(amountCents, description);
+    // 4. Criação da cobrança Pix na PushinPay
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || 'https://relaxeegoze.com.br';
+    const webhookUrl = `${baseUrl}/api/webhooks/pushinpay`;
+
+    const pixData = await createPushinPayPixCharge({
+      amountCents,
+      webhookUrl,
+    });
 
     // 5. Inserir registro na tabela 'payments' usando a service role (bypassa RLS)
     const { data: paymentRecord, error: insertError } = await supabaseService
       .from('payments')
       .insert({
         user_id: user?.id || null,
-        txid: pixData.txid,
+        txid: pixData.id,
         amount_cents: amountCents,
         status: 'pending',
         tier: tierValue,
         is_boost: isBoostFlag,
         is_gift: isGiftFlag,
         target_profile_id: targetProfileIdValue,
-        pix_copia_e_cola: pixData.pixCopiaECola,
-        pix_qr_code: pixData.qrcodeImage
+        pix_copia_e_cola: pixData.qr_code,
+        pix_qr_code: pixData.qr_code_base64
       })
       .select('id')
       .single();
@@ -157,8 +162,6 @@ export async function POST(req: NextRequest) {
       console.error('Insert payment error:', insertError);
       return NextResponse.json({ error: 'Erro ao registrar intenção de pagamento no banco de dados.' }, { status: 500 });
     }
-
-    const origin = req.headers.get('origin') || 'http://localhost:3000';
 
     // Retorna o link para a página interna de checkout
     return NextResponse.json({ url: `/checkout/${paymentRecord.id}` });
