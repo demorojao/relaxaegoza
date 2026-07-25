@@ -25,9 +25,9 @@ export async function createPushinPayPixCharge({
   amountCents,
   webhookUrl,
 }: CreatePixPayload): Promise<PushinPayPixResponse> {
-  const token = process.env.PUSHINPAY_TOKEN;
+  const token = process.env.PUSHINPAY_TOKEN || '68789|ucgYVKkINYBhrDbIu3R94HYntnKkfYdzR6sahzQic053fc9d';
   if (!token) {
-    throw new Error('PUSHINPAY_TOKEN não configurado em .env.local');
+    throw new Error('PUSHINPAY_TOKEN não configurado no servidor');
   }
 
   if (amountCents < 50) {
@@ -67,7 +67,7 @@ export async function createPushinPayPixCharge({
  * @param txId ID da transação gerada na PushinPay
  */
 export async function getPushinPayPixStatus(txId: string): Promise<PushinPayPixResponse | null> {
-  const token = process.env.PUSHINPAY_TOKEN;
+  const token = process.env.PUSHINPAY_TOKEN || '68789|ucgYVKkINYBhrDbIu3R94HYntnKkfYdzR6sahzQic053fc9d';
   if (!token || !txId) return null;
 
   try {
