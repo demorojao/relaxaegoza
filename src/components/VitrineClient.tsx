@@ -875,8 +875,8 @@ export default function VitrineClient({
         </div>
       </header>
 
-      {/* Hero Banner de Boas-Vindas & Métricas */}
-      {viewMode !== 'reels' && <HeroBanner />}
+      {/* Hero Banner de Boas-Vindas & Métricas (Oculto se logado) */}
+      {viewMode !== 'reels' && <HeroBanner isLoggedIn={!!user} />}
 
       {/* Stories Section - Em Grid/Mapa ficam abaixo do header */}
       {viewMode !== 'reels' && (

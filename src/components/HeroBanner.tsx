@@ -1,14 +1,47 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Sparkles, ShieldCheck, Star, Users, ChevronUp, ChevronDown, ArrowRight } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
-export default function HeroBanner() {
+interface HeroBannerProps {
+  isLoggedIn?: boolean;
+}
+
+export default function HeroBanner({ isLoggedIn }: HeroBannerProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [hasUser, setHasUser] = useState<boolean>(!!isLoggedIn);
+
+  useEffect(() => {
+    if (isLoggedIn !== undefined) {
+      setHasUser(isLoggedIn);
+      return;
+    }
+
+    // Verificar se existe sessão ativa caso não receba a prop explicitamente
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setHasUser(true);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setHasUser(!!session?.user);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [isLoggedIn]);
+
+  // Se o usuário estiver logado, não exibe o banner de captura/boas-vindas
+  if (hasUser) {
+    return null;
+  }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-2 transition-all duration-300">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-2 transition-all duration-300 animate-fadeIn">
       <div className="relative rounded-3xl bg-linear-to-b from-black/90 via-dark-card/70 to-dark-bg/90 border border-gold-primary/20 p-6 sm:p-8 shadow-[0_10px_40px_rgba(0,0,0,0.6)] overflow-hidden">
         
         {/* Glow de Iluminação Dourada no fundo */}
