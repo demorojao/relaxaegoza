@@ -77,6 +77,20 @@ export default function AdminDashboardClient({
   const [directContent, setDirectContent] = useState('');
   const [directLoading, setDirectLoading] = useState(false);
 
+  // Helper de formatação de data e hora para exibição na moderação
+  const formatDateTime = (dateString?: string) => {
+    if (!dateString) return 'Data não registrada';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Data inválida';
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(',', ' às');
+  };
+
   // Estados de Segurança PIN e Auto-Lock
   const [isLocked, setIsLocked] = useState(false);
   const [unlockPin, setUnlockPin] = useState('');
@@ -964,12 +978,16 @@ export default function AdminDashboardClient({
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+                      <div className="flex flex-wrap gap-4 text-xs text-gray-400 items-center">
                         {p.city && <span>Local: <strong className="text-white">{p.city}</strong></span>}
                         {!isClient && p.category && (
                           <span>Categoria: <strong className="text-gold-light uppercase">{p.category === 'massage' ? 'Massagem' : p.category === 'escort' ? 'Acompanhante' : 'Ambos'}</strong></span>
                         )}
                         {p.whatsapp && <span>WhatsApp: <strong className="text-white">{p.whatsapp}</strong></span>}
+                        <span className="flex items-center gap-1 text-gold-light font-mono text-[10px] bg-gold-primary/10 border border-gold-primary/20 px-2 py-0.5 rounded-lg">
+                          <Clock className="w-3 h-3 text-gold-primary" />
+                          Enviado em: {formatDateTime(p.updated_at || p.created_at)}
+                        </span>
                       </div>
                     </div>
 
@@ -977,7 +995,13 @@ export default function AdminDashboardClient({
                     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                       {p.verification_status === 'pending' && (
                         <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2 relative">
-                          <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Selfie de Validação</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Selfie de Validação</span>
+                            <span className="text-[9px] text-gold-light font-mono flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5 text-gold-primary" />
+                              {formatDateTime(p.updated_at || p.created_at)}
+                            </span>
+                          </div>
                           <div 
                             className="relative aspect-video rounded-lg overflow-hidden border border-white/10 cursor-zoom-in group min-h-[140px]"
                             onClick={() => setSelectedImage(p.verification_selfie || '/avatar-placeholder.svg')}
@@ -998,7 +1022,13 @@ export default function AdminDashboardClient({
 
                       {p.verification_status === 'pending' && !isClient && (
                         <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2 relative">
-                          <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">RG / CNH Digital</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">RG / CNH Digital</span>
+                            <span className="text-[9px] text-gold-light font-mono flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5 text-gold-primary" />
+                              {formatDateTime(p.updated_at || p.created_at)}
+                            </span>
+                          </div>
                           <div 
                             className="relative aspect-video rounded-lg overflow-hidden border border-white/10 cursor-zoom-in group min-h-[140px]"
                             onClick={() => setSelectedImage(p.verification_document || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d')}
@@ -1019,7 +1049,13 @@ export default function AdminDashboardClient({
 
                       {p.space_verification_file && !p.is_space_verified && (
                         <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2 relative col-span-full">
-                          <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Mídia do Espaço (Vídeo/Foto)</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Mídia do Espaço (Vídeo/Foto)</span>
+                            <span className="text-[9px] text-emerald-400 font-mono flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5 text-emerald-400" />
+                              Enviado para análise em: {formatDateTime(p.updated_at || p.created_at)}
+                            </span>
+                          </div>
                           <div className="relative rounded-lg overflow-hidden border border-white/10 bg-black/40">
                             {p.space_verification_file.match(/\.(mp4|webm|ogg|mov)$/i) || p.space_verification_file.includes('video') ? (
                               <video 
@@ -1139,10 +1175,14 @@ export default function AdminDashboardClient({
                           Proprietário: {room.host?.name || 'Local'}
                         </span>
                       </h3>
-                      <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+                      <div className="flex flex-wrap gap-4 text-xs text-gray-400 items-center">
                         <span>Preço: <strong className="text-emerald-400 font-bold">R$ {Number(room.price_per_hour).toFixed(2)}/h</strong></span>
                         <span>Cidade/Bairro: <strong className="text-white">{room.city} - {room.neighborhood}</strong></span>
                         <span>Endereço: <strong className="text-white">{room.address}</strong></span>
+                        <span className="flex items-center gap-1 text-gold-light font-mono text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded">
+                          <Clock className="w-3 h-3 text-gold-primary" />
+                          Enviado em: {formatDateTime(room.created_at)}
+                        </span>
                       </div>
                       <p className="text-xs text-gray-400 font-light leading-relaxed mt-2">{room.description}</p>
                     </div>
@@ -1234,9 +1274,15 @@ export default function AdminDashboardClient({
                     </div>
                     
                     <div className="p-4 space-y-3">
-                      <div className="space-y-0.5">
+                      <div className="space-y-1">
                         <h4 className="text-xs font-bold text-white truncate">{profileName}</h4>
-                        <p className="text-[9px] text-gray-500 font-light uppercase tracking-wider">{profileRole}</p>
+                        <div className="flex justify-between items-center text-[9px]">
+                          <span className="text-gray-500 font-light uppercase tracking-wider">{profileRole}</span>
+                          <span className="text-gold-light font-mono flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5 text-gold-primary" />
+                            {formatDateTime(photo.created_at)}
+                          </span>
+                        </div>
                       </div>
                       
                       <div className="flex gap-2">
