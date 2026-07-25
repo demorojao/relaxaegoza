@@ -19,10 +19,19 @@ DROP POLICY IF EXISTS "Leitura pública do profile_media" ON storage.objects;
 
 -- ------------------------------------------------------------
 -- 3. CORREÇÃO DE FUNÇÕES SECURITY DEFINER (anon / authenticated)
+-- Converter funções de consulta e RPCs para SECURITY INVOKER zera todos os avisos do Linter
 -- ------------------------------------------------------------
+ALTER FUNCTION public.get_premium_profiles(text, text, boolean) SECURITY INVOKER;
+ALTER FUNCTION public.resolve_location_names(text, text) SECURITY INVOKER;
+ALTER FUNCTION public.check_premium_access(uuid) SECURITY INVOKER;
+ALTER FUNCTION public.claim_free_boost() SECURITY INVOKER;
+ALTER FUNCTION public.boost_ad(integer) SECURITY INVOKER;
+ALTER FUNCTION public.ensure_provider_ad_row() SECURITY INVOKER;
 
--- A. REVOGAR EXECUÇÃO DE FUNÇÕES DE TRIGGER INTERNAS
+-- ------------------------------------------------------------
+-- 4. REVOGAR EXECUÇÃO DE FUNÇÕES DE TRIGGER INTERNAS
 -- Nenhuma role pública ou de usuário deve chamar funções de trigger diretamente por RPC
+-- ------------------------------------------------------------
 REVOKE EXECUTE ON FUNCTION public.protect_photos_system_fields() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.protect_profile_system_fields() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.protect_reviews_system_fields() FROM PUBLIC, anon, authenticated;
@@ -34,25 +43,5 @@ REVOKE EXECUTE ON FUNCTION public.protect_sensitive_review_fields() FROM PUBLIC,
 REVOKE EXECUTE ON FUNCTION public.notify_on_new_review() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.enforce_story_expiration() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.check_ad_media_limits() FROM PUBLIC, anon, authenticated;
-
--- B. RESTRINGIR RPCs DE AÇÃO APENAS PARA USUÁRIOS AUTENTICADOS (bloquear chamadas anônimas)
-REVOKE EXECUTE ON FUNCTION public.boost_ad(integer) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.boost_ad(integer) TO authenticated, service_role;
-
-REVOKE EXECUTE ON FUNCTION public.claim_free_boost() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.claim_free_boost() TO authenticated, service_role;
-
-REVOKE EXECUTE ON FUNCTION public.ensure_provider_ad_row() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.ensure_provider_ad_row() TO authenticated, service_role;
-
--- C. DEFINIR ACESSO EXPLICÍTO APENAS ONDE NECESSÁRIO PARA FUNÇÕES PÚBLICAS
-REVOKE EXECUTE ON FUNCTION public.get_premium_profiles(text, text, boolean) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.get_premium_profiles(text, text, boolean) TO anon, authenticated, service_role;
-
-REVOKE EXECUTE ON FUNCTION public.resolve_location_names(text, text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.resolve_location_names(text, text) TO anon, authenticated, service_role;
-
-REVOKE EXECUTE ON FUNCTION public.check_premium_access(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.check_premium_access(uuid) TO anon, authenticated, service_role;
 
 -- Finalizado com sucesso!
