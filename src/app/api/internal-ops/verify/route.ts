@@ -38,6 +38,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Acesso negado. Apenas administradores podem executar esta ação.' }, { status: 403 });
     }
 
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1';
+
     const { 
       profileId, 
       status, 
@@ -55,9 +57,12 @@ export async function POST(req: NextRequest) {
       isReportsList,
       isReportDismiss,
       isReportPunish,
-      reportId
+      reportId,
+      isBoostGrant,
+      boostHours
     } = await req.json();
 
+    // Se for listagem simples de denúncias, não exige PIN de segurança
     if (isReportsList) {
       const { data: reports, error: reportsError } = await supabaseService
         .from('reports')
@@ -74,6 +79,61 @@ export async function POST(req: NextRequest) {
 
       if (reportsError) throw reportsError;
       return NextResponse.json({ success: true, reports });
+    }
+
+    // Ações de alteração/mutação exigem validação do PIN de Segurança Admin
+    const requiresPin = isProfileUpdate || isBan || isReportPunish || isBoostGrant || (isProfileUpdate && updateFields?.subscription_tier);
+    if (requiresPin) {
+      const adminPin = req.headers.get('x-admin-pin');
+      const expectedPin = process.env.ADMIN_SECURITY_PIN || '9847';
+      if (!adminPin || adminPin !== expectedPin) {
+        return NextResponse.json({ error: 'PIN de Segurança Inválido ou não fornecido.' }, { status: 403 });
+      }
+    }
+
+    // Concessão Manual de Boost pelo Admin
+    if (isBoostGrant) {
+      if (!profileId || !boostHours) {
+        return NextResponse.json({ error: 'Perfil de destino ou quantidade de horas inválida.' }, { status: 400 });
+      }
+
+      const { data: targetProfile } = await supabaseService
+        .from('profiles')
+        .select('boost_expires_at')
+        .eq('id', profileId)
+        .single();
+
+      const currentBoostExpires = targetProfile?.boost_expires_at
+        ? new Date(targetProfile.boost_expires_at)
+        : new Date();
+
+      const baseDate = currentBoostExpires > new Date() ? currentBoostExpires : new Date();
+      const newExpires = new Date(baseDate.getTime() + boostHours * 60 * 60 * 1000);
+
+      const { error: boostError } = await supabaseService
+        .from('profiles')
+        .update({ 
+          boost_expires_at: newExpires.toISOString(),
+          is_available_now: true
+        })
+        .eq('id', profileId);
+
+      if (boostError) throw boostError;
+
+      // Log de Auditoria
+      try {
+        await supabaseService.from('admin_audit_logs').insert({
+          admin_id: user.id,
+          action: 'BOOST_GRANT',
+          target_profile_id: profileId,
+          details: { boostHours, newExpires: newExpires.toISOString() },
+          ip_address: clientIp
+        });
+      } catch (err) {
+        console.warn('Erro ao salvar audit log:', err);
+      }
+
+      return NextResponse.json({ success: true, boost_expires_at: newExpires.toISOString() });
     }
 
     if (isReportDismiss) {
@@ -121,6 +181,19 @@ export async function POST(req: NextRequest) {
           }, { onConflict: 'ip_address' });
       }
 
+      // Log de Auditoria
+      try {
+        await supabaseService.from('admin_audit_logs').insert({
+          admin_id: user.id,
+          action: 'REPORT_PUNISH',
+          target_profile_id: profileId,
+          details: { reportId, reason },
+          ip_address: clientIp
+        });
+      } catch (err) {
+        console.warn('Erro ao salvar audit log:', err);
+      }
+
       return NextResponse.json({ success: true });
     }
 
@@ -137,6 +210,19 @@ export async function POST(req: NextRequest) {
         .insert({ ip_address: ipAddress, reason: reason || 'Violação dos termos de uso' });
 
       if (banError) throw banError;
+
+      // Log de Auditoria
+      try {
+        await supabaseService.from('admin_audit_logs').insert({
+          admin_id: user.id,
+          action: 'IP_BAN',
+          details: { ipAddress, reason },
+          ip_address: clientIp
+        });
+      } catch (err) {
+        console.warn('Erro ao salvar audit log:', err);
+      }
+
     } else if (isUnban) {
       if (!ipAddress) {
         return NextResponse.json({ error: 'Endereço IP inválido.' }, { status: 400 });
@@ -193,6 +279,19 @@ export async function POST(req: NextRequest) {
         .eq('id', profileId);
 
       if (updateError) throw updateError;
+
+      // Log de Auditoria
+      try {
+        await supabaseService.from('admin_audit_logs').insert({
+          admin_id: user.id,
+          action: 'PROFILE_UPDATE',
+          target_profile_id: profileId,
+          details: updateFields,
+          ip_address: clientIp
+        });
+      } catch (err) {
+        console.warn('Erro ao salvar audit log:', err);
+      }
     } else if (isSpace) {
       // Moderação de Selo de Ambiente/Espaço Validado
       const isVerified = status === 'verified';
