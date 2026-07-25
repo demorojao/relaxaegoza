@@ -10,6 +10,7 @@ import ProfileReels from '../components/ProfileReels';
 import AuraStories from '../components/AuraStories';
 import MatchmakerQuiz from '../components/MatchmakerQuiz';
 import FilterBar from '../components/FilterBar';
+import HeroBanner from './HeroBanner';
 import { getCDNUrl } from '../lib/mediaHelper';
 import { slugify } from '../lib/slugify';
 import Image from 'next/image';
@@ -873,6 +874,9 @@ export default function VitrineClient({
           )}
         </div>
       </header>
+
+      {/* Hero Banner de Boas-Vindas & Métricas */}
+      {viewMode !== 'reels' && <HeroBanner />}
 
       {/* Stories Section - Em Grid/Mapa ficam abaixo do header */}
       {viewMode !== 'reels' && (
