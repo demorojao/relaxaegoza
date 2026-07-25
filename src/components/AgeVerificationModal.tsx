@@ -18,6 +18,7 @@ export default function AgeVerificationModal() {
 
   const handleAccept = () => {
     localStorage.setItem('ageVerified', 'true');
+    window.dispatchEvent(new Event('ageVerifiedSuccess'));
     setIsOpen(false);
     document.body.style.overflow = 'unset';
   };

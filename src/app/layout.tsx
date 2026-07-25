@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import AgeVerificationModal from "../components/AgeVerificationModal";
+import WelcomeModal from "../components/WelcomeModal";
 import WebMcpProvider from "../components/WebMcpProvider";
 
 import MediaProtection from "../components/MediaProtection";
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-dark-bg text-gray-100 font-sans">
         <MediaProtection />
         <AgeVerificationModal />
+        <WelcomeModal />
         <WebMcpProvider />
         {children}
       </body>
