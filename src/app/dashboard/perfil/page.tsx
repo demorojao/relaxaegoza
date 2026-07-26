@@ -80,6 +80,7 @@ export default function ProfileEditor() {
   const [gender, setGender] = useState<'Feminino' | 'Masculino' | 'Trans'>('Feminino');
 
   // Blocos Estruturados de Copywriting
+  const [presentationBio, setPresentationBio] = useState('');
   const [specialties, setSpecialties] = useState('');
   const [whatsIncluded, setWhatsIncluded] = useState('');
   const [rules, setRules] = useState('');
@@ -173,19 +174,36 @@ export default function ProfileEditor() {
         
         // Parsing bio
         const bioText = data.bio || '';
-        if (bioText.includes('=== ESPECIALIDADES ===')) {
+        let mainBio = '';
+        let specPart = '';
+        let inclPart = '';
+        let rulePart = '';
+
+        if (bioText.includes('=== ')) {
           const parts = bioText.split('\n\n=== ');
-          const specPart = parts.find((p: string) => p.startsWith('ESPECIALIDADES ==='))?.replace('ESPECIALIDADES ===\n', '') || '';
-          const inclPart = parts.find((p: string) => p.startsWith('INCLUSO ==='))?.replace('INCLUSO ===\n', '') || '';
-          const rulePart = parts.find((p: string) => p.startsWith('REGRAS ==='))?.replace('REGRAS ===\n', '') || '';
-          setSpecialties(specPart);
-          setWhatsIncluded(inclPart);
-          setRules(rulePart);
+          parts.forEach((part: string) => {
+            if (part.startsWith('ESPECIALIDADES ===') || part.includes('ESPECIALIDADES ===')) {
+              specPart = part.replace(/^.*ESPECIALIDADES ===\n?/, '').trim();
+            } else if (part.startsWith('INCLUSO ===') || part.includes('INCLUSO ===')) {
+              inclPart = part.replace(/^.*INCLUSO ===\n?/, '').trim();
+            } else if (part.startsWith('REGRAS ===') || part.includes('REGRAS ===')) {
+              rulePart = part.replace(/^.*REGRAS ===\n?/, '').trim();
+            } else if (part.startsWith('SOBRE MIM ===') || part.includes('SOBRE MIM ===')) {
+              mainBio = part.replace(/^.*SOBRE MIM ===\n?/, '').trim();
+            } else {
+              if (!mainBio) {
+                mainBio = part.replace(/=== [A-Z\s]+ ===/g, '').trim();
+              }
+            }
+          });
         } else {
-          setSpecialties(bioText);
-          setWhatsIncluded('');
-          setRules('');
+          mainBio = bioText;
         }
+
+        setPresentationBio(mainBio);
+        setSpecialties(specPart);
+        setWhatsIncluded(inclPart);
+        setRules(rulePart);
 
         // Buscar especialidades cadastradas e do perfil
         const { data: allSpecs } = await supabase
@@ -382,7 +400,20 @@ export default function ProfileEditor() {
     setNeighborhood(cleanNeighborhood);
 
     // Formatar biografia estruturada
-    const formattedBio = `=== ESPECIALIDADES ===\n${specialties}\n\n=== INCLUSO ===\n${whatsIncluded}\n\n=== REGRAS ===\n${rules}`;
+    let formattedBio = '';
+    if (presentationBio.trim()) {
+      formattedBio += `=== SOBRE MIM ===\n${presentationBio.trim()}\n\n`;
+    }
+    if (specialties.trim()) {
+      formattedBio += `=== ESPECIALIDADES ===\n${specialties.trim()}\n\n`;
+    }
+    if (whatsIncluded.trim()) {
+      formattedBio += `=== INCLUSO ===\n${whatsIncluded.trim()}\n\n`;
+    }
+    if (rules.trim()) {
+      formattedBio += `=== REGRAS ===\n${rules.trim()}\n\n`;
+    }
+    formattedBio = formattedBio.trim() || presentationBio;
 
     // Geocodificação automática via Nominatim API
     let lat = latitude;
@@ -1302,6 +1333,26 @@ export default function ProfileEditor() {
           </div>
 
           <div className="space-y-5">
+            {/* Apresentação Profissional / Sobre Mim */}
+            <div className="space-y-1.5">
+              <label htmlFor="presentation-bio-input" className="text-xs text-gold-light font-bold flex items-center gap-1.5">
+                <UserSquare2 className="w-3.5 h-3.5 text-gold-primary" />
+                <span>Biografia & Apresentação Profissional (Sobre Mim)</span>
+              </label>
+              <textarea 
+                id="presentation-bio-input"
+                title="Biografia & Apresentação Profissional"
+                value={presentationBio} 
+                onChange={(e) => setPresentationBio(e.target.value)} 
+                rows={4}
+                className="w-full bg-dark-bg/60 border border-gold-primary/30 text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary focus:outline-none transition-colors leading-relaxed"
+                placeholder="Ex: Olá! Sou a Juliana, especialista em massagens tântricas e sensoriais. Atendo com carinho, discrição e profissionalismo..."
+              />
+              <span className="text-[10px] text-gray-400 font-light block">
+                Este texto é a sua apresentação oficial e será exibido em destaque no seu perfil público, logo acima da seção de avaliações dos clientes.
+              </span>
+            </div>
+
             {/* Minhas Especialidades */}
             <div className="space-y-1.5">
               <label htmlFor="specialties-input" className="text-xs text-gray-400 font-medium">Minhas Especialidades e Formação</label>
