@@ -23,7 +23,7 @@ export default function ClientDashboard() {
   const [activeSubModal, setActiveSubModal] = useState<any | null>(null);
   const [subMedias, setSubMedias] = useState<any[]>([]);
   const [loadingMedias, setLoadingMedias] = useState(false);
-  const [previewMediaUrl, setPreviewMediaUrl] = useState<string | null>(null);
+  const [previewMediaItem, setPreviewMediaItem] = useState<{ url: string; type: 'photo' | 'video'; title?: string } | null>(null);
 
   useEffect(() => {
     fetchClientProfile();
@@ -477,7 +477,7 @@ export default function ClientDashboard() {
                 </div>
               </div>
               <button
-                onClick={() => { setActiveSubModal(null); setPreviewMediaUrl(null); }}
+                onClick={() => { setActiveSubModal(null); setPreviewMediaItem(null); }}
                 className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -501,24 +501,40 @@ export default function ClientDashboard() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-1">
                   {subMedias.map(media => {
-                    const isVideo = media.media_type === 'video';
+                    const isVideo = media.media_type === 'video' || media.media_url?.includes('.mp4') || media.media_url?.includes('.webm');
                     return (
                       <div 
                         key={media.id}
                         className="bg-black/60 border border-white/10 rounded-2xl overflow-hidden group hover:border-gold-primary/50 transition-all flex flex-col justify-between"
                       >
-                        <div className="relative aspect-[3/4] bg-dark-bg overflow-hidden cursor-pointer" onClick={() => setPreviewMediaUrl(media.media_url)}>
+                        <div 
+                          className="relative aspect-[3/4] bg-dark-bg overflow-hidden cursor-pointer" 
+                          onClick={() => setPreviewMediaItem({ url: media.media_url, type: isVideo ? 'video' : 'photo', title: media.title })}
+                        >
                           <img 
-                            src={media.media_url || media.preview_url} 
+                            src={media.preview_url || media.media_url} 
                             alt={media.title || 'Mídia Exclusiva'} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 select-none"
+                            onContextMenu={(e) => e.preventDefault()}
                           />
+                          
+                          {/* Play button overlay if video */}
+                          {isVideo && (
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-full bg-gold-primary/90 text-dark-bg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <Play className="w-6 h-6 fill-dark-bg ml-0.5" />
+                              </div>
+                            </div>
+                          )}
+
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="px-3 py-1.5 rounded-xl bg-gold-primary text-dark-bg font-bold text-xs flex items-center gap-1">
-                              <Eye className="w-3.5 h-3.5" /> Ampliar em HD
+                            <span className="px-3 py-1.5 rounded-xl bg-gold-primary text-dark-bg font-bold text-xs flex items-center gap-1 shadow-lg">
+                              {isVideo ? <Play className="w-3.5 h-3.5 fill-dark-bg" /> : <Eye className="w-3.5 h-3.5" />}
+                              {isVideo ? 'Assistir Vídeo HD' : 'Ampliar foto em HD'}
                             </span>
                           </div>
-                          <span className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-gold-primary px-2 py-0.5 rounded text-[9px] font-bold border border-gold-primary/30">
+                          <span className="absolute top-2 left-2 bg-black/70 backdrop-blur-xs text-gold-primary px-2 py-0.5 rounded text-[9px] font-bold border border-gold-primary/30 flex items-center gap-1">
+                            {isVideo ? <Video className="w-3 h-3 text-gold-primary" /> : <ImageIcon className="w-3 h-3 text-gold-primary" />}
                             {isVideo ? 'VÍDEO VIP' : 'FOTO HD'}
                           </span>
                         </div>
@@ -538,7 +554,7 @@ export default function ClientDashboard() {
 
             <div className="pt-2 border-t border-white/10 flex justify-end">
               <button
-                onClick={() => { setActiveSubModal(null); setPreviewMediaUrl(null); }}
+                onClick={() => { setActiveSubModal(null); setPreviewMediaItem(null); }}
                 className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all cursor-pointer"
               >
                 Fechar Canal
@@ -548,16 +564,33 @@ export default function ClientDashboard() {
         </div>
       )}
 
-      {previewMediaUrl && (
+      {/* FULLSCREEN LIGHTBOX & VIDEO PLAYER */}
+      {previewMediaItem && (
         <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
           <button 
-            onClick={() => setPreviewMediaUrl(null)}
+            onClick={() => setPreviewMediaItem(null)}
             className="absolute top-6 right-6 p-3 text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10 cursor-pointer"
           >
             <X className="w-6 h-6" />
           </button>
           <div className="max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-gold-primary/30 shadow-2xl relative flex items-center justify-center">
-            <img src={previewMediaUrl} alt="Mídia Ampliada" className="max-w-full max-h-[85vh] object-contain rounded-xl" />
+            {previewMediaItem.type === 'video' ? (
+              <video 
+                src={previewMediaItem.url} 
+                controls 
+                autoPlay 
+                controlsList="nodownload"
+                className="max-w-full max-h-[85vh] rounded-xl shadow-2xl" 
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            ) : (
+              <img 
+                src={previewMediaItem.url} 
+                alt="Mídia Ampliada" 
+                className="max-w-full max-h-[85vh] object-contain rounded-xl select-none" 
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            )}
           </div>
         </div>
       )}

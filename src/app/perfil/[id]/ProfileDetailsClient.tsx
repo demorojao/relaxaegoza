@@ -27,6 +27,9 @@ import {
   Unlock,
   Crown,
   X,
+  Play,
+  Video,
+  Eye,
   AlertTriangle,
   Clock,
   FileImage,
@@ -165,7 +168,7 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
   const [isSubscribed, setIsSubscribed] = React.useState(false);
   const [subExpiresAt, setSubExpiresAt] = React.useState<string | null>(null);
   const [subscribing, setSubscribing] = React.useState(false);
-  const [activeMediaPreview, setActiveMediaPreview] = React.useState<string | null>(null);
+  const [activeMediaPreview, setActiveMediaPreview] = React.useState<{ url: string; type: 'photo' | 'video' } | null>(null);
 
   const priceFormatted = subscriptionPriceCents 
     ? `R$ ${(subscriptionPriceCents / 100).toFixed(2)}/mês` 
@@ -288,31 +291,42 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
       {/* Grid de Mídias (Desbloqueado vs Borrado) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {medias.map((m) => {
-          const isVideo = m.media_type === 'video';
+          const isVideo = m.media_type === 'video' || m.media_url?.includes('.mp4') || m.media_url?.includes('.webm');
           return (
             <div 
               key={m.id} 
               className={`relative aspect-[3/4] rounded-xl overflow-hidden border ${isSubscribed ? 'border-emerald-500/40 hover:border-emerald-400 cursor-pointer' : 'border-gold-primary/20'} bg-black/60 group transition-all`}
               onClick={() => {
                 if (isSubscribed) {
-                  setActiveMediaPreview(m.media_url || m.preview_url);
+                  setActiveMediaPreview({ url: getCDNUrl(m.media_url || m.preview_url), type: isVideo ? 'video' : 'photo' });
                 }
               }}
             >
               {isSubscribed ? (
                 <>
                   <img
-                    src={getCDNUrl(m.media_url || m.preview_url)}
+                    src={getCDNUrl(m.preview_url || m.media_url)}
                     alt={m.title || ''}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 select-none"
                     onContextMenu={(e) => e.preventDefault()}
                   />
+
+                  {isVideo && (
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-gold-primary/90 text-dark-bg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <Play className="w-5 h-5 fill-dark-bg ml-0.5" />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="px-2.5 py-1 rounded-lg bg-gold-primary text-dark-bg text-[10px] font-bold">
-                      Ampliar HD
+                    <span className="px-2.5 py-1 rounded-lg bg-gold-primary text-dark-bg text-[10px] font-bold flex items-center gap-1 shadow-md">
+                      {isVideo ? <Play className="w-3 h-3 fill-dark-bg" /> : <Eye className="w-3 h-3" />}
+                      {isVideo ? 'Assistir Vídeo HD' : 'Ampliar HD'}
                     </span>
                   </div>
-                  <span className="absolute top-2 left-2 bg-emerald-500/80 backdrop-blur-xs text-dark-bg font-extrabold px-1.5 py-0.5 rounded text-[8px]">
+                  <span className="absolute top-2 left-2 bg-emerald-500/90 backdrop-blur-xs text-dark-bg font-extrabold px-1.5 py-0.5 rounded text-[8px] flex items-center gap-1">
+                    {isVideo ? <Video className="w-2.5 h-2.5" /> : null}
                     {isVideo ? 'VÍDEO VIP' : 'FOTO HD'}
                   </span>
                 </>
@@ -382,7 +396,23 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
             <X className="w-6 h-6" />
           </button>
           <div className="max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-gold-primary/30 shadow-2xl relative flex items-center justify-center">
-            <img src={activeMediaPreview} alt="Mídia Ampliada" className="max-w-full max-h-[85vh] object-contain rounded-xl" />
+            {activeMediaPreview.type === 'video' ? (
+              <video 
+                src={activeMediaPreview.url} 
+                controls 
+                autoPlay 
+                controlsList="nodownload"
+                className="max-w-full max-h-[85vh] rounded-xl shadow-2xl"
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            ) : (
+              <img 
+                src={activeMediaPreview.url} 
+                alt="Mídia Ampliada" 
+                className="max-w-full max-h-[85vh] object-contain rounded-xl select-none"
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            )}
           </div>
         </div>
       )}
