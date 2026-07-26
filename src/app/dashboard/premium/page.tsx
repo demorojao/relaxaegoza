@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { getCDNUrl } from '../../../lib/mediaHelper';
 import { uploadToR2, deleteFromR2 } from '@/lib/r2Client';
+import { isValidCPF, formatCPF, formatWhatsAppLink } from '@/lib/utils';
 
 export default function PremiumPage() {
   const [profile, setProfile] = useState<any>(null);
@@ -167,19 +168,28 @@ export default function PremiumPage() {
   const handleSavePixKey = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
+
+    const cleanCpf = pixKey.replace(/\D/g, '');
+    if (!isValidCPF(cleanCpf)) {
+      setErrorMsg('O PIX deve ser obrigatoriamente um CPF válido (11 dígitos). Verifique o número informado.');
+      return;
+    }
+
     setUpdatingPix(true);
     setSuccessMsg('');
     setErrorMsg('');
     try {
+      const formattedCpf = formatCPF(cleanCpf);
       const { error } = await supabase
         .from('profiles')
-        .update({ pix_key: pixKey.trim() })
+        .update({ pix_key: formattedCpf })
         .eq('id', profile.id);
       if (error) throw error;
-      setSuccessMsg('✅ Chave PIX cadastrada com sucesso!');
-      setProfile((prev: any) => ({ ...prev, pix_key: pixKey.trim() }));
+      setSuccessMsg('✅ CPF cadastrado com sucesso e vinculado à sua conta!');
+      setProfile((prev: any) => ({ ...prev, pix_key: formattedCpf }));
+      setPixKey(formattedCpf);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Erro ao salvar Chave PIX.');
+      setErrorMsg(err.message || 'Erro ao salvar CPF para recebimento PIX.');
     } finally {
       setUpdatingPix(false);
     }
@@ -256,6 +266,11 @@ export default function PremiumPage() {
   const totalNetFormatted = (totalNetCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const totalGrossFormatted = (totalGrossCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+  const isPixLocked = Boolean(profile?.pix_key && profile.pix_key.trim().length > 0);
+  const isBalanceEligible = totalNetCents >= 5000;
+  const remainingForMinimum = Math.max(0, 5000 - totalNetCents);
+  const remainingFormatted = (remainingForMinimum / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16 selection:bg-gold-primary selection:text-dark-bg">
       <div className="border-b border-dark-border/20 pb-5">
@@ -310,8 +325,12 @@ export default function PremiumPage() {
               <div className="text-2xl md:text-3xl font-extrabold text-gold-light tracking-tight">
                 {totalNetFormatted}
               </div>
-              <p className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Disponível para saque
+              <p className={`text-[10px] font-medium flex items-center gap-1 ${isBalanceEligible ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {isBalanceEligible ? (
+                  <><CheckCircle2 className="w-3 h-3 shrink-0" /> Disponível para saque instantâneo</>
+                ) : (
+                  <><AlertCircle className="w-3 h-3 shrink-0" /> Faltam {remainingFormatted} para saque (mín. R$ 50,00)</>
+                )}
               </p>
             </div>
 
@@ -357,17 +376,18 @@ export default function PremiumPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <Send className="w-4 h-4 text-emerald-400" /> Dados para Recebimento de Vendas (PIX)
+                  <Send className="w-4 h-4 text-emerald-400" /> Dados para Recebimento de Vendas (CPF Titular)
                 </h3>
                 <p className="text-xs text-gray-400 font-light leading-relaxed">
-                  Cadastre sua chave PIX para receber os repasses dos conteúdos vendidos diretamente na sua conta bancária.
+                  Os repasses são enviados exclusivamente para a chave PIX do <strong>CPF titular</strong> cadastrado (Mínimo por saque: R$ 50,00).
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={handleRequestPayout}
-                disabled={requestingPayout || totalNetCents === 0}
+                disabled={requestingPayout || !isBalanceEligible || !isPixLocked}
+                title={!isPixLocked ? "Cadastre seu CPF antes de sacar" : !isBalanceEligible ? "O valor mínimo de saque é R$ 50,00" : "Solicitar saque via PIX"}
                 className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-dark-bg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
               >
                 {requestingPayout ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ArrowDownToLine className="w-4 h-4" />}
@@ -382,39 +402,75 @@ export default function PremiumPage() {
               </div>
             )}
 
-            <form onSubmit={handleSavePixKey} className="space-y-2 pt-2">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <input
-                    type={showPixKey ? "text" : "password"}
-                    value={pixKey}
-                    onChange={(e) => setPixKey(e.target.value)}
-                    placeholder="Insira sua chave PIX (CPF, E-mail, Telefone ou Chave Aleatória)"
-                    className="w-full pl-4 pr-10 py-2.5 text-xs rounded-xl bg-black/60 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-gold-primary tracking-wide font-mono"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPixKey(!showPixKey)}
-                    className="absolute right-3 top-2.5 text-gray-400 hover:text-white transition-colors cursor-pointer"
-                    title={showPixKey ? "Ocultar Chave PIX" : "Visualizar Chave PIX"}
+            {isPixLocked ? (
+              <div className="space-y-2.5 pt-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      type={showPixKey ? "text" : "password"}
+                      value={pixKey || profile?.pix_key || ''}
+                      readOnly
+                      className="w-full pl-4 pr-10 py-2.5 text-xs rounded-xl bg-black/80 border border-emerald-500/30 text-emerald-300 font-mono tracking-wider cursor-not-allowed select-none opacity-90"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPixKey(!showPixKey)}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                      title={showPixKey ? "Ocultar CPF" : "Visualizar CPF"}
+                    >
+                      {showPixKey ? <EyeOff className="w-4 h-4 text-gold-primary" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <a
+                    href={formatWhatsAppLink('5511999999999', `Olá suporte! Sou a usuária ${profile?.name || ''} (ID: ${profile?.id}). Solicito alteração do meu CPF/Chave PIX cadastrado.`) || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2.5 rounded-xl bg-wine-primary/30 hover:bg-wine-primary/50 border border-wine-primary/40 text-wine-light hover:text-white text-xs font-medium tracking-wide transition-all flex items-center justify-center gap-2 shrink-0"
                   >
-                    {showPixKey ? <EyeOff className="w-4 h-4 text-gold-primary" /> : <Eye className="w-4 h-4" />}
+                    Solicitar Alteração no Suporte
+                  </a>
+                </div>
+                <p className="text-[10px] text-emerald-400/90 font-light flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Chave PIX (CPF) cadastrada e <strong>bloqueada para sua segurança anti-fraude</strong>.</span>
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSavePixKey} className="space-y-2 pt-2">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      type={showPixKey ? "text" : "password"}
+                      value={pixKey}
+                      onChange={(e) => setPixKey(e.target.value)}
+                      placeholder="Insira seu CPF (ex: 123.456.789-00 ou 12345678900)"
+                      className="w-full pl-4 pr-10 py-2.5 text-xs rounded-xl bg-black/60 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-gold-primary tracking-wide font-mono"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPixKey(!showPixKey)}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                      title={showPixKey ? "Ocultar CPF" : "Visualizar CPF"}
+                    >
+                      {showPixKey ? <EyeOff className="w-4 h-4 text-gold-primary" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={updatingPix}
+                    className="px-6 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 cursor-pointer shrink-0"
+                  >
+                    {updatingPix ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
+                    Confirmar CPF para PIX
                   </button>
                 </div>
-                <button
-                  type="submit"
-                  disabled={updatingPix}
-                  className="px-6 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 cursor-pointer shrink-0"
-                >
-                  {updatingPix ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
-                  Salvar Chave PIX
-                </button>
-              </div>
-              <p className="text-[10px] text-gray-500 font-light flex items-center gap-1">
-                <Lock className="w-3 h-3 text-gold-primary/70 shrink-0" /> Sua chave PIX é mantida oculta por segurança contra visualização de terceiros. Clique no olho para visualizar.
-              </p>
-            </form>
+                <p className="text-[10px] text-amber-400/90 font-light flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span><strong>Atenção Anti-Fraude:</strong> A chave PIX deve ser o seu <strong>CPF titular</strong>. Uma vez salva, a alteração exige verificação de documentos no suporte.</span>
+                </p>
+              </form>
+            )}
           </div>
 
           {/* EXTRATO DE VENDAS EM TEMPO REAL */}

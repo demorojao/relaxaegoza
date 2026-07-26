@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabaseServer';
 import { requestPushinPayPixCashOut } from '@/lib/pushinpay';
+import { isValidCPF } from '@/lib/utils';
+
+const MIN_PAYOUT_CENTS = 5000; // R$ 50,00 valor mínimo por saque para evitar bloqueio da conta gateway
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,7 +41,14 @@ export async function POST(req: NextRequest) {
 
     if (!profile.pix_key || !profile.pix_key.trim()) {
       return NextResponse.json({
-        error: 'Você precisa cadastrar uma chave PIX antes de solicitar o saque.'
+        error: 'Você precisa cadastrar seu CPF como chave PIX antes de solicitar o saque.'
+      }, { status: 400 });
+    }
+
+    const cleanPixKey = profile.pix_key.trim().replace(/\D/g, '');
+    if (!isValidCPF(cleanPixKey)) {
+      return NextResponse.json({
+        error: 'A chave PIX cadastrada deve ser obrigatoriamente o seu CPF (11 dígitos válidos) para prevenção de fraudes.'
       }, { status: 400 });
     }
 
@@ -73,9 +83,9 @@ export async function POST(req: NextRequest) {
     const totalGrossCents = Math.round(totalGrossReais * 100);
     const totalNetCents = Math.round(totalNetReais * 100);
 
-    if (totalNetCents < 500) {
+    if (totalNetCents < MIN_PAYOUT_CENTS) {
       return NextResponse.json({
-        error: 'O valor mínimo para solicitação de saque PIX é R$ 5,00.'
+        error: `O valor mínimo para solicitação de saque PIX é de R$ 50,00. Seu saldo disponível atual é R$ ${(totalNetCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`
       }, { status: 400 });
     }
 
