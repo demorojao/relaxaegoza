@@ -63,6 +63,7 @@ export default function ProfileEditor() {
   const [neighborhood, setNeighborhood] = useState('');
   const [city, setCity] = useState('');
   const [rate, setRate] = useState(0);
+  const [isConsultRate, setIsConsultRate] = useState(false);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
@@ -152,7 +153,14 @@ export default function ProfileEditor() {
         setWhatsappCustomMessage(data.whatsapp_custom_message || '');
         setNeighborhood(data.neighborhood || '');
         setCity(data.city || '');
-        setRate(Number(data.price_per_hour) || 0);
+        const numRate = Number(data.price_per_hour);
+        if (!numRate || numRate === 0 || numRate < 300) {
+          setIsConsultRate(true);
+          setRate(0);
+        } else {
+          setIsConsultRate(false);
+          setRate(numRate);
+        }
         setCategory(data.category || 'massage');
         setTargetAudience(data.target_audience || []);
         setGender(data.gender || 'Feminino');
@@ -410,6 +418,15 @@ export default function ProfileEditor() {
     try {
       let finalAvatarUrl = avatarUrl;
 
+      if (!isConsultRate) {
+        const numRate = Number(rate);
+        if (!numRate || numRate < 300) {
+          alert('O valor mínimo aceito por sessão/hora é R$ 300,00. Ou marque a opção "Consultar valor".');
+          setSaving(false);
+          return;
+        }
+      }
+
       // Se selecionou uma nova foto de perfil, faz upload para o Cloudflare R2
       if (avatarFile) {
         finalAvatarUrl = await uploadToR2(avatarFile);
@@ -422,7 +439,7 @@ export default function ProfileEditor() {
         whatsapp: rawWhatsapp,
         neighborhood: cleanNeighborhood,
         city: cleanCity,
-        price_per_hour: Number(rate),
+        price_per_hour: isConsultRate ? 0 : Number(rate),
         bio: formattedBio,
         category,
         target_audience: targetAudience,
@@ -1109,14 +1126,40 @@ export default function ProfileEditor() {
                 id="rate-input"
                 type="number" 
                 title="Valor da Sessão"
-                value={rate} 
-                onChange={(e) => setRate(Number(e.target.value))} 
-                className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
-                required
+                value={isConsultRate ? '' : (rate || '')} 
+                onChange={(e) => setRate(e.target.value === '' ? 0 : Number(e.target.value))} 
+                placeholder={isConsultRate ? "A consultar" : "300"}
+                min={300}
+                disabled={isConsultRate}
+                required={!isConsultRate}
+                className={`w-full border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors ${
+                  isConsultRate 
+                    ? 'bg-black/60 border-dark-border opacity-50 cursor-not-allowed' 
+                    : 'bg-dark-bg/60 border-dark-border'
+                }`}
               />
-              <p className="text-[10px] text-gold-primary/80 font-medium">
-                * O Relaxe & Goze é um portal exclusivo de alto padrão. O valor mínimo aceito é R$ 300,00/h.
-              </p>
+
+              {/* Checkbox Consultar Valor */}
+              <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isConsultRate}
+                  onChange={e => {
+                    setIsConsultRate(e.target.checked);
+                    if (e.target.checked) setRate(0);
+                  }}
+                  className="w-4 h-4 rounded border-white/10 text-gold-primary focus:ring-gold-primary bg-black/40 accent-gold-primary"
+                />
+                <span className="text-xs text-gold-light font-medium">
+                  Consultar valor (Negociar no WhatsApp)
+                </span>
+              </label>
+
+              {!isConsultRate && (
+                <p className="text-[10px] text-gold-primary/80 font-medium">
+                  * O Relaxe & Goze é um portal exclusivo de alto padrão. O valor mínimo aceito é R$ 300,00/h.
+                </p>
+              )}
             </div>
 
             {/* Mensagem Customizada do WhatsApp */}

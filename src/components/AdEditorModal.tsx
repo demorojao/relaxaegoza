@@ -21,6 +21,7 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<number | ''>('');
+  const [isConsultPrice, setIsConsultPrice] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
@@ -114,11 +115,17 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
         .maybeSingle();
 
       if (adError) throw adError;
-
       if (adData) {
         setTitle(adData.title || '');
         setDescription(adData.description || '');
-        setPrice(adData.price || 0);
+        const rawPrice = adData.price;
+        if (!rawPrice || rawPrice === 0 || rawPrice < 300) {
+          setIsConsultPrice(true);
+          setPrice('');
+        } else {
+          setIsConsultPrice(false);
+          setPrice(rawPrice);
+        }
         setSelectedPhotos(adData.photos || []);
         setSelectedVideos(adData.videos || []);
         setIsActive(adData.is_active ?? true);
@@ -126,7 +133,14 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
         // Fallbacks from profile
         setTitle(`Atendimento com ${profile.name}`);
         setDescription(profile.bio || '');
-        setPrice(profile.price_per_hour || 0);
+        const rawPrice = profile.price_per_hour;
+        if (!rawPrice || rawPrice === 0 || rawPrice < 300) {
+          setIsConsultPrice(true);
+          setPrice('');
+        } else {
+          setIsConsultPrice(false);
+          setPrice(rawPrice);
+        }
         setSelectedPhotos([]);
         setSelectedVideos([]);
         setIsActive(true);
@@ -183,6 +197,14 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
       return;
     }
 
+    if (!isConsultPrice) {
+      const numPrice = Number(price);
+      if (!numPrice || numPrice < 300) {
+        setErrorMsg('O valor mínimo aceito por hora é R$ 300,00. Caso prefira negociar no WhatsApp, marque a opção "Consultar valor".');
+        return;
+      }
+    }
+
     setLoading(true);
     setErrorMsg(null);
 
@@ -191,7 +213,7 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
         profile_id: profile.id,
         title,
         description,
-        price: Number(price),
+        price: isConsultPrice ? 0 : Number(price),
         photos: selectedPhotos,
         videos: selectedVideos,
         is_active: isActive,
@@ -299,12 +321,35 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
                 <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Preço por Hora (R$)</label>
                 <Input 
                   type="number" 
-                  value={price} 
-                  onChange={e => setPrice(Number(e.target.value))} 
-                  placeholder="250"
-                  min={0}
-                  required
+                  value={isConsultPrice ? '' : price} 
+                  onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))} 
+                  placeholder={isConsultPrice ? "A consultar" : "300"}
+                  min={300}
+                  disabled={isConsultPrice}
+                  required={!isConsultPrice}
+                  className={isConsultPrice ? "opacity-50 cursor-not-allowed bg-black/60" : ""}
                 />
+                
+                {/* Checkbox Consultar Valor */}
+                <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isConsultPrice}
+                    onChange={e => {
+                      setIsConsultPrice(e.target.checked);
+                      if (e.target.checked) setPrice('');
+                    }}
+                    className="w-4 h-4 rounded border-white/10 text-gold-primary focus:ring-gold-primary bg-black/40 accent-gold-primary"
+                  />
+                  <span className="text-xs text-gold-light font-medium">
+                    Consultar valor (Negociar no WhatsApp)
+                  </span>
+                </label>
+                {!isConsultPrice && (
+                  <p className="text-[10px] text-gray-500 font-light">
+                    * Valor mínimo aceito: R$ 300,00/h
+                  </p>
+                )}
               </div>
             </div>
 

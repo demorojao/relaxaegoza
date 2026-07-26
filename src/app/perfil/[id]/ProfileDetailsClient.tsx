@@ -761,14 +761,23 @@ export default function ProfileDetailsClient({
 
         {/* Preço e Botão */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex sm:flex-col justify-between sm:justify-start items-center sm:items-start w-full sm:w-auto">
-            <span className="text-xs text-gray-500 uppercase font-semibold">Valor da Hora</span>
-            <div className="flex items-center gap-1.5 text-gold-light">
-              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 -mr-1" />
-              <span className="text-2xl sm:text-3xl font-bold">{adPrice}</span>
-              <span className="text-gray-500 text-xs font-light">/ hr</span>
+          {(!adPrice || Number(adPrice) < 300) ? (
+            <div className="flex flex-col justify-center items-start">
+              <span className="text-[10px] sm:text-xs text-gray-400 uppercase font-semibold">Valor da Hora</span>
+              <span className="text-xl sm:text-2xl font-bold text-gold-light uppercase tracking-wide">
+                Consultar valor
+              </span>
             </div>
-          </div>
+          ) : (
+            <div className="flex sm:flex-col justify-between sm:justify-start items-center sm:items-start w-full sm:w-auto">
+              <span className="text-xs text-gray-500 uppercase font-semibold">Valor da Hora</span>
+              <div className="flex items-center gap-1.5 text-gold-light">
+                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 -mr-1" />
+                <span className="text-2xl sm:text-3xl font-bold">{adPrice}</span>
+                <span className="text-gray-500 text-xs font-light">/ hr</span>
+              </div>
+            </div>
+          )}
           
           {(() => {
             const whatsappMessage = profile.whatsapp_custom_message

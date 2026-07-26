@@ -217,11 +217,17 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
                 {profile.age} anos
               </span>
               
-              <div className="flex items-center text-gold-light">
-                <DollarSign className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 -mr-0.5 shrink-0" />
-                <span className="text-xs sm:text-sm">{displayPrice}</span>
-                <span className="text-[9px] text-white/50 font-normal ml-0.5">/h</span>
-              </div>
+              {(!displayPrice || Number(displayPrice) < 300) ? (
+                <span className="text-[10px] sm:text-xs font-bold text-gold-light uppercase tracking-wide">
+                  Consultar valor
+                </span>
+              ) : (
+                <div className="flex items-center text-gold-light">
+                  <DollarSign className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 -mr-0.5 shrink-0" />
+                  <span className="text-xs sm:text-sm">{displayPrice}</span>
+                  <span className="text-[9px] text-white/50 font-normal ml-0.5">/h</span>
+                </div>
+              )}
             </div>
 
             {/* Cidade e Avaliação */}

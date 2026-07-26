@@ -618,9 +618,19 @@ export default function ProfileReels({
                     <span className="text-sm font-normal text-gray-300 shrink-0">{profile.age} anos</span>
                   </h2>
                   <div className="flex items-center text-gold-light font-bold text-sm mt-0.5">
-                    <DollarSign className="w-3.5 h-3.5 -mr-0.5 shrink-0" />
-                    <span>{profile.ad_price !== undefined && profile.ad_price !== null ? profile.ad_price : profile.price_per_hour}</span>
-                    <span className="text-[10px] text-gray-400 font-normal ml-0.5">/h</span>
+                    {(() => {
+                      const reelsPrice = profile.ad_price !== undefined && profile.ad_price !== null ? profile.ad_price : profile.price_per_hour;
+                      if (!reelsPrice || Number(reelsPrice) < 300) {
+                        return <span className="text-xs uppercase font-bold text-gold-light">Consultar valor</span>;
+                      }
+                      return (
+                        <>
+                          <DollarSign className="w-3.5 h-3.5 -mr-0.5 shrink-0" />
+                          <span>{reelsPrice}</span>
+                          <span className="text-[10px] text-gray-400 font-normal ml-0.5">/h</span>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
