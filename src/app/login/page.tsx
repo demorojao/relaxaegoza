@@ -81,7 +81,11 @@ export default function LoginPage() {
       setSuccessMessage('E-mail de recuperação enviado com sucesso! Verifique sua caixa de entrada.');
       setRecoveryEmail('');
     } catch (err: any) {
-      setErrorMessage(err.message || 'Erro ao enviar e-mail de recuperação.');
+      let friendlyMessage = err.message;
+      if (err.message === 'Error sending recovery email' || err.message?.includes('sending recovery email')) {
+        friendlyMessage = 'O servidor de e-mail atingiu o limite ou falhou. Por favor, aguarde alguns minutos ou configure o SMTP no painel do Supabase.';
+      }
+      setErrorMessage(friendlyMessage || 'Erro ao enviar e-mail de recuperação.');
     } finally {
       setLoading(false);
     }
