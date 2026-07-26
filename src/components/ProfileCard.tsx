@@ -84,7 +84,14 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
   };
 
   const rawDesc = showAdInfo ? (profile.ad_description || profile.bio) : (profile.bio || profile.ad_description);
-  const cleanDesc = rawDesc ? rawDesc.replace(/\\n/g, ' ').replace(/\n/g, ' ') : '';
+  const cleanDesc = rawDesc 
+    ? rawDesc
+        .replace(/=== [A-Z\s]+ ===/g, '')
+        .replace(/\\n/g, ' ')
+        .replace(/\n/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim() 
+    : '';
 
   return (
     <Link href={`/perfil/${profile.id}`} className="block w-full h-full">
@@ -259,9 +266,9 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
               </div>
             </div>
 
-            {/* Categoria e Público Alvo */}
-            {(profile.target_audience || profile.category) && (
-              <div className="flex items-center justify-between border-t border-white/5 pt-1.5 mt-0.5 text-[8px] sm:text-[9px] text-gray-400 font-medium font-sans">
+            {/* Categoria e Especialidades (Tags Limpas) */}
+            <div className="flex flex-col gap-1 border-t border-white/5 pt-1.5 mt-0.5">
+              <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-gray-400 font-medium font-sans">
                 <span className="truncate text-gray-300">
                   {profile.category === 'massage' 
                     ? '🧘 Massagens' 
@@ -275,7 +282,23 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
                   </span>
                 )}
               </div>
-            )}
+
+              {/* Tags de Especialidades em destaque no Card */}
+              {specialtyNames.length > 0 && (
+                <div className="flex flex-wrap gap-1 pt-0.5">
+                  {specialtyNames.slice(0, 2).map((spec) => (
+                    <span key={spec} className="text-[8px] bg-gold-primary/10 border border-gold-primary/20 text-gold-light px-1.5 py-0.5 rounded-md font-medium truncate max-w-[120px]">
+                      ✨ {spec}
+                    </span>
+                  ))}
+                  {specialtyNames.length > 2 && (
+                    <span className="text-[8px] text-gray-400 font-light self-center">
+                      +{specialtyNames.length - 2}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Descrição / Biografia do Anúncio */}

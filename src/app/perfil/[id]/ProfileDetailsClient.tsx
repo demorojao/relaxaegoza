@@ -13,6 +13,7 @@ import {
   ShieldCheck, 
   Building2, 
   User, 
+  UserCheck,
   Trophy,
   Wind,
   Wifi,
@@ -504,6 +505,71 @@ export default function ProfileDetailsClient({
   const adDescription = ad?.description || profile.bio || '';
   const adPrice = ad ? ad.price : (profile.price_per_hour || 0);
 
+  const computedSpecialties = React.useMemo(() => {
+    const list: string[] = [];
+
+    if (Array.isArray(profile?.specialties)) {
+      profile.specialties.forEach((s: any) => {
+        const name = typeof s === 'string' ? s : s?.specialties?.name || s?.name;
+        if (name && !list.includes(name)) list.push(name);
+      });
+    }
+
+    const rawBio = ad?.description || profile?.bio || '';
+    if (rawBio.includes('=== ESPECIALIDADES ===')) {
+      const parts = rawBio.split('=== ');
+      const specPart = parts.find((p: string) => p.startsWith('ESPECIALIDADES ==='))?.replace('ESPECIALIDADES ===\n', '').trim();
+      if (specPart) {
+        specPart.split(/[,;\n]/).map((s: string) => s.trim()).filter(Boolean).forEach((s: string) => {
+          if (!list.includes(s) && s.length > 2 && !s.startsWith('===') && !s.includes('INCLUSO') && !s.includes('REGRAS')) {
+            list.push(s);
+          }
+        });
+      }
+    }
+
+    return list;
+  }, [profile, ad]);
+
+  const parseProfileBio = React.useCallback((raw: string) => {
+    if (!raw) return { bioText: '', included: '', rules: '' };
+
+    let bioText = raw;
+    let included = '';
+    let rules = '';
+
+    if (raw.includes('=== ')) {
+      const parts = raw.split('\n\n=== ');
+      
+      parts.forEach(part => {
+        if (part.startsWith('ESPECIALIDADES ===')) {
+          // Processed in specialties list
+        } else if (part.startsWith('INCLUSO ===') || part.includes('INCLUSO ===')) {
+          included = part.replace(/^.*INCLUSO ===\n?/, '').trim();
+        } else if (part.startsWith('REGRAS ===') || part.includes('REGRAS ===')) {
+          rules = part.replace(/^.*REGRAS ===\n?/, '').trim();
+        } else {
+          const cleanPart = part
+            .replace(/ESPECIALIDADES ===[\s\S]*?(?=\n\n|$)/, '')
+            .replace(/INCLUSO ===[\s\S]*?(?=\n\n|$)/, '')
+            .replace(/REGRAS ===[\s\S]*?(?=\n\n|$)/, '')
+            .replace(/=== [A-Z\s]+ ===/g, '')
+            .trim();
+          if (cleanPart) bioText = cleanPart;
+        }
+      });
+
+      bioText = bioText
+        .replace(/=== ESPECIALIDADES ===[\s\S]*?(?=\n\n===|$)/g, '')
+        .replace(/=== INCLUSO ===[\s\S]*?(?=\n\n===|$)/g, '')
+        .replace(/=== REGRAS ===[\s\S]*?(?=\n\n===|$)/g, '')
+        .replace(/=== [A-Z\s]+ ===/g, '')
+        .trim();
+    }
+
+    return { bioText, included, rules };
+  }, []);
+
   // Compilação de fotos do anúncio com suporte a navegação
   const adPhotosList: string[] = React.useMemo(() => {
     let list: string[] = [];
@@ -813,14 +879,23 @@ export default function ProfileDetailsClient({
           </div>
         </div>
 
-        {/* Especialidades */}
-        {specialtyNames.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {specialtyNames.map((spec: string) => (
-              <span key={spec} className="px-3 py-1 rounded-full border border-gold-primary/30 bg-gold-primary/10 text-gold-light text-xs font-medium tracking-wide">
-                {spec}
-              </span>
-            ))}
+        {/* Especialidades e Atendimentos prestados */}
+        {computedSpecialties.length > 0 && (
+          <div className="space-y-2.5 bg-black/40 border border-white/5 rounded-2xl p-4 sm:p-5">
+            <span className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-gold-primary" />
+              Especialidades & Atendimentos
+            </span>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {computedSpecialties.map((spec: string) => (
+                <span 
+                  key={spec} 
+                  className="px-3.5 py-1.5 rounded-xl border border-gold-primary/30 bg-gold-primary/10 text-gold-light text-xs font-semibold tracking-wide shadow-xs flex items-center gap-1.5"
+                >
+                  ✨ {spec}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
@@ -999,105 +1074,56 @@ export default function ProfileDetailsClient({
           </div>
         )}
 
-        {/* Descrição / Bio Estruturada */}
-        {adDescription && (
-          <div className="pt-6 border-t border-white/10 space-y-6">
-            {(() => {
-              const parsed = parseBio(adDescription);
-              if (parsed.included || parsed.rules) {
-                return (
-                  <div className="space-y-6">
-                    {parsed.specialties && (
-                      <div className="space-y-2.5">
-                        <h4 className="text-xs font-bold text-gold-light uppercase tracking-wider">Especialidades e Experiência</h4>
-                        <p className="text-gray-400 text-xs leading-relaxed font-light whitespace-pre-wrap">{parsed.specialties}</p>
-                      </div>
-                    )}
-                    {parsed.included && (
-                      <div className="space-y-2.5 bg-white/1 border border-white/5 rounded-xl p-4">
-                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-gold-primary" /> Incluso no Atendimento
-                        </h4>
-                        <p className="text-gray-400 text-xs leading-relaxed font-light whitespace-pre-wrap">{parsed.included}</p>
-                      </div>
-                    )}
-                    {parsed.rules && (
-                      <div className="space-y-2.5 bg-wine-primary/2 border border-wine-primary/10 rounded-xl p-4">
-                        <h4 className="text-xs font-bold text-wine-light uppercase tracking-wider">Regras & Restrições</h4>
-                        <p className="text-gray-400 text-xs leading-relaxed font-light whitespace-pre-wrap">{parsed.rules}</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              return (
-                <div className="space-y-2.5">
-                  <h3 className="text-sm font-semibold text-white uppercase tracking-widest">Sobre Mim</h3>
-                  <div className="text-gray-400 text-xs leading-relaxed whitespace-pre-wrap font-light">
-                    {profile.bio}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        )}
-
-        {/* Galeria Geral do Perfil */}
-        <div className="space-y-4 pt-6 border-t border-white/5">
-          <h3 className="text-sm font-semibold text-white uppercase tracking-widest flex items-center gap-2">
-            <FileImage className="w-4 h-4 text-gold-primary" />
-            Galeria do Perfil
-          </h3>
+        {/* Bio & Apresentação Profissional — Destaque sobre as avaliações */}
+        {(() => {
+          const rawBio = initialAd?.description || profile.bio || '';
+          const { bioText, included, rules } = parseProfileBio(rawBio);
           
-          {mediaToRender.length === 0 ? (
-            <p className="text-gray-500 text-xs font-light">Nenhuma foto ou vídeo cadastrado na galeria.</p>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {mediaToRender.map((media: any, index: number) => (
-                <div key={index} className="relative aspect-3/4 rounded-xl overflow-hidden group cursor-pointer border border-white/5 protected-media">
-                  {/* Overlay shield de proteção */}
-                  <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
-                  {media.type === 'video' ? (
-                    <video 
-                      src={getCDNUrl(media.url)} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      controls
-                      playsInline
-                      controlsList="nodownload nofullscreen noremoteplayback"
-                      disablePictureInPicture={true}
-                      onContextMenu={(e) => e.preventDefault()}
-                    />
-                  ) : (
-                    <Watermark className="w-full h-full">
-                      <Image 
-                        src={getCDNUrl(media.url)} 
-                        alt={`Foto do Anúncio ${index + 1}`} 
-                        fill
-                        sizes="(max-width: 768px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
-                        onContextMenu={(e) => e.preventDefault()}
-                        onDragStart={(e) => e.preventDefault()}
-                      />
-                    </Watermark>
+          if (!bioText && !included && !rules) return null;
+
+          return (
+            <div className="bg-linear-to-br from-black/60 via-black/40 to-wine-primary/10 border border-white/10 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl pt-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <h3 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-gold-primary" />
+                  Sobre Mim — Apresentação Profissional
+                </h3>
+                <span className="text-[10px] text-gold-light bg-gold-primary/10 border border-gold-primary/20 px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider">
+                  Perfil Oficial
+                </span>
+              </div>
+
+              {/* Texto de apresentação principal */}
+              {bioText && (
+                <div className="text-gray-300 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-light">
+                  {bioText}
+                </div>
+              )}
+
+              {/* Grid de Informações Adicionais (Incluso & Regras) */}
+              {(included || rules) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  {included && (
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
+                      <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-emerald-400" /> Incluso no Atendimento
+                      </h4>
+                      <p className="text-gray-300 text-xs leading-relaxed font-light whitespace-pre-wrap">{included}</p>
+                    </div>
                   )}
-                  {media.is_verified && (
-                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-emerald-500/20 text-emerald-400 z-10 pointer-events-none">
-                      <ShieldCheck className="w-4 h-4" />
+                  {rules && (
+                    <div className="bg-wine-primary/10 border border-wine-primary/20 rounded-xl p-4 space-y-2">
+                      <h4 className="text-xs font-bold text-wine-light uppercase tracking-wider flex items-center gap-1.5">
+                        <AlertTriangle className="w-4 h-4 text-wine-light" /> Regras & Restrições
+                      </h4>
+                      <p className="text-gray-300 text-xs leading-relaxed font-light whitespace-pre-wrap">{rules}</p>
                     </div>
                   )}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
-
-        {/* Conteúdo Exclusivo — Aba Premium */}
-        <PremiumSection 
-          providerId={id} 
-          providerName={profile.name} 
-          subscriptionPriceCents={profile.subscription_price_cents}
-        />
-
+          );
+        })()}
 
         <div className="space-y-6 pt-6 border-t border-white/5">
           <h3 className="text-sm font-semibold text-white uppercase tracking-widest flex items-center gap-2">
