@@ -111,6 +111,35 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
       .eq('id', targetUserId);
 
     console.log(`Boost ativado com sucesso para ${targetUserId}. Expira em: ${newExpires.toISOString()}`);
+  } else if (tier === 'exclusive_subscription') {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    if (user_id && target_profile_id) {
+      await supabaseService
+        .from('premium_subscriptions')
+        .upsert({
+          client_id: user_id,
+          provider_id: target_profile_id,
+          status: 'active',
+          price_cents: payment.amount_cents || 4990,
+          expires_at: expiresAt.toISOString()
+        }, { onConflict: 'client_id,provider_id' });
+
+      await supabaseService
+        .from('content_purchases')
+        .insert({
+          client_id: user_id,
+          provider_id: target_profile_id,
+          amount_cents: payment.amount_cents || 4990,
+          net_amount_cents: Math.round((payment.amount_cents || 4990) * 0.9),
+          purchase_type: 'subscription',
+          status: 'paid',
+          created_at: new Date().toISOString()
+        });
+
+      console.log(`Assinatura Clube Exclusivo ativada com sucesso: Cliente ${user_id} -> Profissional ${target_profile_id}`);
+    }
   } else if (tier && ['pro', 'gold'].includes(tier)) {
     await supabaseService
       .from('profiles')

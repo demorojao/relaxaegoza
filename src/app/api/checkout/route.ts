@@ -5,7 +5,7 @@ import { createPushinPayPixCharge } from '@/lib/pushinpay';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { tier, isBoost, isGift, targetProfileId, boostHours } = body;
+    const { tier, isBoost, isGift, isExclusiveContent, targetProfileId, boostHours } = body;
 
     const supabase = getSupabaseServerClient();
     const supabaseService = getSupabaseServiceClient();
@@ -40,8 +40,30 @@ export async function POST(req: NextRequest) {
     let targetProfileIdValue = null;
     let tierValue = null;
 
+    // 0. Caso: Assinatura de Conteúdo Exclusivo de Profissional
+    if (isExclusiveContent) {
+      const targetId = targetProfileId;
+      if (!targetId) {
+        return NextResponse.json({ error: 'Profissional de destino não informada.' }, { status: 400 });
+      }
+
+      const { data: targetProfile, error: targetError } = await supabase
+        .from('profiles')
+        .select('name, subscription_price_cents, role')
+        .eq('id', targetId)
+        .single();
+
+      if (targetError || !targetProfile || targetProfile.role !== 'provider') {
+        return NextResponse.json({ error: 'Profissional não encontrada.' }, { status: 404 });
+      }
+
+      amountCents = targetProfile.subscription_price_cents || 4990;
+      targetProfileIdValue = targetId;
+      tierValue = 'exclusive_subscription';
+      description = `Assinatura Clube Exclusivo VIP - ${targetProfile.name}`;
+    }
     // 1. Caso: Super Destaque de Presente (Gift Boost)
-    if (isGift && isBoost) {
+    else if (isGift && isBoost) {
       if (!targetProfileId) {
         return NextResponse.json({ error: 'Perfil de destino nao informado.' }, { status: 400 });
       }

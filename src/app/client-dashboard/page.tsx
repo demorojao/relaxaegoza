@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Shield, ShieldCheck, Sparkles, User, LogOut, Heart, Star, Check, PhoneCall, History, Upload } from 'lucide-react';
+import { Shield, ShieldCheck, Sparkles, User, LogOut, Heart, Star, Check, PhoneCall, History, Upload, Crown, Play, Eye, Calendar, X, ExternalLink, Image as ImageIcon, Video, Lock, Unlock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
@@ -16,6 +16,14 @@ export default function ClientDashboard() {
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [verifyingSuccess, setVerifyingSuccess] = useState(false);
+
+  // Exclusivos / Subscriptions State
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [loadingSubs, setLoadingSubs] = useState(true);
+  const [activeSubModal, setActiveSubModal] = useState<any | null>(null);
+  const [subMedias, setSubMedias] = useState<any[]>([]);
+  const [loadingMedias, setLoadingMedias] = useState(false);
+  const [previewMediaUrl, setPreviewMediaUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClientProfile();
@@ -37,11 +45,72 @@ export default function ClientDashboard() {
           return;
         }
         setProfile(data);
+        fetchClientSubscriptions(user.id);
       }
     } else {
       router.push('/login');
     }
     setLoading(false);
+  };
+
+  const fetchClientSubscriptions = async (clientId: string) => {
+    setLoadingSubs(true);
+    try {
+      const { data: subsData, error: subsErr } = await supabase
+        .from('premium_subscriptions')
+        .select('*')
+        .eq('client_id', clientId)
+        .eq('status', 'active');
+
+      if (subsErr) {
+        console.warn('Err fetching subs:', subsErr);
+        setLoadingSubs(false);
+        return;
+      }
+
+      if (subsData && subsData.length > 0) {
+        const providerIds = subsData.map(s => s.provider_id);
+        const { data: providersData } = await supabase
+          .from('profiles')
+          .select('id, name, city, state, subscription_price_cents, profile_photo')
+          .in('id', providerIds);
+
+        const joined = subsData.map(s => ({
+          ...s,
+          provider: providersData?.find(p => p.id === s.provider_id) || { name: 'Profissional', id: s.provider_id }
+        }));
+        setSubscriptions(joined);
+      } else {
+        setSubscriptions([]);
+      }
+    } catch (err) {
+      console.error('Error fetching subscriptions:', err);
+    } finally {
+      setLoadingSubs(false);
+    }
+  };
+
+  const handleOpenVipFeed = async (sub: any) => {
+    setActiveSubModal(sub);
+    setLoadingMedias(true);
+    setSubMedias([]);
+
+    try {
+      const { data: medias } = await supabase
+        .from('premium_media')
+        .select('*')
+        .eq('profile_id', sub.provider_id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (medias) {
+        setSubMedias(medias);
+      }
+    } catch (err) {
+      console.error('Error loading sub medias:', err);
+    } finally {
+      setLoadingMedias(false);
+    }
   };
 
   const handleVerifyClient = async (e: React.FormEvent) => {
@@ -57,10 +126,8 @@ export default function ClientDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      // 1. Upload the Selfie file to Cloudflare R2
       const selfiePublicUrl = await uploadToR2(selfieFile);
 
-      // 2. Update verification status in profiles table
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -98,7 +165,6 @@ export default function ClientDashboard() {
     );
   }
 
-  // Círculo de Confiança Score
   const trustLevel = 
     profile?.verification_status === 'verified' 
       ? 'Ouro (Máximo)' 
@@ -119,12 +185,9 @@ export default function ClientDashboard() {
 
   return (
     <div className="min-h-screen bg-dark-bg text-gray-100 selection:bg-gold-primary selection:text-dark-bg relative overflow-hidden pb-16">
-      {/* Background Lights */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold-primary/5 blur-[150px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-wine-primary/5 blur-[150px] rounded-full pointer-events-none" />
 
-
-      {/* Header Fixo */}
       <header className="sticky top-0 z-40 bg-black/70 backdrop-blur-lg border-b border-white/5 px-4 sm:px-6 py-3.5 flex items-center justify-between">
         <Logo />
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -142,7 +205,6 @@ export default function ClientDashboard() {
       </header>
 
       <div className="max-w-5xl mx-auto px-6 mt-10 space-y-10">
-        {/* Welcome Block */}
         <div className="glass-effect rounded-3xl p-6 md:p-8 border border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-gold-primary/10 border border-gold-primary/20 flex items-center justify-center text-gold-primary">
@@ -159,7 +221,6 @@ export default function ClientDashboard() {
             </div>
           </div>
 
-          {/* Círculo de Confiança Score Badge */}
           <div className="bg-black/40 border border-white/5 rounded-2xl p-4 flex gap-6 items-center">
             <div className="text-center">
               <span className="text-[10px] uppercase text-gray-500 font-semibold block mb-1">Nível de Confiança</span>
@@ -173,13 +234,96 @@ export default function ClientDashboard() {
           </div>
         </div>
 
-        {/* Duas Seções Principais */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
-          {/* Coluna 1 & 2: Ações / Histórico */}
           <div className="md:col-span-2 space-y-8">
             
-            {/* Bloco: Círculo de Confiança Explicação & Ativação */}
+            <div className="glass-effect rounded-2xl border border-gold-primary/20 p-6 space-y-6 bg-gradient-to-br from-gold-primary/5 to-transparent relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-gold-primary/10 text-gold-primary rounded-xl">
+                    <Crown className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-white">Minhas Assinaturas VIP & Conteúdos Exclusivos</h3>
+                    <p className="text-xs text-gray-400 font-light">
+                      Canais VIP de acompanhantes e massagistas com acesso completo liberado.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] bg-gold-primary/20 text-gold-primary border border-gold-primary/30 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+                  {subscriptions.length} {subscriptions.length === 1 ? 'Canal Ativo' : 'Canais Ativos'}
+                </span>
+              </div>
+
+              {loadingSubs ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="w-6 h-6 border-2 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
+                </div>
+              ) : subscriptions.length === 0 ? (
+                <div className="bg-black/30 border border-white/5 rounded-xl p-6 text-center space-y-3">
+                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-gray-400">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-white">Nenhuma assinatura VIP ativa</h4>
+                    <p className="text-[11px] text-gray-400 font-light mt-1 max-w-md mx-auto leading-relaxed">
+                      Você ainda não assinou o clube exclusivo de nenhuma profissional. Navegue pelos perfis na vitrine e assine com Pix Instantâneo para liberar fotos e vídeos inéditos.
+                    </p>
+                  </div>
+                  <Link href="/" className="inline-block pt-2">
+                    <button className="px-4 py-2 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold transition-all shadow-md">
+                      Explorar Perfis na Vitrine
+                    </button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {subscriptions.map(sub => (
+                    <div 
+                      key={sub.id} 
+                      className="bg-black/40 border border-gold-primary/30 rounded-xl p-4 space-y-4 hover:border-gold-primary transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full overflow-hidden border border-gold-primary/40 bg-dark-bg shrink-0">
+                          {sub.provider?.profile_photo ? (
+                            <img src={sub.provider.profile_photo} alt={sub.provider.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gold-primary font-bold">
+                              {sub.provider.name?.charAt(0) || 'P'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-semibold text-white truncate group-hover:text-gold-primary transition-colors">
+                            {sub.provider.name}
+                          </h4>
+                          <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
+                            <Unlock className="w-3 h-3" /> Acesso VIP Ativo
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-black/30 p-2.5 rounded-lg border border-white/5 text-[10px] space-y-1 text-gray-400">
+                        <div className="flex justify-between items-center">
+                          <span>Válido até:</span>
+                          <span className="text-white font-medium">
+                            {sub.expires_at ? new Date(sub.expires_at).toLocaleDateString('pt-BR') : '30 dias'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleOpenVipFeed(sub)}
+                        className="w-full py-2 rounded-lg bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-gold-primary/10"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> Ver Fotos & Vídeos VIP
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="glass-effect rounded-2xl border border-white/5 p-6 space-y-6">
               <div className="flex items-start gap-3">
                 <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl mt-0.5">
@@ -282,7 +426,6 @@ export default function ClientDashboard() {
               )}
             </div>
 
-            {/* Favoritas / Atividades */}
             <div className="glass-effect rounded-2xl border border-white/5 p-6">
               <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                 <History className="w-4 h-4 text-gold-primary" /> Histórico de Agendamentos & Avaliações
@@ -292,10 +435,8 @@ export default function ClientDashboard() {
                 <span className="text-xs text-gray-500 font-light">Nenhuma atividade recente registrada. Suas avaliações aparecerão aqui.</span>
               </div>
             </div>
-
           </div>
 
-          {/* Coluna 3: Benefícios / Menu Lateral */}
           <div className="space-y-6">
             <div className="glass-effect rounded-2xl border border-white/5 p-5 space-y-4">
               <h4 className="text-xs font-semibold text-gold-primary uppercase tracking-wider">Regras de Convivência</h4>
@@ -315,10 +456,111 @@ export default function ClientDashboard() {
               </ul>
             </div>
           </div>
-
         </div>
-
       </div>
+
+      {activeSubModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#121214] border border-gold-primary/30 rounded-3xl max-w-3xl w-full p-6 md:p-8 space-y-6 shadow-2xl relative animate-scaleUp">
+            <div className="flex justify-between items-center border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gold-primary/10 border border-gold-primary/30 flex items-center justify-center text-gold-primary font-bold">
+                  <Crown className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    Canal Exclusivo VIP: {activeSubModal.provider?.name}
+                  </h3>
+                  <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
+                    <Unlock className="w-3 h-3" /> Acesso Total Desbloqueado para Assinante
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => { setActiveSubModal(null); setPreviewMediaUrl(null); }}
+                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {loadingMedias ? (
+              <div className="py-20 flex justify-center">
+                <div className="w-8 h-8 border-2 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
+              </div>
+            ) : subMedias.length === 0 ? (
+              <div className="py-16 text-center border-2 border-dashed border-white/10 rounded-2xl space-y-2">
+                <ImageIcon className="w-8 h-8 text-gray-500 mx-auto" />
+                <p className="text-xs text-gray-400 font-light">Nenhuma foto ou vídeo exclusivo publicado recentemente neste canal.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-gold-primary" /> Mídias Exclusivas do Clube ({subMedias.length})
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-1">
+                  {subMedias.map(media => {
+                    const isVideo = media.media_type === 'video';
+                    return (
+                      <div 
+                        key={media.id}
+                        className="bg-black/60 border border-white/10 rounded-2xl overflow-hidden group hover:border-gold-primary/50 transition-all flex flex-col justify-between"
+                      >
+                        <div className="relative aspect-[3/4] bg-dark-bg overflow-hidden cursor-pointer" onClick={() => setPreviewMediaUrl(media.media_url)}>
+                          <img 
+                            src={media.media_url || media.preview_url} 
+                            alt={media.title || 'Mídia Exclusiva'} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="px-3 py-1.5 rounded-xl bg-gold-primary text-dark-bg font-bold text-xs flex items-center gap-1">
+                              <Eye className="w-3.5 h-3.5" /> Ampliar em HD
+                            </span>
+                          </div>
+                          <span className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-gold-primary px-2 py-0.5 rounded text-[9px] font-bold border border-gold-primary/30">
+                            {isVideo ? 'VÍDEO VIP' : 'FOTO HD'}
+                          </span>
+                        </div>
+                        
+                        <div className="p-3 space-y-1 bg-black/40 border-t border-white/5">
+                          <h5 className="text-xs font-semibold text-white truncate">{media.title || 'Conteúdo Exclusivo'}</h5>
+                          {media.description && (
+                            <p className="text-[10px] text-gray-400 font-light line-clamp-2">{media.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="pt-2 border-t border-white/10 flex justify-end">
+              <button
+                onClick={() => { setActiveSubModal(null); setPreviewMediaUrl(null); }}
+                className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all cursor-pointer"
+              >
+                Fechar Canal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {previewMediaUrl && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
+          <button 
+            onClick={() => setPreviewMediaUrl(null)}
+            className="absolute top-6 right-6 p-3 text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10 cursor-pointer"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-gold-primary/30 shadow-2xl relative flex items-center justify-center">
+            <img src={previewMediaUrl} alt="Mídia Ampliada" className="max-w-full max-h-[85vh] object-contain rounded-xl" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
