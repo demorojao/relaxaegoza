@@ -39,6 +39,7 @@ export interface Profile {
   ad_price?: number;
   ad_photos?: string[];
   ad_videos?: string[];
+  photos?: any[];
 }
 
 export interface Story {

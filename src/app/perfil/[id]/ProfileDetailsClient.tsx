@@ -25,7 +25,9 @@ import {
   Lock,
   AlertTriangle,
   Clock,
-  FileImage
+  FileImage,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { formatWhatsAppLink } from '@/lib/utils';
 import { triggerRevalidate } from '@/lib/revalidate';
@@ -435,11 +437,83 @@ export default function ProfileDetailsClient({
   const adDescription = ad?.description || profile.bio || '';
   const adPrice = ad ? ad.price : (profile.price_per_hour || 0);
 
-  const mediaToRender = photos.map(p => ({
-    url: p.photo_url,
-    type: p.media_type || 'photo',
-    is_verified: p.is_verified
-  }));
+  // Compilação de fotos do anúncio com suporte a navegação
+  const adPhotosList: string[] = React.useMemo(() => {
+    let list: string[] = [];
+    if (ad && Array.isArray(ad.photos) && ad.photos.length > 0) {
+      list = [...ad.photos];
+    }
+    if (photos && photos.length > 0) {
+      photos.forEach((p: any) => {
+        if (p.photo_url && !list.includes(p.photo_url)) {
+          list.push(p.photo_url);
+        }
+      });
+    }
+    if (list.length === 0 && profile.avatar_url) {
+      list = [profile.avatar_url];
+    }
+    return list;
+  }, [ad, photos, profile.avatar_url]);
+
+  const [activePhotoIdx, setActivePhotoIdx] = React.useState(0);
+  const [heroTouchStartX, setHeroTouchStartX] = React.useState<number | null>(null);
+
+  const handleNextHeroPhoto = () => {
+    setActivePhotoIdx((prev) => (prev + 1) % adPhotosList.length);
+  };
+
+  const handlePrevHeroPhoto = () => {
+    setActivePhotoIdx((prev) => (prev - 1 + adPhotosList.length) % adPhotosList.length);
+  };
+
+  const handleHeroTouchStart = (e: React.TouchEvent) => {
+    setHeroTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleHeroTouchEnd = (e: React.TouchEvent) => {
+    if (heroTouchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffX = heroTouchStartX - touchEndX;
+
+    if (Math.abs(diffX) > 30) {
+      if (diffX > 0) {
+        setActivePhotoIdx((prev) => (prev + 1) % adPhotosList.length);
+      } else {
+        setActivePhotoIdx((prev) => (prev - 1 + adPhotosList.length) % adPhotosList.length);
+      }
+    }
+    setHeroTouchStartX(null);
+  };
+
+  const mediaToRender = React.useMemo(() => {
+    const list: any[] = [];
+    const addedUrls = new Set<string>();
+
+    if (ad && Array.isArray(ad.photos)) {
+      ad.photos.forEach((url: string) => {
+        if (url && !addedUrls.has(url)) {
+          addedUrls.add(url);
+          list.push({ url, type: 'photo', is_verified: true });
+        }
+      });
+    }
+
+    if (photos && photos.length > 0) {
+      photos.forEach(p => {
+        if (p.photo_url && !addedUrls.has(p.photo_url)) {
+          addedUrls.add(p.photo_url);
+          list.push({
+            url: p.photo_url,
+            type: p.media_type || 'photo',
+            is_verified: p.is_verified
+          });
+        }
+      });
+    }
+
+    return list;
+  }, [ad, photos]);
 
   const isOwner = currentUser?.id === profile.id;
 
@@ -463,6 +537,8 @@ export default function ProfileDetailsClient({
       );
     }
   }
+
+  const currentHeroPhoto = adPhotosList[activePhotoIdx] || profile.avatar_url || '/avatar-placeholder.svg';
 
   return (
     <div className="w-full space-y-6">
@@ -496,18 +572,23 @@ export default function ProfileDetailsClient({
       )}
 
       <div className="flex flex-col md:flex-row gap-8 items-start">
-      {/* Avatar Principal */}
-      <div className={`w-full md:w-1/3 aspect-4/5 sm:aspect-3/4 max-h-90 md:max-h-none rounded-2xl overflow-hidden shadow-2xl relative shrink-0 border-2 protected-media ${
-        isAvailable ? 'border-emerald-500 neon-ring-active' : profile.subscription_tier === 'gold' ? 'border-gold-primary' : 'border-white/5'
-      }`}>
+      {/* Avatar Principal com Carrossel e Deslize (Swipe) */}
+      <div 
+        className={`w-full md:w-1/3 aspect-4/5 sm:aspect-3/4 max-h-90 md:max-h-none rounded-2xl overflow-hidden shadow-2xl relative shrink-0 border-2 protected-media touch-pan-y group ${
+          isAvailable ? 'border-emerald-500 neon-ring-active' : profile.subscription_tier === 'gold' ? 'border-gold-primary' : 'border-white/5'
+        }`}
+        onTouchStart={handleHeroTouchStart}
+        onTouchEnd={handleHeroTouchEnd}
+      >
         {/* Overlay shield para impedir clique e salvamento direto da imagem */}
         <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
         <Image 
-          src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'} 
+          key={currentHeroPhoto}
+          src={getCDNUrl(currentHeroPhoto) || '/avatar-placeholder.svg'} 
           alt={profile.name}
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover select-none pointer-events-none"
+          className="object-cover select-none pointer-events-none transition-transform duration-500"
           onContextMenu={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
           priority
@@ -518,6 +599,45 @@ export default function ProfileDetailsClient({
             <CheckCircle className="w-4 h-4 text-emerald-400" />
             <span className="text-[10px] font-semibold tracking-wide uppercase text-white">Foto Real</span>
           </div>
+        )}
+
+        {/* Controles do Carrossel */}
+        {adPhotosList.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={handlePrevHeroPhoto}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-gold-primary hover:text-dark-bg cursor-pointer"
+              title="Foto anterior"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleNextHeroPhoto}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-gold-primary hover:text-dark-bg cursor-pointer"
+              title="Próxima foto"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+
+            {/* Indicadores de Paginação */}
+            <div className="absolute bottom-3 inset-x-0 flex flex-col items-center gap-1 z-20 pointer-events-none">
+              <div className="flex items-center justify-center gap-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+                {adPhotosList.map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={`h-1.5 rounded-full transition-all ${
+                      idx === activePhotoIdx 
+                        ? 'bg-gold-primary w-4' 
+                        : 'bg-white/40 w-1.5'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </div>
 

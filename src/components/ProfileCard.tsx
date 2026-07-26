@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, DollarSign, Star, ShieldCheck, Building2, Sparkles } from 'lucide-react';
+import { MapPin, DollarSign, Star, ShieldCheck, Building2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Profile } from '../types';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -23,6 +23,8 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
   const isPro = profile.subscription_tier === 'pro';
   
   const [isAvailable, setIsAvailable] = React.useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   React.useEffect(() => {
     const available = !!(profile.is_available_now && (!profile.available_until || new Date(profile.available_until) > new Date()));
@@ -31,7 +33,55 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
 
   const displayName = (showAdInfo && profile.ad_title) ? profile.ad_title : profile.name;
   const displayPrice = (showAdInfo && profile.ad_price !== undefined && profile.ad_price !== null) ? profile.ad_price : profile.price_per_hour;
-  const displayAvatar = (showAdInfo && profile.ad_photos && profile.ad_photos.length > 0) ? profile.ad_photos[0] : profile.avatar_url;
+  
+  // Compilar lista completa de fotos do anúncio ou do perfil
+  const photosList: string[] = useMemo(() => {
+    let list: string[] = [];
+    if (showAdInfo && profile.ad_photos && profile.ad_photos.length > 0) {
+      list = profile.ad_photos;
+    } else if (profile.photos && profile.photos.length > 0) {
+      list = profile.photos.map((p: any) => typeof p === 'string' ? p : p.photo_url).filter(Boolean);
+    }
+    if (list.length === 0 && profile.avatar_url) {
+      list = [profile.avatar_url];
+    }
+    return list;
+  }, [showAdInfo, profile.ad_photos, profile.photos, profile.avatar_url]);
+
+  const currentPhoto = photosList[currentPhotoIndex] || profile.avatar_url || '/avatar-placeholder.svg';
+
+  const handleNextPhoto = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentPhotoIndex((prev) => (prev + 1) % photosList.length);
+  };
+
+  const handlePrevPhoto = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentPhotoIndex((prev) => (prev - 1 + photosList.length) % photosList.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffX = touchStartX - touchEndX;
+
+    if (Math.abs(diffX) > 30) {
+      if (diffX > 0) {
+        // Swipe Esquerda -> Próxima foto
+        setCurrentPhotoIndex((prev) => (prev + 1) % photosList.length);
+      } else {
+        // Swipe Direita -> Foto anterior
+        setCurrentPhotoIndex((prev) => (prev - 1 + photosList.length) % photosList.length);
+      }
+    }
+    setTouchStartX(null);
+  };
 
   const rawDesc = showAdInfo ? (profile.ad_description || profile.bio) : (profile.bio || profile.ad_description);
   const cleanDesc = rawDesc ? rawDesc.replace(/\\n/g, ' ').replace(/\n/g, ' ') : '';
@@ -42,7 +92,7 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
         isInteractive
         variant={isGold ? 'glass-gold' : isPro ? 'glass-wine' : 'glass'}
         className={cn(
-          "flex flex-col w-full h-full rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border border-white/5",
+          "flex flex-col w-full h-full rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border border-white/5 group",
           isGold 
             ? 'border-2 border-gold-primary/70 gold-ring-active' 
             : isAvailable 
@@ -50,21 +100,28 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
               : ''
         )}
       >
-        {/* Container da Imagem */}
-        <div className="relative w-full aspect-[3/3.8] overflow-hidden shrink-0 protected-media">
+        {/* Container da Imagem com Carrossel e Deslize (Swipe) */}
+        <div 
+          className="relative w-full aspect-[3/3.8] overflow-hidden shrink-0 protected-media touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
+          
           <Image
-            src={getCDNUrl(displayAvatar) || '/avatar-placeholder.svg'}
+            key={currentPhoto}
+            src={getCDNUrl(currentPhoto) || '/avatar-placeholder.svg'}
             alt={displayName}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-105 select-none pointer-events-none"
+            className="object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
+            priority={currentPhotoIndex === 0}
           />
           
-          {/* Overlay Degradê escuro sutil apenas na base da imagem */}
-          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/60 to-transparent opacity-80" />
+          {/* Overlay Degradê escuro sutil na base da imagem */}
+          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/70 to-transparent opacity-90 pointer-events-none" />
 
           {/* Badges do Topo */}
           <div className="absolute top-3.5 left-3.5 right-3.5 flex justify-between items-center z-10 pointer-events-none">
@@ -99,6 +156,46 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
               )}
             </div>
           </div>
+
+          {/* Botões de Navegação de Fotos (Setas Esquerda / Direita) */}
+          {photosList.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={handlePrevPhoto}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-gold-primary hover:text-dark-bg cursor-pointer"
+                title="Foto anterior"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNextPhoto}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-gold-primary hover:text-dark-bg cursor-pointer"
+                title="Próxima foto"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              {/* Bolinhas de Paginação e Contador de Fotos */}
+              <div className="absolute bottom-2.5 inset-x-0 flex flex-col items-center gap-1 z-20 pointer-events-none">
+                <div className="flex items-center justify-center gap-1 bg-black/50 backdrop-blur-xs px-2 py-0.5 rounded-full border border-white/10">
+                  {photosList.map((_, idx) => (
+                    <span
+                      key={idx}
+                      className={`h-1.5 rounded-full transition-all ${
+                        idx === currentPhotoIndex 
+                          ? 'bg-gold-primary w-4' 
+                          : 'bg-white/40 w-1.5'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
         </div>
 
         {/* Informações Abaixo da Foto (Bloco Não-Sobreposto) */}
