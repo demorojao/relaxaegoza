@@ -90,3 +90,67 @@ export async function getPushinPayPixStatus(txId: string): Promise<PushinPayPixR
     return null;
   }
 }
+
+export interface PushinPayCashOutPayload {
+  value: number; // Valor em centavos (ex: R$ 50,00 = 5000)
+  pix_key: string;
+}
+
+export interface PushinPayCashOutResponse {
+  id: string;
+  status: string;
+  value: number;
+  pix_key?: string;
+  receipt_url?: string;
+  error?: string;
+}
+
+/**
+ * Realiza uma transferência PIX (CashOut / Payout) via PushinPay para a chave PIX informada
+ * @param value Valor em centavos (ex: 5000 = R$ 50,00)
+ * @param pix_key Chave PIX de destino (CPF, CNPJ, Email, Telefone ou EVP)
+ */
+export async function requestPushinPayPixCashOut({
+  value,
+  pix_key,
+}: PushinPayCashOutPayload): Promise<PushinPayCashOutResponse> {
+  const token = process.env.PUSHINPAY_TOKEN || '68789|ucgYVKkINYBhrDbIu3R94HYntnKkfYdzR6sahzQic053fc9d';
+  if (!token) {
+    throw new Error('PUSHINPAY_TOKEN não configurado no servidor');
+  }
+
+  if (value < 500) {
+    throw new Error('O valor mínimo para transferência PIX de saque é de R$ 5,00 (500 centavos).');
+  }
+
+  if (!pix_key || pix_key.trim().length < 4) {
+    throw new Error('Chave PIX inválida para transferência.');
+  }
+
+  const cleanPixKey = pix_key.trim().replace(/\s+/g, '');
+
+  const payload = {
+    value,
+    pix_key: cleanPixKey,
+  };
+
+  const response = await fetch(`${PUSHINPAY_API_URL}/pix/cashOut`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Erro na API PushinPay (/pix/cashOut):', response.status, errorText);
+    throw new Error(`Falha no repasse PIX (${response.status}): ${errorText}`);
+  }
+
+  const data: PushinPayCashOutResponse = await response.json();
+  return data;
+}
+

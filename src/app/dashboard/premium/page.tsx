@@ -38,6 +38,7 @@ export default function PremiumPage() {
 
   // Financial State
   const [pixKey, setPixKey] = useState('');
+  const [showPixKey, setShowPixKey] = useState(false);
   const [updatingPix, setUpdatingPix] = useState(false);
   const [requestingPayout, setRequestingPayout] = useState(false);
   const [payoutSuccessMsg, setPayoutSuccessMsg] = useState('');
@@ -191,12 +192,29 @@ export default function PremiumPage() {
     }
     setRequestingPayout(true);
     setPayoutSuccessMsg('');
+    setErrorMsg('');
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/payouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao processar a solicitação de saque PIX.');
+      }
+
+      setPayoutSuccessMsg(`⚡ Transferência PIX de R$ ${Number(data.netAmount).toFixed(2)} realizada com sucesso para a sua conta! ID: ${data.pushinpayTxId || data.payoutId}`);
+      
+      // Recarregar dados para atualizar o saldo
+      fetchData();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro ao solicitar saque via PIX.');
+    } finally {
       setRequestingPayout(false);
-      setPayoutSuccessMsg('🚀 Solicitação de Saque via PIX registrada com sucesso! A transferência será processada em até 24 horas úteis.');
-      setTimeout(() => setPayoutSuccessMsg(''), 8000);
-    }, 1500);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -364,23 +382,38 @@ export default function PremiumPage() {
               </div>
             )}
 
-            <form onSubmit={handleSavePixKey} className="flex flex-col sm:flex-row gap-3 pt-2">
-              <input
-                type="text"
-                value={pixKey}
-                onChange={(e) => setPixKey(e.target.value)}
-                placeholder="Insira sua chave PIX (CPF, E-mail, Telefone ou Chave Aleatória)"
-                className="flex-1 px-4 py-2.5 text-xs rounded-xl bg-black/60 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-gold-primary"
-                required
-              />
-              <button
-                type="submit"
-                disabled={updatingPix}
-                className="px-6 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 cursor-pointer"
-              >
-                {updatingPix ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
-                Salvar Chave PIX
-              </button>
+            <form onSubmit={handleSavePixKey} className="space-y-2 pt-2">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <input
+                    type={showPixKey ? "text" : "password"}
+                    value={pixKey}
+                    onChange={(e) => setPixKey(e.target.value)}
+                    placeholder="Insira sua chave PIX (CPF, E-mail, Telefone ou Chave Aleatória)"
+                    className="w-full pl-4 pr-10 py-2.5 text-xs rounded-xl bg-black/60 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-gold-primary tracking-wide font-mono"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPixKey(!showPixKey)}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                    title={showPixKey ? "Ocultar Chave PIX" : "Visualizar Chave PIX"}
+                  >
+                    {showPixKey ? <EyeOff className="w-4 h-4 text-gold-primary" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <button
+                  type="submit"
+                  disabled={updatingPix}
+                  className="px-6 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 cursor-pointer shrink-0"
+                >
+                  {updatingPix ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
+                  Salvar Chave PIX
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-500 font-light flex items-center gap-1">
+                <Lock className="w-3 h-3 text-gold-primary/70 shrink-0" /> Sua chave PIX é mantida oculta por segurança contra visualização de terceiros. Clique no olho para visualizar.
+              </p>
             </form>
           </div>
 
