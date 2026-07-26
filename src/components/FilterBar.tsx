@@ -8,6 +8,8 @@ interface FilterBarProps {
   setSpaceFilter: (v: boolean) => void;
   verifiedFilter: boolean;
   setVerifiedFilter: (v: boolean) => void;
+  availableFilter?: boolean;
+  setAvailableFilter?: (v: boolean) => void;
   viewMode: 'reels' | 'grid' | 'map';
   setViewMode: (v: 'reels' | 'grid' | 'map') => void;
   cityFilter: string;
@@ -28,6 +30,8 @@ export default function FilterBar({
   setSpaceFilter,
   verifiedFilter,
   setVerifiedFilter,
+  availableFilter,
+  setAvailableFilter,
   viewMode,
   setViewMode,
   cityFilter,
@@ -74,19 +78,32 @@ export default function FilterBar({
         </div>
       </div>
 
-      {/* Abas de Categoria (Flex-wrap para evitar corte em qualquer tela) */}
+      {/* Abas de Categoria e Filtros Rápidos (Flex-wrap) */}
       <div className="w-full">
         <div className="flex flex-wrap gap-1.5 sm:gap-2">
           <button
-            onClick={() => { setCategoryFilter(''); setSpaceFilter(false); }}
+            onClick={() => { setCategoryFilter(''); setSpaceFilter(false); if (setAvailableFilter) setAvailableFilter(false); }}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
-              categoryFilter === '' && !spaceFilter
+              categoryFilter === '' && !spaceFilter && !availableFilter && !verifiedFilter
                 ? 'bg-linear-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md shadow-gold-primary/10'
                 : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
           >
             Todos
           </button>
+          {setAvailableFilter && (
+            <button
+              onClick={() => { setAvailableFilter(!availableFilter); }}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border flex items-center gap-1.5 ${
+                availableFilter
+                  ? 'bg-emerald-500 border-emerald-400 text-dark-bg shadow-md shadow-emerald-500/20'
+                  : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${availableFilter ? 'bg-dark-bg' : 'bg-emerald-400 animate-pulse'}`} />
+              Online Agora
+            </button>
+          )}
           <button
             onClick={() => { setCategoryFilter('escort'); setSpaceFilter(false); }}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
@@ -108,7 +125,7 @@ export default function FilterBar({
             🧘 Massagens
           </button>
           <button
-            onClick={() => { setSpaceFilter(true); }}
+            onClick={() => { setSpaceFilter(!spaceFilter); }}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
               spaceFilter
                 ? 'bg-linear-to-r from-emerald-600 to-emerald-800 border-emerald-600 text-white shadow-md shadow-emerald-600/10'

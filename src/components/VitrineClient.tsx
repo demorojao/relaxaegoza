@@ -175,6 +175,7 @@ export default function VitrineClient({
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [spaceFilter, setSpaceFilter] = useState<boolean>(false);
   const [verifiedFilter, setVerifiedFilter] = useState<boolean>(false);
+  const [availableFilter, setAvailableFilter] = useState<boolean>(false);
   const [genderFilter, setGenderFilter] = useState<'Feminino' | 'Masculino' | 'Trans' | ''>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -462,13 +463,13 @@ export default function VitrineClient({
   };
 
   useEffect(() => {
-    const hasActiveFilters = cityFilter || neighborhoodFilter || categoryFilter || ageFilter || priceFilter || selectedSpecialties.length > 0 || spaceFilter || verifiedFilter || genderFilter || currentTab !== 'ads';
+    const hasActiveFilters = cityFilter || neighborhoodFilter || categoryFilter || ageFilter || priceFilter || selectedSpecialties.length > 0 || spaceFilter || verifiedFilter || availableFilter || genderFilter || currentTab !== 'ads';
     if (hasActiveFilters) {
       fetchProfiles();
     } else {
       setProfiles(sortProfiles(initialProfiles, userCoords));
     }
-  }, [cityFilter, neighborhoodFilter, categoryFilter, ageFilter, priceFilter, selectedSpecialties, spaceFilter, verifiedFilter, genderFilter, initialProfiles, userCoords, currentTab]);
+  }, [cityFilter, neighborhoodFilter, categoryFilter, ageFilter, priceFilter, selectedSpecialties, spaceFilter, verifiedFilter, availableFilter, genderFilter, initialProfiles, userCoords, currentTab]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -620,6 +621,11 @@ export default function VitrineClient({
       // Filtro de Verificados
       if (verifiedFilter) {
         filteredData = filteredData.filter(p => p.verification_status === 'verified');
+      }
+
+      // Filtro de Disponível Agora
+      if (availableFilter) {
+        filteredData = filteredData.filter(p => p.is_available_now && (!p.available_until || new Date(p.available_until) > new Date()));
       }
 
       // Filtro de Gênero
@@ -933,6 +939,8 @@ export default function VitrineClient({
           setSpaceFilter={setSpaceFilter}
           verifiedFilter={verifiedFilter}
           setVerifiedFilter={setVerifiedFilter}
+          availableFilter={availableFilter}
+          setAvailableFilter={setAvailableFilter}
           viewMode={viewMode}
           setViewMode={setViewMode}
           cityFilter={cityFilter}

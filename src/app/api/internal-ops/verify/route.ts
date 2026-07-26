@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       reportId,
       isBoostGrant,
       boostHours,
+      isNotificationsList,
       isBroadcastNotification,
       isDirectNotification,
       notificationTitle,
@@ -68,6 +69,27 @@ export async function POST(req: NextRequest) {
       isResetPassword,
       newPassword
     } = await req.json();
+
+    // Se for listagem simples de histórico de notificações enviadas
+    if (isNotificationsList) {
+      const { data: sentNotifications, error: notifErr } = await supabaseService
+        .from('profile_notifications')
+        .select(`
+          id,
+          profile_id,
+          title,
+          content,
+          type,
+          is_read,
+          created_at,
+          profiles:profiles(id, name, avatar_url, role)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      if (notifErr) throw notifErr;
+      return NextResponse.json({ success: true, notifications: sentNotifications || [] });
+    }
 
     // Se for listagem simples de denúncias, não exige PIN de segurança
     if (isReportsList) {

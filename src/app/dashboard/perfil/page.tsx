@@ -142,9 +142,10 @@ export default function ProfileEditor() {
       
       if (data) {
         setProfile(data);
-        setStageName(data.name || '');
+        setImageConsent(true); // Manter consentimento pré-marcado para perfis existentes
+        setStageName(data.name || user.user_metadata?.name || user.user_metadata?.full_name || '');
         setAge(data.age || 18);
-        setWhatsapp(formatPhone(data.whatsapp || ''));
+        setWhatsapp(formatPhone(data.whatsapp || user.user_metadata?.whatsapp || ''));
         if (data.business_hours && typeof data.business_hours === 'object' && Object.keys(data.business_hours).length > 0) {
           setBusinessHours(data.business_hours);
         } else {
@@ -152,7 +153,7 @@ export default function ProfileEditor() {
         }
         setWhatsappCustomMessage(data.whatsapp_custom_message || '');
         setNeighborhood(data.neighborhood || '');
-        setCity(data.city || '');
+        setCity(data.city || user.user_metadata?.city || '');
         const numRate = Number(data.price_per_hour);
         if (!numRate || numRate === 0 || numRate < 300) {
           setIsConsultRate(true);
@@ -182,6 +183,8 @@ export default function ProfileEditor() {
           setRules(rulePart);
         } else {
           setSpecialties(bioText);
+          setWhatsIncluded('');
+          setRules('');
         }
 
         // Buscar especialidades cadastradas e do perfil
@@ -301,8 +304,8 @@ export default function ProfileEditor() {
     }
 
     // Validar Valor Mínimo da Sessão (Premium/Luxo)
-    if (Number(rate) < 300) {
-      alert('O Relaxe & Goze é um portal exclusivo de alto padrão (Premium/Luxo). O valor mínimo de sessão aceito é de R$ 300,00 por hora.');
+    if (!isConsultRate && Number(rate) < 300) {
+      alert('O valor mínimo aceito por sessão/hora é R$ 300,00. Ou marque a opção "Consultar valor".');
       return;
     }
 
@@ -1310,10 +1313,10 @@ export default function ProfileEditor() {
                 rows={3}
                 className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors leading-relaxed"
                 placeholder="Ex: Formada em terapias corporais na Índia, focada no alinhamento..."
-                required
               />
               <span className="text-[10px] text-gray-500 font-light block">Foque nas suas habilidades e técnicas corporais de destaque.</span>
             </div>
+
             {/* O que está Incluso na Sessão */}
             <div className="space-y-1.5">
               <label htmlFor="whats-included-input" className="text-xs text-gray-400 font-medium">O que está Incluso no Atendimento</label>
@@ -1325,7 +1328,6 @@ export default function ProfileEditor() {
                 rows={3}
                 className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors leading-relaxed"
                 placeholder="Ex: Toalhas limpas, óleos essenciais orgânicos..."
-                required
               />
               <span className="text-[10px] text-gray-500 font-light block">Liste toda a infraestrutura e materiais descartáveis para passar segurança.</span>
             </div>
@@ -1341,7 +1343,6 @@ export default function ProfileEditor() {
                 rows={3}
                 className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors leading-relaxed"
                 placeholder="Ex: Somente com agendamento prévio de no mínimo 1 hora. Não realizo..."
-                required
               />
               <span className="text-[10px] text-gray-500 font-light block">Defina limites claros de comportamento e etiqueta para blindar seu tempo.</span>
             </div>

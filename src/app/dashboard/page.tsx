@@ -16,7 +16,12 @@ import {
   Lock,
   Building2,
   Camera,
-  Upload
+  Upload,
+  Copy,
+  ExternalLink,
+  Edit3,
+  PlusCircle,
+  Check
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -28,6 +33,15 @@ import { uploadToR2 } from '@/lib/r2Client';
 export default function DashboardMetrics() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleCopyProfileLink = () => {
+    if (!profile?.id) return;
+    const profileUrl = `${window.location.origin}/perfil/${profile.id}`;
+    navigator.clipboard.writeText(profileUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
   const [profile, setProfile] = useState<any>(null);
   const [isAvailable, setIsAvailable] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
@@ -594,6 +608,73 @@ export default function DashboardMetrics() {
               isAvailable ? 'translate-x-6' : 'translate-x-0'
             }`} />
           </button>
+        </div>
+      </div>
+
+      {/* Barra de Ações Rápidas da Profissional */}
+      <div className="glass-effect rounded-2xl border border-dark-border/60 p-4 bg-linear-to-r from-gold-primary/5 via-dark-bg/60 to-transparent">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-gray-200">
+            <Sparkles className="w-4 h-4 text-gold-primary animate-pulse shrink-0" />
+            <span>Ações Rápidas do Anúncio</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+            {/* Copiar Link */}
+            <button
+              onClick={handleCopyProfileLink}
+              title="Copiar Link do Meu Perfil para compartilhar no WhatsApp / Instagram"
+              className="flex-1 md:flex-none px-3.5 py-2 rounded-xl bg-black/50 hover:bg-black/80 border border-white/10 text-xs font-medium text-gray-200 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+            >
+              {copiedLink ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-emerald-400 font-semibold">Link Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5 text-gold-primary" />
+                  <span>Copiar Link do Perfil</span>
+                </>
+              )}
+            </button>
+
+            {/* Ver Perfil Público */}
+            {profile?.id && (
+              <a
+                href={`/perfil/${profile.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Abrir meu perfil público numa nova aba"
+                className="flex-1 md:flex-none px-3.5 py-2 rounded-xl bg-black/50 hover:bg-black/80 border border-white/10 text-xs font-medium text-gray-200 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-gold-primary" />
+                <span>Ver Meu Perfil Público</span>
+              </a>
+            )}
+
+            {/* Postar Story */}
+            <Link href="/dashboard/stories" className="flex-1 md:flex-none">
+              <button
+                title="Postar um novo Story efêmero"
+                className="w-full px-3.5 py-2 rounded-xl bg-gold-primary/10 hover:bg-gold-primary/20 border border-gold-primary/30 text-xs font-semibold text-gold-light hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <PlusCircle className="w-3.5 h-3.5 text-gold-primary" />
+                <span>Postar Story</span>
+              </button>
+            </Link>
+
+            {/* Editar Dados */}
+            <Link href="/dashboard/perfil" className="flex-1 md:flex-none">
+              <button
+                title="Editar informações do perfil"
+                className="w-full px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-gray-300 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-gray-400" />
+                <span>Editar Perfil</span>
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
 

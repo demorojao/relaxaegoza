@@ -201,7 +201,7 @@ export default function RegisterPage() {
                 <div className="space-y-1">
                   <p className="font-semibold text-white">Portal de Alto Padrão & Luxo</p>
                   <p className="text-gray-400 font-light leading-relaxed">
-                    O Relaxe & Goze é uma vitrine exclusiva para acompanhantes de luxo e massoterapeutas de elite. Para preservar o padrão premium do portal, <span className="text-gold-primary font-medium">exigimos o valor mínimo de R$ 300,00 por hora</span> em todos os anúncios publicados.
+                    O Relaxe & Goze é uma vitrine exclusiva para acompanhantes de luxo e massoterapeutas de elite. Para preservar o padrão premium do portal, <span className="text-gold-primary font-medium">exigimos o valor mínimo de R$ 300,00 por hora (ou a opção "Consultar valor")</span> em todos os anúncios publicados.
                   </p>
                 </div>
               </div>

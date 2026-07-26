@@ -30,7 +30,9 @@ import {
   KeyRound,
   Bell,
   Send,
-  Megaphone
+  Megaphone,
+  CheckCircle2,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -104,6 +106,9 @@ export default function AdminDashboardClient({
   const [reports, setReports] = useState<any[]>([]);
   const [loadingReports, setLoadingReports] = useState(false);
 
+  const [sentNotifications, setSentNotifications] = useState<any[]>([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+
   // Estado de Autenticação Obrigatória
   const [authenticating, setAuthenticating] = useState(true);
 
@@ -168,7 +173,14 @@ export default function AdminDashboardClient({
 
   useEffect(() => {
     fetchReports();
+    fetchSentNotifications();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'broadcast') {
+      fetchSentNotifications();
+    }
+  }, [activeTab]);
 
   const handleUnlock = () => {
     if (!unlockPin) return;
@@ -235,6 +247,33 @@ export default function AdminDashboardClient({
       console.error(err);
     } finally {
       setLoadingReports(false);
+    }
+  };
+
+  const fetchSentNotifications = async () => {
+    setLoadingNotifications(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/internal-ops/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'x-admin-secret': adminSecret
+        },
+        body: JSON.stringify({ isNotificationsList: true })
+      });
+
+      const res = await response.json();
+      if (res.success && res.notifications) {
+        setSentNotifications(res.notifications);
+      }
+    } catch (err) {
+      console.error('Erro ao buscar histórico de notificações:', err);
+    } finally {
+      setLoadingNotifications(false);
     }
   };
 
@@ -594,10 +633,11 @@ export default function AdminDashboardClient({
         const res = await response.json();
         if (!response.ok) throw new Error(res.error || 'Erro ao disparar notificação.');
 
-        setBroadcastSuccess(`Notificação enviada com sucesso para ${res.count} usuários!`);
+        setBroadcastSuccess(`Notificação enviada com sucesso para ${res.count} usuários! Status atual: Entregue na caixa de entrada (Pendente de leitura).`);
         setBroadcastTitle('');
         setBroadcastContent('');
-        setTimeout(() => setBroadcastSuccess(''), 6000);
+        fetchSentNotifications();
+        setTimeout(() => setBroadcastSuccess(''), 8000);
       } catch (err: any) {
         alert(err.message || 'Erro ao disparar notificação em massa.');
       } finally {
@@ -636,10 +676,11 @@ export default function AdminDashboardClient({
       const res = await response.json();
       if (!response.ok) throw new Error(res.error || 'Erro ao enviar notificação.');
 
-      alert(`Notificação enviada com sucesso para ${directNotifModal.profileName}!`);
+      alert(`📢 Notificação enviada com sucesso para ${directNotifModal.profileName}!\n\nStatus Inicial: ENTREGUE (Pendente de leitura pelo usuário).\nVocê pode acompanhar em tempo real se o usuário já leu acessando a aba "Notificações" no painel.`);
       setDirectNotifModal({ open: false, profileId: '', profileName: '' });
       setDirectTitle('');
       setDirectContent('');
+      fetchSentNotifications();
     } catch (err: any) {
       alert(err.message || 'Erro ao enviar notificação.');
     } finally {
@@ -1510,6 +1551,7 @@ export default function AdminDashboardClient({
         </div>
       ) : activeTab === 'broadcast' ? (
         /* Aba de Disparo de Notificações em Massa (Broadcast) */
+        <>
         <Card variant="glass" className="p-6 md:p-8 space-y-6 max-w-3xl mx-auto border-gold-primary/30 bg-black/40">
           <div className="flex items-center gap-3 border-b border-white/10 pb-4">
             <div className="w-10 h-10 bg-gold-primary/10 rounded-xl flex items-center justify-center text-gold-primary border border-gold-primary/20">
@@ -1601,10 +1643,141 @@ export default function AdminDashboardClient({
               className="w-full py-3 text-xs font-bold uppercase tracking-wider cursor-pointer"
             >
               <Send className="w-4 h-4 mr-2" />
-              Disparar Notificação em Massa (Exige PIN)
+              Disparar Notificação em Massa
             </Button>
           </form>
         </Card>
+
+        {/* Histórico & Status de Leitura das Notificações Enviadas */}
+        <Card variant="glass" className="p-6 md:p-8 space-y-6 max-w-4xl mx-auto border-white/10 bg-black/40 mt-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white tracking-wide flex items-center gap-2">
+                  Histórico de Avisos & Status de Leitura
+                  {loadingNotifications && <RefreshCw className="w-3.5 h-3.5 animate-spin text-gold-primary" />}
+                </h2>
+                <p className="text-xs text-gray-400 font-light">
+                  Acompanhe em tempo real se o usuário recebeu e visualizou a mensagem ou aviso enviado.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant="dark"
+              size="sm"
+              onClick={fetchSentNotifications}
+              disabled={loadingNotifications}
+              className="text-xs border border-white/10 hover:bg-white/10 shrink-0 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loadingNotifications ? "animate-spin" : ""}`} />
+              Atualizar Status
+            </Button>
+          </div>
+
+          {/* Métrica de Leitura */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-black/50 border border-white/10 p-4 rounded-xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-gray-400 uppercase font-bold">Total Disparados</span>
+                <span className="text-xl font-bold text-white block mt-0.5">{sentNotifications.length}</span>
+              </div>
+              <Send className="w-5 h-5 text-gray-500" />
+            </div>
+            <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-emerald-300 uppercase font-bold">Lidos / Visualizados</span>
+                <span className="text-xl font-bold text-emerald-400 block mt-0.5">
+                  {sentNotifications.filter(n => n.is_read).length}
+                </span>
+              </div>
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-amber-300 uppercase font-bold">Pendentes de Leitura</span>
+                <span className="text-xl font-bold text-amber-400 block mt-0.5">
+                  {sentNotifications.filter(n => !n.is_read).length}
+                </span>
+              </div>
+              <Clock className="w-5 h-5 text-amber-400 animate-pulse" />
+            </div>
+          </div>
+
+          {/* Lista do Histórico de Avisos com Selo de Leitura */}
+          {sentNotifications.length === 0 ? (
+            <div className="text-center py-10 bg-black/20 rounded-xl border border-white/5 text-gray-500 text-xs">
+              Nenhum aviso ou notificação registrado ainda.
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              {sentNotifications.map((notif) => {
+                const targetProfile = notif.profiles;
+                const isRead = notif.is_read;
+
+                return (
+                  <div 
+                    key={notif.id}
+                    className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-black/40 ${
+                      isRead ? "border-emerald-500/30 bg-emerald-950/10" : "border-amber-500/20 bg-amber-950/10"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0 bg-zinc-900 mt-0.5">
+                        <Image 
+                          src={targetProfile?.avatar_url || '/avatar-placeholder.svg'} 
+                          alt={targetProfile?.name || 'Usuário'} 
+                          fill 
+                          sizes="40px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-bold text-white">
+                            {targetProfile?.name || `Perfil ID: ${notif.profile_id.slice(0, 8)}...`}
+                          </span>
+                          <span className="text-[10px] text-gray-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                            {targetProfile?.role === 'client' ? 'Cliente' : 'Anunciante'}
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-semibold text-gold-light mt-1 flex items-center gap-1.5">
+                          <Bell className="w-3.5 h-3.5 text-gold-primary shrink-0" />
+                          {notif.title}
+                        </h4>
+                        <p className="text-xs text-gray-300 font-light mt-0.5 leading-relaxed">
+                          {notif.content}
+                        </p>
+                        <span className="text-[10px] text-gray-500 font-mono mt-1 block">
+                          Enviado em: {formatDateTime(notif.created_at)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Selo de Status da Notificação */}
+                    <div className="shrink-0 flex items-center sm:flex-col sm:items-end gap-1.5 self-end sm:self-center">
+                      {isRead ? (
+                        <div className="px-3 py-1 bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          Lido / Visualizado ✅
+                        </div>
+                      ) : (
+                        <div className="px-3 py-1 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                          <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                          Entregue • Não lido ainda ⏳
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+        </>
       ) : (
         /* Gerenciar Todos os Anunciantes/Clientes/Hosts */
         <div className="grid grid-cols-1 gap-4">

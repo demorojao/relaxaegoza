@@ -27,7 +27,10 @@ import {
   Clock,
   FileImage,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Share2,
+  Copy,
+  Check
 } from 'lucide-react';
 import { formatWhatsAppLink } from '@/lib/utils';
 import { triggerRevalidate } from '@/lib/revalidate';
@@ -366,6 +369,26 @@ export default function ProfileDetailsClient({
     }
   };
 
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleShareLink = async () => {
+    const shareUrl = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: profile?.name ? `Perfil de ${profile.name} - Relaxe & Goze` : 'Relaxe & Goze',
+          url: shareUrl
+        });
+        return;
+      } catch (err) {
+        // Fallback para área de transferência se cancelar o dialog
+      }
+    }
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
@@ -664,6 +687,26 @@ export default function ProfileDetailsClient({
                 <Building2 className="w-5 h-5" />
               </div>
             )}
+
+            {/* Botão de Compartilhar/Copiar Link */}
+            <button
+              type="button"
+              onClick={handleShareLink}
+              title="Compartilhar Perfil"
+              className="sm:ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-300 hover:text-white transition-all cursor-pointer shadow-sm"
+            >
+              {copiedLink ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-emerald-400">Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-3.5 h-3.5 text-gold-primary" />
+                  <span>Compartilhar</span>
+                </>
+              )}
+            </button>
           </div>
 
           {adTitle && (
