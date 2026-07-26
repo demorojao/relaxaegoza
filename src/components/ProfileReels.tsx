@@ -68,6 +68,12 @@ export default function ProfileReels({
   const [activeReviews, setActiveReviews] = useState<any[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   
+  // Touch swipe states
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+  const [touchEndY, setTouchEndY] = useState<number | null>(null);
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
@@ -227,6 +233,36 @@ export default function ProfileReels({
       const next = current < totalMedia - 1 ? current + 1 : 0;
       return { ...prev, [profileId]: next };
     });
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.targetTouches[0].clientX);
+    setTouchStartY(e.targetTouches[0].clientY);
+    setTouchEndX(null);
+    setTouchEndY(null);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+    setTouchEndY(e.targetTouches[0].clientY);
+  };
+
+  const handleTouchEnd = (profileId: string, totalMedia: number) => {
+    if (touchStartX !== null && touchEndX !== null && totalMedia > 1) {
+      const diffX = touchStartX - touchEndX;
+      const diffY = touchStartY !== null && touchEndY !== null ? touchStartY - touchEndY : 0;
+
+      // Se a distância horizontal for maior que a vertical e > 30px, consideramos um arrastar lateral
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+        if (diffX > 0) {
+          // Swipe para a esquerda (próxima foto)
+          handleNextMedia(profileId, totalMedia);
+        } else {
+          // Swipe para a direita (foto anterior)
+          handlePrevMedia(profileId, totalMedia);
+        }
+      }
+    }
   };
 
   if (loading) {
@@ -434,7 +470,7 @@ export default function ProfileReels({
                 </motion.div>
               ))}
 
-              {/* Left/Right arrows for photo navigation - aparecem ao hover/tap */}
+              {/* Left/Right arrows for photo navigation */}
               {mediaList.length > 1 && (
                 <>
                   <button
@@ -443,10 +479,10 @@ export default function ProfileReels({
                       e.stopPropagation();
                       handlePrevMedia(profile.id, mediaList.length);
                     }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-90 backdrop-blur-sm"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 border border-white/20 flex items-center justify-center text-white shadow-lg backdrop-blur-md active:scale-95 transition-all cursor-pointer"
                     aria-label="Foto anterior"
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-6 h-6 text-gold-light" />
                   </button>
                   <button
                     type="button"
@@ -454,21 +490,46 @@ export default function ProfileReels({
                       e.stopPropagation();
                       handleNextMedia(profile.id, mediaList.length);
                     }}
-                    className="absolute right-20 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-90 backdrop-blur-sm"
+                    className="absolute right-16 md:right-20 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 border border-white/20 flex items-center justify-center text-white shadow-lg backdrop-blur-md active:scale-95 transition-all cursor-pointer"
                     aria-label="Próxima foto"
                   >
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight className="w-6 h-6 text-gold-light" />
                   </button>
                 </>
               )}
 
-              {/* Central tap zone for play/pause and double-tap like */}
+              {/* Central tap / swipe zone */}
               <div 
-                className="absolute inset-0 z-10"
+                className="absolute inset-0 z-10 touch-pan-y"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={() => handleTouchEnd(profile.id, mediaList.length)}
                 onClick={(e) => {
-                  // Ignora cliques nos botões de navegação lateral
                   const target = e.target as HTMLElement;
                   if (target.closest('button') || target.closest('a')) return;
+
+                  // Se o usuário fez swipe horizontal recente, ignorar clique
+                  if (touchStartX !== null && touchEndX !== null && Math.abs(touchStartX - touchEndX) > 20) {
+                    return;
+                  }
+
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const clickX = e.clientX - rect.left;
+                  const width = rect.width;
+
+                  // Se houver mais de 1 foto e clicar no terço esquerdo -> voltar foto
+                  if (mediaList.length > 1 && clickX / width < 0.3) {
+                    handlePrevMedia(profile.id, mediaList.length);
+                    return;
+                  }
+
+                  // Se houver mais de 1 foto e clicar no terço direito -> avançar foto
+                  if (mediaList.length > 1 && clickX / width > 0.7) {
+                    handleNextMedia(profile.id, mediaList.length);
+                    return;
+                  }
+
+                  // Clique no centro: duplo clique curte, clique simples toca/pausa vídeo
                   const now = Date.now();
                   if (now - lastTap < 300) {
                     handleDoubleTap(e, profile.id);

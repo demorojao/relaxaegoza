@@ -88,23 +88,60 @@ export default function VitrineClient({
       setLoadingReelsPhotos(true);
       try {
         const photosMap: Record<string, { url: string; type: 'photo' | 'video' }[]> = {};
+        const profileIds = profiles.map(p => p.id);
+
+        // Buscar todas as fotos da galeria cadastradas na tabela profile_photos
+        const { data: galleryData } = await supabase
+          .from('profile_photos')
+          .select('profile_id, url, media_type')
+          .in('profile_id', profileIds)
+          .order('created_at', { ascending: false });
+
+        const galleryMap: Record<string, { url: string; type: 'photo' | 'video' }[]> = {};
+        if (galleryData) {
+          galleryData.forEach(item => {
+            if (!galleryMap[item.profile_id]) galleryMap[item.profile_id] = [];
+            galleryMap[item.profile_id].push({
+              url: item.url,
+              type: item.media_type === 'video' ? 'video' : 'photo'
+            });
+          });
+        }
 
         profiles.forEach(p => {
           photosMap[p.id] = [];
-          
-          // Add ad selected photos & videos if available
+          const addedUrls = new Set<string>();
+
+          // 1. Fotos e Vídeos do Anúncio Principal
           const adPhotos = (p as any).ad_photos || [];
           const adVideos = (p as any).ad_videos || [];
 
-          if (adPhotos.length > 0 || adVideos.length > 0) {
-            adPhotos.forEach((url: string) => {
+          adPhotos.forEach((url: string) => {
+            if (url && !addedUrls.has(url)) {
+              addedUrls.add(url);
               photosMap[p.id].push({ url, type: 'photo' });
-            });
-            adVideos.forEach((url: string) => {
+            }
+          });
+
+          adVideos.forEach((url: string) => {
+            if (url && !addedUrls.has(url)) {
+              addedUrls.add(url);
               photosMap[p.id].push({ url, type: 'video' });
-            });
-          } else if (p.avatar_url) {
-            // Fallback to avatar if no ad media is present
+            }
+          });
+
+          // 2. Fotos da Galeria do Perfil
+          const gMedia = galleryMap[p.id] || [];
+          gMedia.forEach(item => {
+            if (item.url && !addedUrls.has(item.url)) {
+              addedUrls.add(item.url);
+              photosMap[p.id].push(item);
+            }
+          });
+
+          // 3. Fallback Foto de Perfil / Avatar
+          if (p.avatar_url && !addedUrls.has(p.avatar_url)) {
+            addedUrls.add(p.avatar_url);
             photosMap[p.id].push({ url: p.avatar_url, type: 'photo' });
           }
         });
