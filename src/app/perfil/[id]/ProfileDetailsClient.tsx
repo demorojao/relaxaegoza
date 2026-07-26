@@ -109,6 +109,50 @@ const getStatusExpediente = (businessHours: any) => {
   return { status: 'Indisponível', next: null };
 };
 
+function formatScheduleGrouped(hours: Record<string, { active: boolean; start?: string; end?: string }>) {
+  if (!hours || typeof hours !== 'object') return [];
+
+  const days = [
+    { key: 'Seg', label: 'Seg' },
+    { key: 'Ter', label: 'Ter' },
+    { key: 'Qua', label: 'Qua' },
+    { key: 'Qui', label: 'Qui' },
+    { key: 'Sex', label: 'Sex' },
+    { key: 'Sab', label: 'Sáb' },
+    { key: 'Dom', label: 'Dom' }
+  ];
+
+  const groups: Array<{ startDay: string; endDay: string; active: boolean; start?: string; end?: string }> = [];
+
+  days.forEach((dayObj) => {
+    const info = hours[dayObj.key] || { active: false };
+    const lastGroup = groups[groups.length - 1];
+
+    if (
+      lastGroup &&
+      lastGroup.active === info.active &&
+      lastGroup.start === info.start &&
+      lastGroup.end === info.end
+    ) {
+      lastGroup.endDay = dayObj.label;
+    } else {
+      groups.push({
+        startDay: dayObj.label,
+        endDay: dayObj.label,
+        active: info.active,
+        start: info.start,
+        end: info.end
+      });
+    }
+  });
+
+  return groups.map((g) => {
+    const dayText = g.startDay === g.endDay ? g.startDay : `${g.startDay} a ${g.endDay}`;
+    const timeText = g.active && g.start && g.end ? `${g.start} às ${g.end}` : 'Folga';
+    return { dayText, timeText, active: g.active };
+  });
+}
+
 // Componente de Conteúdo Exclusivo para o perfil público
 function PremiumSection({ providerId, providerName, subscriptionPriceCents }: { providerId: string; providerName: string; subscriptionPriceCents?: number }) {
   const [medias, setMedias] = React.useState<any[]>([]);
@@ -883,9 +927,9 @@ export default function ProfileDetailsClient({
 
         {/* Horários de Expediente */}
         {profile.business_hours && typeof profile.business_hours === 'object' && Object.keys(profile.business_hours).length > 0 && (
-          <div className="bg-black/40 border border-white/5 rounded-2xl p-4 sm:p-5 space-y-3.5 pt-6 border-t border-white/10">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-widest flex items-center gap-2">
+          <div className="bg-black/40 border border-white/5 rounded-2xl p-4 sm:p-5 space-y-3.5 pt-5">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h3 className="text-xs font-semibold text-white uppercase tracking-widest flex items-center gap-2">
                 <Clock className="w-4 h-4 text-gold-primary" />
                 Horário de Atendimento
               </h3>
@@ -893,7 +937,7 @@ export default function ProfileDetailsClient({
                 const { status, next } = getStatusExpediente(profile.business_hours);
                 if (status === 'Em expediente') {
                   return (
-                    <span className="inline-flex items-center gap-1.5 text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider animate-pulse">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full font-bold uppercase tracking-wider animate-pulse">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                       Em expediente
                     </span>
@@ -901,7 +945,7 @@ export default function ProfileDetailsClient({
                 } else {
                   return (
                     <div className="flex flex-col items-end gap-0.5">
-                      <span className="inline-flex items-center gap-1.5 text-[10px] bg-white/5 text-gray-400 border border-white/10 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] bg-white/5 text-gray-400 border border-white/10 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
                         <span className="w-1.5 h-1.5 rounded-full bg-gray-500" />
                         Indisponível
                       </span>
@@ -916,21 +960,23 @@ export default function ProfileDetailsClient({
               })()}
             </div>
 
-            {/* Lista expandível sutil de horários semanais */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
-              {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'].map(day => {
-                const info = profile.business_hours[day] || { active: false };
-                return (
-                  <div key={day} className="flex justify-between items-center text-[10px] sm:text-xs bg-black/20 border border-white/5 p-2 rounded-lg">
-                    <span className="font-medium text-gray-400">{day}</span>
-                    {info.active ? (
-                      <span className="text-gray-300 font-light font-mono">{info.start} - {info.end}</span>
-                    ) : (
-                      <span className="text-gray-600 font-light italic">Folga</span>
-                    )}
-                  </div>
-                );
-              })}
+            {/* Resumo Agrupado e Limpo dos Horários */}
+            <div className="flex flex-wrap gap-2 pt-1">
+              {formatScheduleGrouped(profile.business_hours).map((item, idx) => (
+                <div 
+                  key={idx} 
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs border ${
+                    item.active 
+                      ? 'bg-white/5 border-white/10 text-gray-200' 
+                      : 'bg-black/20 border-white/5 text-gray-500'
+                  }`}
+                >
+                  <span className="font-semibold text-white">{item.dayText}:</span>
+                  <span className={item.active ? 'text-gold-light font-medium' : 'text-gray-500 italic'}>
+                    {item.timeText}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}
