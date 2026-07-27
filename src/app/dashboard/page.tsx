@@ -27,6 +27,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import HostDashboardView from '@/components/HostDashboardView';
 import AdEditorModal from '@/components/AdEditorModal';
+import ExclusiveContentManager from '@/components/ExclusiveContentManager';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { uploadToR2 } from '@/lib/r2Client';
 
@@ -759,6 +760,11 @@ export default function DashboardMetrics() {
           </div>
         </div>
       </div>
+
+      {/* Módulo de Clube VIP e Mídias Exclusivas */}
+      {profile && profile.role === 'provider' && (
+        <ExclusiveContentManager profile={profile} onSave={fetchProfile} />
+      )}
 
       {/* Seção de Estatísticas e Tráfego */}
       <div className="relative">
