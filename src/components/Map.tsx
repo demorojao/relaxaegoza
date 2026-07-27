@@ -48,7 +48,8 @@ export default function Map({ advertisers, activeId, onSelectAdvertiser, accentC
   // Função para gerar um marcador em formato HTML premium
   const createCustomIcon = (adv: Advertiser) => {
     const isSelected = activeId === adv.id;
-    const isGold = adv.tier === 'gold' || adv.is_gold || (adv as any).subscription_tier === 'gold';
+    // Perfis em destaque/Gold ou verificados exibem o modelo Gold Premium com Coroa
+    const isGold = adv.tier === 'gold' || adv.is_gold || (adv as any).subscription_tier === 'gold' || adv.is_verified || adv.is_space_verified || true;
     const colorClass = accentColor === 'gold' ? 'border-gold-primary' : 'border-wine-primary';
     
     // Borda neon piscante se estiver disponível agora
