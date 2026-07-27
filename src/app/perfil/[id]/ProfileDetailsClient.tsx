@@ -1021,6 +1021,12 @@ export default function ProfileDetailsClient({
               <MapPin className="w-4 h-4 text-wine-light/80" />
               <span>{profile.neighborhood || 'Bairro não informado'}, {profile.city}</span>
             </div>
+
+            {/* Privacy Protection Badge */}
+            <div className="bg-black/40 border border-gold-primary/20 p-2.5 rounded-xl flex items-center gap-2 text-[11px] text-gray-300">
+              <ShieldCheck className="w-4 h-4 text-gold-primary shrink-0 animate-pulse" />
+              <span>Endereço exato e sala são informados no WhatsApp após agendamento prévio.</span>
+            </div>
             
             {/* Badges de Destaque do Perfil */}
             <div className="flex flex-wrap gap-2 mt-1">

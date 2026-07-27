@@ -28,6 +28,7 @@ import { useRouter } from 'next/navigation';
 import HostDashboardView from '@/components/HostDashboardView';
 import AdEditorModal from '@/components/AdEditorModal';
 import ExclusiveContentManager from '@/components/ExclusiveContentManager';
+import FinancialGoalsCalculator from '@/components/FinancialGoalsCalculator';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { uploadToR2 } from '@/lib/r2Client';
 
@@ -42,6 +43,16 @@ export default function DashboardMetrics() {
     navigator.clipboard.writeText(profileUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const [copiedBioLink, setCopiedBioLink] = useState(false);
+
+  const handleCopyBioLink = () => {
+    if (!profile?.id) return;
+    const bioUrl = `${window.location.origin}/bio/${profile.id}`;
+    navigator.clipboard.writeText(bioUrl);
+    setCopiedBioLink(true);
+    setTimeout(() => setCopiedBioLink(false), 2500);
   };
   const [profile, setProfile] = useState<any>(null);
   const [isAvailable, setIsAvailable] = useState(false);
@@ -640,6 +651,25 @@ export default function DashboardMetrics() {
               )}
             </button>
 
+            {/* Copiar Link na Bio */}
+            <button
+              onClick={handleCopyBioLink}
+              title="Copiar Cartão VIP Digital ideal para colocar no Instagram / TikTok"
+              className="flex-1 md:flex-none px-3.5 py-2 rounded-xl bg-gold-primary/10 hover:bg-gold-primary/20 border border-gold-primary/30 text-xs font-semibold text-gold-light hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+            >
+              {copiedBioLink ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-emerald-400 font-semibold">Link Bio Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-gold-primary" />
+                  <span>Copiar Cartão na Bio (Instagram)</span>
+                </>
+              )}
+            </button>
+
             {/* Ver Perfil Público */}
             {profile?.id && (
               <a
@@ -789,6 +819,11 @@ export default function DashboardMetrics() {
         )}
 
         <div className={`space-y-8 ${tier !== 'gold' ? 'select-none pointer-events-none' : ''}`}>
+          {/* Calculadora de Meta Financeira Mensal */}
+          {profile && profile.role === 'provider' && (
+            <FinancialGoalsCalculator profile={profile} onSave={fetchProfile} />
+          )}
+
           {/* Grid containing Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {/* Views */}
