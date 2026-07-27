@@ -122,6 +122,7 @@ export default function PricingPage() {
         'Botão "Disponível Agora" ativo (Borda Neon)',
         'Selo de Espaço Validado via Vídeo (Online)',
         'Estatísticas avançadas de tráfego (Cliques / Views)',
+        'Calculadora de Metas Financeiras & Progresso 📊',
         'Selo de Destaque Premium no mapa interativo',
         'Atendimento e assessoria de marketing dedicados'
       ],
