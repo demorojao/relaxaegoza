@@ -34,6 +34,8 @@ export interface Advertiser {
   rate: number; // Valor por hora
   photos: string[];
   amenities: string[];
+  tier?: 'free' | 'pro' | 'gold';
+  is_gold?: boolean;
 }
 
 export const MOCK_AMENITIES: Amenity[] = [

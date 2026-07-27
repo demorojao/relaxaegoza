@@ -44,7 +44,9 @@ export default function ProfileGrid({ loading, profiles, viewMode, userCoords, s
     city: p.city,
     rate: Number((showAdInfo && p.ad_price !== undefined && p.ad_price !== null) ? p.ad_price : p.price_per_hour) || 0,
     photos: [(showAdInfo && p.ad_photos && p.ad_photos.length > 0) ? p.ad_photos[0] : (p.avatar_url || '/avatar-placeholder.svg')],
-    amenities: p.amenities || []
+    amenities: p.amenities || [],
+    tier: p.subscription_tier || 'free',
+    is_gold: p.subscription_tier === 'gold'
   }));
 
   const mapCenter: [number, number] = userCoords
