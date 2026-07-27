@@ -162,7 +162,7 @@ function formatScheduleGrouped(hours: Record<string, { active: boolean; start?: 
 
 // Componente de Conteúdo Exclusivo para o perfil público
 // Componente de Conteúdo Exclusivo (Clube VIP) para o perfil público
-function PremiumSection({ providerId, providerName, subscriptionPriceCents, currentUser }: { providerId: string; providerName: string; subscriptionPriceCents?: number; currentUser?: any }) {
+function PremiumSection({ providerId, providerName, subscriptionPriceCents, currentUser, whatsapp }: { providerId: string; providerName: string; subscriptionPriceCents?: number; currentUser?: any; whatsapp?: string }) {
   const [medias, setMedias] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [isSubscribed, setIsSubscribed] = React.useState(false);
@@ -253,6 +253,9 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
     }
   };
 
+  const vipWhatsappMessage = `Olá ${providerName}! Vi seu perfil no Relaxe & Goze e gostaria de assinar seu Clube VIP ou comprar mídias e conteúdos exclusivos diretamente!`;
+  const vipWhatsappLink = formatWhatsAppLink(whatsapp, vipWhatsappMessage);
+
   if (loading) {
     return (
       <div className="py-6 flex justify-center">
@@ -261,23 +264,21 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
     );
   }
 
-  if (medias.length === 0) return null;
-
   return (
-    <div className="space-y-4 pt-6 border-t border-gold-primary/20 bg-gradient-to-b from-gold-primary/5 via-transparent to-transparent p-5 rounded-2xl border">
+    <div id="clube-vip-section" className="space-y-5 pt-6 border-t border-gold-primary/30 bg-gradient-to-b from-gold-primary/10 via-black/50 to-transparent p-5 sm:p-6 rounded-2xl border shadow-xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <Crown className="w-5 h-5 text-gold-primary animate-pulse" />
+          <h3 className="text-base sm:text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <Crown className="w-5.5 h-5.5 text-gold-primary animate-pulse" />
             Clube VIP & Conteúdo Exclusivo
             <span className="text-[10px] bg-gold-primary/20 text-gold-light border border-gold-primary/30 px-2.5 py-0.5 rounded-full font-bold">
-              {medias.length} {medias.length === 1 ? 'Mídia' : 'Mídias'}
+              {medias.length > 0 ? `${medias.length} ${medias.length === 1 ? 'Mídia' : 'Mídias'}` : 'Acervo VIP'}
             </span>
           </h3>
-          <p className="text-xs text-gray-400 font-light mt-0.5">
+          <p className="text-xs text-gray-300 font-light mt-1 leading-relaxed">
             {isSubscribed 
               ? `Você é um assinante VIP ativo de ${providerName}!` 
-              : `Fotos e vídeos inéditos em alta definição liberados exclusivamente para assinantes.`}
+              : `Assine o clube de ${providerName} para ter acesso a ensaios sensuais, vídeos inéditos e atendimento exclusivo.`}
           </p>
         </div>
 
@@ -288,101 +289,144 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
         )}
       </div>
 
-      {/* Grid de Mídias (Desbloqueado vs Borrado) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-        {medias.map((m) => {
-          const isVideo = m.media_type === 'video' || m.media_url?.includes('.mp4') || m.media_url?.includes('.webm');
-          return (
-            <div 
-              key={m.id} 
-              className={`relative aspect-[3/4] rounded-xl overflow-hidden border ${isSubscribed ? 'border-emerald-500/40 hover:border-emerald-400 cursor-pointer' : 'border-gold-primary/20'} bg-black/60 group transition-all`}
-              onClick={() => {
-                if (isSubscribed) {
-                  setActiveMediaPreview({ url: getCDNUrl(m.media_url || m.preview_url), type: isVideo ? 'video' : 'photo' });
-                }
-              }}
-            >
-              {isSubscribed ? (
-                <>
-                  <img
-                    src={getCDNUrl(m.preview_url || m.media_url)}
-                    alt={m.title || ''}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 select-none"
-                    onContextMenu={(e) => e.preventDefault()}
-                  />
-
-                  {isVideo && (
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                      <div className="w-10 h-10 rounded-full bg-gold-primary/90 text-dark-bg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <Play className="w-5 h-5 fill-dark-bg ml-0.5" />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="px-2.5 py-1 rounded-lg bg-gold-primary text-dark-bg text-[10px] font-bold flex items-center gap-1 shadow-md">
-                      {isVideo ? <Play className="w-3 h-3 fill-dark-bg" /> : <Eye className="w-3 h-3" />}
-                      {isVideo ? 'Assistir Vídeo HD' : 'Ampliar HD'}
-                    </span>
-                  </div>
-                  <span className="absolute top-2 left-2 bg-emerald-500/90 backdrop-blur-xs text-dark-bg font-extrabold px-1.5 py-0.5 rounded text-[8px] flex items-center gap-1">
-                    {isVideo ? <Video className="w-2.5 h-2.5" /> : null}
-                    {isVideo ? 'VÍDEO VIP' : 'FOTO HD'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  {/* Thumbnail Borrada */}
-                  {m.preview_url ? (
+      {/* Grid de Mídias ou Mock Preview Teaser quando medias.length === 0 */}
+      {medias.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {medias.map((m) => {
+            const isVideo = m.media_type === 'video' || m.media_url?.includes('.mp4') || m.media_url?.includes('.webm');
+            return (
+              <div 
+                key={m.id} 
+                className={`relative aspect-[3/4] rounded-xl overflow-hidden border ${isSubscribed ? 'border-emerald-500/40 hover:border-emerald-400 cursor-pointer' : 'border-gold-primary/20'} bg-black/60 group transition-all`}
+                onClick={() => {
+                  if (isSubscribed) {
+                    setActiveMediaPreview({ url: getCDNUrl(m.media_url || m.preview_url), type: isVideo ? 'video' : 'photo' });
+                  }
+                }}
+              >
+                {isSubscribed ? (
+                  <>
                     <img
-                      src={getCDNUrl(m.preview_url)}
-                      alt=""
-                      className="w-full h-full object-cover blur-md scale-110 select-none pointer-events-none opacity-60"
+                      src={getCDNUrl(m.preview_url || m.media_url)}
+                      alt={m.title || ''}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 select-none"
                       onContextMenu={(e) => e.preventDefault()}
                     />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gold-primary/20 to-wine-primary/20" />
-                  )}
 
-                  {/* Lock overlay */}
-                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1.5 p-2 text-center">
-                    <div className="w-9 h-9 rounded-full bg-black/70 border border-gold-primary/40 flex items-center justify-center shadow-lg">
-                      <Lock className="w-4 h-4 text-gold-primary" />
+                    {isVideo && (
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-gold-primary/90 text-dark-bg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                          <Play className="w-5 h-5 fill-dark-bg ml-0.5" />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="px-2.5 py-1 rounded-lg bg-gold-primary text-dark-bg text-[10px] font-bold flex items-center gap-1 shadow-md">
+                        {isVideo ? <Play className="w-3 h-3 fill-dark-bg" /> : <Eye className="w-3 h-3" />}
+                        {isVideo ? 'Assistir Vídeo HD' : 'Ampliar HD'}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-gold-light font-medium max-w-full truncate">
-                      {m.title || 'Conteúdo Privado'}
+                    <span className="absolute top-2 left-2 bg-emerald-500/90 backdrop-blur-xs text-dark-bg font-extrabold px-1.5 py-0.5 rounded text-[8px] flex items-center gap-1">
+                      {isVideo ? <Video className="w-2.5 h-2.5" /> : null}
+                      {isVideo ? 'VÍDEO VIP' : 'FOTO HD'}
                     </span>
-                  </div>
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Thumbnail Borrada */}
+                    {m.preview_url ? (
+                      <img
+                        src={getCDNUrl(m.preview_url)}
+                        alt=""
+                        className="w-full h-full object-cover blur-md scale-110 select-none pointer-events-none opacity-60"
+                        onContextMenu={(e) => e.preventDefault()}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gold-primary/20 to-wine-primary/20" />
+                    )}
 
-      {/* Call to Action de Assinatura */}
+                    {/* Lock overlay */}
+                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1.5 p-2 text-center">
+                      <div className="w-9 h-9 rounded-full bg-black/70 border border-gold-primary/40 flex items-center justify-center shadow-lg">
+                        <Lock className="w-4 h-4 text-gold-primary" />
+                      </div>
+                      <span className="text-[10px] text-gold-light font-medium max-w-full truncate">
+                        {m.title || 'Conteúdo Privado'}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Preview Teaser para Perfis sem mídias cadastradas na tabela */
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-black/40 border border-gold-primary/20 rounded-xl p-4 flex flex-col items-center text-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-gold-primary/10 border border-gold-primary/30 flex items-center justify-center text-gold-primary">
+              <Eye className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-bold text-white">Ensaio Fotográfico HD</span>
+            <span className="text-[10px] text-gray-400 font-light">Fotos privativas liberadas para assinantes</span>
+          </div>
+
+          <div className="bg-black/40 border border-gold-primary/20 rounded-xl p-4 flex flex-col items-center text-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-gold-primary/10 border border-gold-primary/30 flex items-center justify-center text-gold-primary">
+              <Video className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-bold text-white">Vídeos de Bastidores</span>
+            <span className="text-[10px] text-gray-400 font-light">Vídeos curtos em alta definição e alta taxa de quadros</span>
+          </div>
+
+          <div className="bg-black/40 border border-gold-primary/20 rounded-xl p-4 flex flex-col items-center text-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-gold-primary/10 border border-gold-primary/30 flex items-center justify-center text-gold-primary">
+              <Sparkles className="w-5 h-5 text-gold-primary animate-pulse" />
+            </div>
+            <span className="text-xs font-bold text-white">Canal Direto VIP</span>
+            <span className="text-[10px] text-gray-400 font-light">Compre packs e fotos diretamente via WhatsApp</span>
+          </div>
+        </div>
+      )}
+
+      {/* Call to Action de Assinatura & WhatsApp */}
       {!isSubscribed && (
-        <div className="bg-black/40 border border-gold-primary/30 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
+        <div className="bg-black/60 border border-gold-primary/40 p-4 sm:p-5 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gold-primary/10 border border-gold-primary/30 flex items-center justify-center text-gold-primary shrink-0">
-              <Crown className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-full bg-gold-primary/20 border border-gold-primary/40 flex items-center justify-center text-gold-primary shrink-0 shadow-lg">
+              <Crown className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-white">Assinar o Clube Exclusivo de {providerName}</h4>
-              <p className="text-[11px] text-gray-400 font-light">
-                Acesso ilimitado e imediato a todas as fotos e vídeos privados por {priceFormatted}.
+              <h4 className="text-sm font-bold text-white">Assinar o Clube Exclusivo de {providerName}</h4>
+              <p className="text-xs text-gray-300 font-light mt-0.5">
+                Acesso imediato ao acervo privado ou solicite packs exclusivos diretamente no WhatsApp.
               </p>
             </div>
           </div>
 
-          <button
-            onClick={handleSubscribePix}
-            disabled={subscribing}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-gold-primary/20 shrink-0"
-          >
-            <Sparkles className="w-4 h-4" />
-            {subscribing ? 'Gerando Pix...' : `Assinar Agora com Pix (${priceFormatted})`}
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto shrink-0">
+            <button
+              onClick={handleSubscribePix}
+              disabled={subscribing}
+              className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-gold-primary/20"
+            >
+              <Sparkles className="w-4 h-4" />
+              {subscribing ? 'Gerando Pix...' : `Assinar Pix (${priceFormatted})`}
+            </button>
+
+            {vipWhatsappLink && (
+              <a
+                href={vipWhatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
+              >
+                <span>💬</span>
+                Comprar no WhatsApp
+              </a>
+            )}
+          </div>
         </div>
       )}
 
@@ -1058,7 +1102,14 @@ export default function ProfileDetailsClient({
                   <Building2 className="w-3.5 h-3.5" /> Espaço Auditado
                 </span>
               )}
-              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gold-primary/20 border border-gold-primary/40 text-gold-light text-[10px] font-bold uppercase tracking-wider shadow-sm animate-pulse">
+              <span 
+                onClick={() => {
+                  const el = document.getElementById('clube-vip-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                title="Clique para ver o Clube VIP e Conteúdos Exclusivos"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gold-primary/20 border border-gold-primary/40 text-gold-light text-[10px] font-bold uppercase tracking-wider shadow-sm animate-pulse cursor-pointer hover:bg-gold-primary/30 transition-all"
+              >
                 <Crown className="w-3.5 h-3.5 text-gold-primary" /> Clube VIP Exclusivo
               </span>
             </div>
@@ -1280,6 +1331,7 @@ export default function ProfileDetailsClient({
           providerName={profile.name} 
           subscriptionPriceCents={profile.subscription_price_cents} 
           currentUser={currentUser} 
+          whatsapp={profile.whatsapp}
         />
 
         {/* Bio & Apresentação Profissional — Destaque sobre as avaliações */}
