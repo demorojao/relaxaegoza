@@ -48,7 +48,7 @@ export default function Map({ advertisers, activeId, onSelectAdvertiser, accentC
   // Função para gerar um marcador em formato HTML premium
   const createCustomIcon = (adv: Advertiser) => {
     const isSelected = activeId === adv.id;
-    const isGold = adv.tier === 'gold' || adv.is_gold;
+    const isGold = adv.tier === 'gold' || adv.is_gold || (adv as any).subscription_tier === 'gold';
     const colorClass = accentColor === 'gold' ? 'border-gold-primary' : 'border-wine-primary';
     
     // Borda neon piscante se estiver disponível agora
@@ -57,26 +57,21 @@ export default function Map({ advertisers, activeId, onSelectAdvertiser, accentC
       : 'ring-1 ring-white/20';
 
     if (isGold) {
-      // ESTILO GOLD PREMIUM EXTRAORDINÁRIO
       const goldSizeClass = isSelected ? 'w-14 h-14 scale-110' : 'w-12 h-12';
       return L.divIcon({
         html: `
-          <div class="relative ${goldSizeClass} transition-all duration-300">
-            {/* Halo Dourado Pulsante de Fundo */}
-            <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 animate-ping opacity-60 blur-xs"></div>
+          <div class="relative ${goldSizeClass} transition-all duration-300" style="overflow: visible !important;">
+            <div class="absolute inset-0 rounded-full bg-amber-400/40 animate-ping"></div>
             
-            {/* Círculo Principal com Borda Metálica Dourada */}
-            <div class="relative w-full h-full rounded-full p-[2.5px] bg-gradient-to-tr from-yellow-600 via-amber-200 to-yellow-500 shadow-[0_0_18px_rgba(234,179,8,0.9)] overflow-hidden">
+            <div class="relative w-full h-full rounded-full p-[2.5px] bg-gradient-to-tr from-yellow-600 via-amber-200 to-yellow-500 shadow-[0_0_20px_rgba(245,158,11,0.95)] overflow-hidden">
               <img src="${adv.photos[0]}" class="w-full h-full object-cover rounded-full" alt="${adv.stage_name}" />
             </div>
 
-            {/* Coroa Dourada Flutuante */}
-            <div class="absolute -top-2 -right-1 bg-yellow-400 text-black text-[9px] font-extrabold px-1 py-0.5 rounded-full shadow-lg border border-yellow-200 flex items-center justify-center">
+            <div class="absolute -top-3 -right-2 bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 text-black text-[11px] font-black px-1.5 py-0.5 rounded-full shadow-2xl border border-white/80 z-50 flex items-center justify-center pointer-events-none" style="z-index: 9999;">
               👑
             </div>
 
-            {/* Status Online Verde */}
-            ${adv.is_available_now ? '<div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-dark-bg animate-pulse"></div>' : ''}
+            ${adv.is_available_now ? '<div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-dark-bg animate-pulse"></div>' : ''}
           </div>
         `,
         className: 'custom-leaflet-marker gold-premium-marker',

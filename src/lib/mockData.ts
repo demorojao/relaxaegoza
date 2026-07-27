@@ -76,7 +76,9 @@ export const MOCK_ADVERTISERS: Advertiser[] = [
       'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=600',
       'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=600'
     ],
-    amenities: ['Maca Profissional', 'Óleos Essenciais Importados', 'Música de Relaxamento', 'Chuveiro Aquecido', 'Local Próprio']
+    amenities: ['Maca Profissional', 'Óleos Essenciais Importados', 'Música de Relaxamento', 'Chuveiro Aquecido', 'Local Próprio'],
+    tier: 'gold',
+    is_gold: true
   },
   {
     id: 'm2',

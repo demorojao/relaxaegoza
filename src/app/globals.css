@@ -144,6 +144,10 @@ body {
 }
 
 /* Custom styles for dark map markers */
+.custom-leaflet-marker, .gold-premium-marker, .leaflet-marker-icon {
+  overflow: visible !important;
+}
+
 .leaflet-popup-content-wrapper {
   background: #111319 !important;
   color: #F3F4F6 !important;
