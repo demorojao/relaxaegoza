@@ -253,9 +253,6 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
     }
   };
 
-  const vipWhatsappMessage = `Olá ${providerName}! Vi seu perfil no Relaxe & Goze e gostaria de assinar seu Clube VIP ou comprar mídias e conteúdos exclusivos diretamente!`;
-  const vipWhatsappLink = formatWhatsAppLink(whatsapp, vipWhatsappMessage);
-
   if (loading) {
     return (
       <div className="py-6 flex justify-center">
@@ -270,7 +267,7 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
         <div>
           <h3 className="text-base sm:text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
             <Crown className="w-5.5 h-5.5 text-gold-primary animate-pulse" />
-            Clube VIP & Conteúdo Exclusivo
+            Clube VIP Exclusivo Relaxe & Goze
             <span className="text-[10px] bg-gold-primary/20 text-gold-light border border-gold-primary/30 px-2.5 py-0.5 rounded-full font-bold">
               {medias.length > 0 ? `${medias.length} ${medias.length === 1 ? 'Mídia' : 'Mídias'}` : 'Acervo VIP'}
             </span>
@@ -278,7 +275,7 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
           <p className="text-xs text-gray-300 font-light mt-1 leading-relaxed">
             {isSubscribed 
               ? `Você é um assinante VIP ativo de ${providerName}!` 
-              : `Assine o clube de ${providerName} para ter acesso a ensaios sensuais, vídeos inéditos e atendimento exclusivo.`}
+              : `Assine o Clube VIP de ${providerName} para desbloquear fotos em alta definição, vídeos inéditos e conteúdos exclusivos com total sigilo.`}
           </p>
         </div>
 
@@ -369,7 +366,7 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
               <Eye className="w-5 h-5" />
             </div>
             <span className="text-xs font-bold text-white">Ensaio Fotográfico HD</span>
-            <span className="text-[10px] text-gray-400 font-light">Fotos privativas liberadas para assinantes</span>
+            <span className="text-[10px] text-gray-400 font-light">Fotos privativas em alta resolução liberadas para assinantes</span>
           </div>
 
           <div className="bg-black/40 border border-gold-primary/20 rounded-xl p-4 flex flex-col items-center text-center gap-2">
@@ -377,20 +374,20 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
               <Video className="w-5 h-5" />
             </div>
             <span className="text-xs font-bold text-white">Vídeos de Bastidores</span>
-            <span className="text-[10px] text-gray-400 font-light">Vídeos curtos em alta definição e alta taxa de quadros</span>
+            <span className="text-[10px] text-gray-400 font-light">Vídeos inéditos de bastidores gravados com exclusividade</span>
           </div>
 
           <div className="bg-black/40 border border-gold-primary/20 rounded-xl p-4 flex flex-col items-center text-center gap-2">
             <div className="w-10 h-10 rounded-full bg-gold-primary/10 border border-gold-primary/30 flex items-center justify-center text-gold-primary">
               <Sparkles className="w-5 h-5 text-gold-primary animate-pulse" />
             </div>
-            <span className="text-xs font-bold text-white">Canal Direto VIP</span>
-            <span className="text-[10px] text-gray-400 font-light">Compre packs e fotos diretamente via WhatsApp</span>
+            <span className="text-xs font-bold text-white">Acesso Imediato & Sigiloso</span>
+            <span className="text-[10px] text-gray-400 font-light">Liberação instantânea após pagamento via Pix no site</span>
           </div>
         </div>
       )}
 
-      {/* Call to Action de Assinatura & WhatsApp */}
+      {/* Call to Action Exclusivo da Plataforma (Pix / Checkout Oficial) */}
       {!isSubscribed && (
         <div className="bg-black/60 border border-gold-primary/40 p-4 sm:p-5 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -400,33 +397,19 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
             <div>
               <h4 className="text-sm font-bold text-white">Assinar o Clube Exclusivo de {providerName}</h4>
               <p className="text-xs text-gray-300 font-light mt-0.5">
-                Acesso imediato ao acervo privado ou solicite packs exclusivos diretamente no WhatsApp.
+                Desbloqueie todo o acervo privado por {priceFormatted} com pagamento 100% seguro via Pix.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto shrink-0">
-            <button
-              onClick={handleSubscribePix}
-              disabled={subscribing}
-              className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-gold-primary/20"
-            >
-              <Sparkles className="w-4 h-4" />
-              {subscribing ? 'Gerando Pix...' : `Assinar Pix (${priceFormatted})`}
-            </button>
-
-            {vipWhatsappLink && (
-              <a
-                href={vipWhatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
-              >
-                <span>💬</span>
-                Comprar no WhatsApp
-              </a>
-            )}
-          </div>
+          <button
+            onClick={handleSubscribePix}
+            disabled={subscribing}
+            className="w-full md:w-auto px-6 py-3.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-gold-primary/20 shrink-0"
+          >
+            <Sparkles className="w-4 h-4" />
+            {subscribing ? 'Gerando Pix...' : `Assinar Agora com Pix (${priceFormatted})`}
+          </button>
         </div>
       )}
 
