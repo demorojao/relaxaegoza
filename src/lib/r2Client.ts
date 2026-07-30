@@ -1,9 +1,10 @@
 import { supabase } from './supabase';
 
 /**
- * Faz o upload de um arquivo para o Cloudflare R2 usando a API segura do servidor Next.js.
- * Envia o arquivo via FormData para o servidor que faz o upload de servidor para servidor no R2,
- * evitando problemas de CORS e falhas de presigned URL no navegador.
+ * Faz o upload de um arquivo para o Cloudflare R2.
+ * Para arquivos maiores (como vídeos HD), gera uma URL assinada (Presigned URL)
+ * e faz o upload direto do navegador para o Cloudflare R2 via HTTP PUT,
+ * evitando a limitação de payload da Vercel/Next.js (4.5MB).
  */
 export async function uploadToR2(file: File): Promise<string> {
   // 1. Obter a sessão atual para autenticar a requisição na API
@@ -12,27 +13,74 @@ export async function uploadToR2(file: File): Promise<string> {
     throw new Error('Sessão expirada. Faça login novamente.');
   }
 
-  // 2. Preparar FormData para envio
-  const formData = new FormData();
-  formData.append('file', file);
-
-  // 3. Enviar para a API de upload do servidor
-  const response = await fetch('/api/media/upload', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${session.access_token}`,
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.error || 'Erro ao realizar upload do arquivo.');
+  // Para arquivos maiores que 3MB (como vídeos ou fotos de altíssima resolução),
+  // faz o upload direto via Presigned URL para não estourar os limites de tamanho de API da Vercel
+  if (file.size > 3 * 1024 * 1024) {
+    return uploadViaPresignedUrl(file, session.access_token);
   }
 
-  const { publicUrl } = await response.json();
-  if (!publicUrl) {
-    throw new Error('Servidor não retornou uma URL válida para o arquivo.');
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/media/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: formData,
+    });
+
+    if (response.status === 413 || !response.ok) {
+      return uploadViaPresignedUrl(file, session.access_token);
+    }
+
+    const { publicUrl } = await response.json();
+    if (!publicUrl) {
+      throw new Error('Servidor não retornou uma URL válida para o arquivo.');
+    }
+
+    return publicUrl;
+  } catch (err) {
+    return uploadViaPresignedUrl(file, session.access_token);
+  }
+}
+
+async function uploadViaPresignedUrl(file: File, token: string): Promise<string> {
+  // 1. Solicitar presigned URL para o servidor Next.js
+  const presignRes = await fetch('/api/media/presign', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      fileName: file.name,
+      contentType: file.type || 'application/octet-stream',
+    }),
+  });
+
+  if (!presignRes.ok) {
+    const errData = await presignRes.json().catch(() => ({}));
+    throw new Error(errData.error || 'Erro ao obter autorização de upload.');
+  }
+
+  const { presignedUrl, publicUrl } = await presignRes.json();
+  if (!presignedUrl || !publicUrl) {
+    throw new Error('Servidor não retornou a URL de upload esperada.');
+  }
+
+  // 2. Upload direto via PUT do navegador para o Cloudflare R2
+  const uploadRes = await fetch(presignedUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': file.type || 'application/octet-stream',
+    },
+    body: file,
+  });
+
+  if (!uploadRes.ok) {
+    throw new Error(`Falha no upload direto para o servidor de mídias (${uploadRes.status}).`);
   }
 
   return publicUrl;
@@ -61,3 +109,4 @@ export async function deleteFromR2(fileUrl: string): Promise<void> {
     throw new Error(errData.error || 'Erro ao deletar o arquivo do armazenamento R2.');
   }
 }
+

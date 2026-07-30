@@ -773,7 +773,7 @@ export default function ProfileEditor() {
         <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 flex flex-col sm:flex-row items-center gap-6">
           <div className="relative w-28 h-28 rounded-full border border-dark-border overflow-hidden bg-black/40 flex items-center justify-center group shrink-0 shadow-[0_0_15px_rgba(197,168,128,0.1)]">
             {avatarPreview ? (
-              <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <img src={getCDNUrl(avatarPreview)} alt="Avatar" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
             ) : (
               <UserSquare2 className="w-12 h-12 text-gray-600" />
             )}

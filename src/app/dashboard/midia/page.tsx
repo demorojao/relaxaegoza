@@ -460,10 +460,14 @@ export default function MediaManager() {
               return (
                 <div key={m.id} className="relative aspect-[3/4] rounded-xl overflow-hidden border border-dark-border group bg-black/40">
                   {isVideo ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-center p-4">
-                      <Video className="w-8 h-8 text-gold-primary mb-2" />
-                      <span className="text-[9px] text-gray-400 truncate w-full">{m.photo_url}</span>
-                    </div>
+                    <video 
+                      src={getCDNUrl(m.photo_url)} 
+                      className="w-full h-full object-cover" 
+                      muted 
+                      loop 
+                      playsInline 
+                      preload="metadata" 
+                    />
                   ) : (
                     <div 
                       className="absolute inset-0 bg-cover bg-center"

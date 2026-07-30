@@ -274,13 +274,26 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {medias.map((m) => {
               const isVideo = m.media_type === 'video';
+              const mediaSrc = getCDNUrl(m.preview_url || m.media_url);
+
               return (
                 <div key={m.id} className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/10 bg-black/60 group">
-                  <img
-                    src={getCDNUrl(m.preview_url || m.media_url)}
-                    alt={m.title || ''}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                  {isVideo ? (
+                    <video
+                      src={mediaSrc}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                    />
+                  ) : (
+                    <img
+                      src={mediaSrc}
+                      alt={m.title || ''}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-between p-3">
                     <span className="self-start bg-black/60 backdrop-blur-xs text-gold-primary text-[9px] font-bold px-2 py-0.5 rounded border border-gold-primary/30 flex items-center gap-1">
                       {isVideo ? <Video className="w-3 h-3 text-gold-primary" /> : <ImageIcon className="w-3 h-3 text-gold-primary" />}

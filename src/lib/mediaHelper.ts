@@ -1,29 +1,43 @@
 /**
- * Auxiliar para converter as URLs públicas de Storage do Supabase
- * nas URLs rápidas da CDN do AWS CloudFront se configurada.
+ * Auxiliar para converter as URLs públicas de mídias (Supabase Storage / Cloudflare R2)
+ * nas URLs públicas rápidas e válidas.
  */
 export function getCDNUrl(url: string | null | undefined): string {
   if (!url) return '';
   
-  // URL base pública do bucket profile_media no Supabase
-  const supabaseStoragePrefix = 'https://ivlaeilkomqhqwerojny.supabase.co/storage/v1/object/public/profile_media';
-  
-  let normalizedUrl = url;
+  let normalizedUrl = url.trim();
+  if (!normalizedUrl) return '';
 
-  // Se a URL contiver o caminho do proxy local ou de Vercel, normaliza para a URL direta do Supabase
-  if (url.includes('/api/supabase-proxy/storage/v1/object/public/profile_media/')) {
-    const parts = url.split('/api/supabase-proxy/storage/v1/object/public/profile_media/');
+  // Se for Data URL (base64) ou Blob URL do navegador, retorna diretamente
+  if (normalizedUrl.startsWith('data:') || normalizedUrl.startsWith('blob:')) {
+    return normalizedUrl;
+  }
+
+  // Prefixos conhecidos de storage
+  const supabaseStoragePrefix = 'https://ivlaeilkomqhqwerojny.supabase.co/storage/v1/object/public/profile_media';
+  const r2PublicDefault = 'https://pub-cb3abcfa6e1b4245be005a2dc81dd7d3.r2.dev';
+
+  // Normalizar proxy local/Vercel do Supabase
+  if (normalizedUrl.includes('/api/supabase-proxy/storage/v1/object/public/profile_media/')) {
+    const parts = normalizedUrl.split('/api/supabase-proxy/storage/v1/object/public/profile_media/');
     normalizedUrl = `${supabaseStoragePrefix}/${parts[1]}`;
   }
-  
-  // CDN URL definida nas variáveis de ambiente (ex: https://d12345.cloudfront.net)
-  const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
+
+  // Se for um caminho de arquivo relativo salvo no banco (ex: "avatars/123.jpg")
+  if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+    if (normalizedUrl.startsWith('/')) {
+      return normalizedUrl;
+    }
+    normalizedUrl = `${supabaseStoragePrefix}/${normalizedUrl}`;
+  }
+
+  const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL || r2PublicDefault;
 
   if (cdnUrl && normalizedUrl.startsWith(supabaseStoragePrefix)) {
-    // Garante que a URL da CDN não termine com barra para evitar barras duplas
     const cleanCdnUrl = cdnUrl.endsWith('/') ? cdnUrl.slice(0, -1) : cdnUrl;
     return normalizedUrl.replace(supabaseStoragePrefix, cleanCdnUrl);
   }
   
   return normalizedUrl;
 }
+
