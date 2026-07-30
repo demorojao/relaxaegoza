@@ -7,7 +7,7 @@ import { MapPin, DollarSign, Star, ShieldCheck, Building2, Sparkles, ChevronLeft
 import { Profile } from '../types';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { cn } from '@/lib/utils';
+import { cn, cleanDescription } from '@/lib/utils';
 
 import { getCDNUrl } from '../lib/mediaHelper';
 
@@ -84,14 +84,7 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
   };
 
   const rawDesc = showAdInfo ? (profile.ad_description || profile.bio) : (profile.bio || profile.ad_description);
-  const cleanDesc = rawDesc 
-    ? rawDesc
-        .replace(/=== [A-Z\s]+ ===/g, '')
-        .replace(/\\n/g, ' ')
-        .replace(/\n/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim() 
-    : '';
+  const cleanDesc = cleanDescription(rawDesc);
 
   return (
     <Link href={`/perfil/${profile.id}`} className="block w-full h-full">

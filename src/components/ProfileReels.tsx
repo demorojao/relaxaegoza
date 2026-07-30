@@ -26,7 +26,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn, formatWhatsAppLink } from '@/lib/utils';
+import { cn, formatWhatsAppLink, cleanDescription } from '@/lib/utils';
 import { supabase } from '../lib/supabase';
 import { getCDNUrl } from '../lib/mediaHelper';
 
@@ -704,7 +704,7 @@ export default function ProfileReels({
                 {/* Specialties or Bio snippet */}
                 {(profile.ad_description || profile.bio) && (
                   <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed font-light drop-shadow-sm">
-                    {profile.ad_description || profile.bio}
+                    {cleanDescription(profile.ad_description || profile.bio)}
                   </p>
                 )}
               </div>

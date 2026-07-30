@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getCDNUrl } from '@/lib/mediaHelper';
+import { cleanDescription } from '@/lib/utils';
 
 interface BioClientViewProps {
   profile: any;
@@ -29,7 +30,8 @@ export default function BioClientView({ profile, ad, mediaCount = 0 }: BioClient
 
   const name = profile?.name || 'Profissional VIP';
   const avatarUrl = profile?.avatar_url ? getCDNUrl(profile.avatar_url) : '/placeholder-avatar.png';
-  const bioText = profile?.bio || ad?.description || 'Atendimento exclusivo de alta qualidade com discrição, conforto e elegância.';
+  const rawBioText = profile?.bio || ad?.description;
+  const bioText = cleanDescription(rawBioText) || 'Atendimento exclusivo de alta qualidade com discrição, conforto e elegância.';
   const city = profile?.city || ad?.city || 'São Paulo';
   const neighborhood = profile?.neighborhood || ad?.neighborhood || '';
   const isAvailable = profile?.is_available || false;

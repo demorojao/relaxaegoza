@@ -29,6 +29,7 @@ import { getCDNUrl } from '@/lib/mediaHelper';
 import { Badge } from '@/components/ui/Badge';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { uploadToR2 } from '@/lib/r2Client';
+import { cleanDescription } from '@/lib/utils';
 
 const MASSAGE_SPECIALTIES = [
   'Massagem Tântrica', 'Nuru', 'Relaxante', 'Massagem Nuru', 'Massagem Relaxante',
@@ -200,10 +201,10 @@ export default function ProfileEditor() {
           mainBio = bioText;
         }
 
-        setPresentationBio(mainBio);
-        setSpecialties(specPart);
-        setWhatsIncluded(inclPart);
-        setRules(rulePart);
+        setPresentationBio(cleanDescription(mainBio));
+        setSpecialties(cleanDescription(specPart));
+        setWhatsIncluded(cleanDescription(inclPart));
+        setRules(cleanDescription(rulePart));
 
         // Buscar especialidades cadastradas e do perfil
         const { data: allSpecs } = await supabase
@@ -399,21 +400,13 @@ export default function ProfileEditor() {
     setCity(cleanCity);
     setNeighborhood(cleanNeighborhood);
 
-    // Formatar biografia estruturada
-    let formattedBio = '';
-    if (presentationBio.trim()) {
-      formattedBio += `=== SOBRE MIM ===\n${presentationBio.trim()}\n\n`;
-    }
-    if (specialties.trim()) {
-      formattedBio += `=== ESPECIALIDADES ===\n${specialties.trim()}\n\n`;
-    }
-    if (whatsIncluded.trim()) {
-      formattedBio += `=== INCLUSO ===\n${whatsIncluded.trim()}\n\n`;
-    }
-    if (rules.trim()) {
-      formattedBio += `=== REGRAS ===\n${rules.trim()}\n\n`;
-    }
-    formattedBio = formattedBio.trim() || presentationBio;
+    // Formatar biografia de forma limpa e elegante, sem marcações brutas tipo === INCLUSO ===
+    const bioParts: string[] = [];
+    if (presentationBio.trim()) bioParts.push(cleanDescription(presentationBio));
+    if (specialties.trim()) bioParts.push(cleanDescription(specialties));
+    if (whatsIncluded.trim()) bioParts.push(cleanDescription(whatsIncluded));
+    if (rules.trim()) bioParts.push(cleanDescription(rules));
+    const formattedBio = bioParts.join('\n\n') || cleanDescription(presentationBio);
 
     // Geocodificação automática via Nominatim API
     let lat = latitude;

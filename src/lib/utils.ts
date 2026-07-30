@@ -56,3 +56,25 @@ export function formatCPF(cpf: string): string {
     .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
 }
 
+/**
+ * Limpa marcações indesejadas (ex: === INCLUSO ===, ==== INCLUSO ======, === ESPECIALIDADES ===, === REGRAS ===)
+ * e formata descrições/bios para exibição fluida e elegante.
+ */
+export function cleanDescription(text: string | null | undefined): string {
+  if (!text) return '';
+  return text
+    // Remove qualquer marcação tipo === INCLUSO ===, ==== INCLUSO ======, === REGRAS ===, etc.
+    .replace(/(?:={2,}|-{2,}|#{2,})\s*[A-ZÀ-Ú\s_]+?\s*(?:={2,}|-{2,}|#{2,})/gi, '')
+    // Remove ocorrências isoladas de INCLUSO: ou INCLUSO ===
+    .replace(/\bINCLUSO\b\s*[:=]*/gi, '')
+    .replace(/\bESPECIALIDADES\b\s*[:=]*/gi, '')
+    .replace(/\bREGRAS\b\s*[:=]*/gi, '')
+    // Substitui quebras de linha por espaço
+    .replace(/\\n/g, ' ')
+    .replace(/\n+/g, ' ')
+    // Limpa múltiplos espaços
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+

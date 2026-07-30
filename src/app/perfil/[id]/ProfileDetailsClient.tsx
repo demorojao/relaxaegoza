@@ -39,7 +39,7 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import { formatWhatsAppLink } from '@/lib/utils';
+import { formatWhatsAppLink, cleanDescription } from '@/lib/utils';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { getCDNUrl } from '@/lib/mediaHelper';
 import ReportModal from '@/components/ReportModal';
@@ -771,19 +771,16 @@ export default function ProfileDetailsClient({
             .replace(/ESPECIALIDADES ===[\s\S]*?(?=\n\n|$)/, '')
             .replace(/INCLUSO ===[\s\S]*?(?=\n\n|$)/, '')
             .replace(/REGRAS ===[\s\S]*?(?=\n\n|$)/, '')
-            .replace(/=== [A-Z\s]+ ===/g, '')
+            .replace(/(?:={2,}|-{2,}|#{2,})\s*[A-ZÀ-Ú\s_]+?\s*(?:={2,}|-{2,}|#{2,})/gi, '')
             .trim();
           if (cleanPart) bioText = cleanPart;
         }
       });
-
-      bioText = bioText
-        .replace(/=== ESPECIALIDADES ===[\s\S]*?(?=\n\n===|$)/g, '')
-        .replace(/=== INCLUSO ===[\s\S]*?(?=\n\n===|$)/g, '')
-        .replace(/=== REGRAS ===[\s\S]*?(?=\n\n===|$)/g, '')
-        .replace(/=== [A-Z\s]+ ===/g, '')
-        .trim();
     }
+
+    bioText = cleanDescription(bioText);
+    included = cleanDescription(included);
+    rules = cleanDescription(rules);
 
     return { bioText, included, rules };
   }, []);
