@@ -1191,6 +1191,73 @@ export default function ProfileDetailsClient({
           })()}
         </div>
 
+        {/* Tabela de Investimento / Preços por Duração */}
+        {(() => {
+          const ratesObj = profile.rates || profile.business_hours?.rates || {};
+          const isConsult = !adPrice || Number(adPrice) < 300;
+
+          const renderRateCard = (label: string, value?: number | string) => {
+            const num = Number(value);
+            if (!num || num <= 0) return null;
+            return (
+              <div key={label} className="bg-white/5 border border-white/10 hover:border-gold-primary/40 rounded-xl p-3 flex flex-col justify-between transition-all group">
+                <span className="text-[10px] text-gray-400 uppercase font-semibold block truncate">{label}</span>
+                <div className="flex items-baseline gap-1 mt-1 text-gold-light">
+                  <span className="text-xs font-bold">R$</span>
+                  <span className="text-base sm:text-lg font-bold text-white group-hover:text-gold-light transition-colors">{num}</span>
+                </div>
+              </div>
+            );
+          };
+
+          const items = [
+            renderRateCard('15 Minutos', ratesObj.min15),
+            renderRateCard('30 Minutos', ratesObj.min30),
+            renderRateCard('45 Minutos', ratesObj.min45),
+            renderRateCard('1 Hora (Padrão)', ratesObj.hour1 || (adPrice >= 300 ? adPrice : undefined)),
+            renderRateCard('2 Horas', ratesObj.hour2),
+            renderRateCard('Pernoite', ratesObj.overnight),
+          ].filter(Boolean);
+
+          if (isConsult) {
+            return (
+              <div className="bg-black/40 border border-white/5 rounded-2xl p-4 sm:p-5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold text-white uppercase tracking-widest flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-gold-primary" />
+                    Investimento por Duração
+                  </h3>
+                  <span className="text-[9px] text-gold-light font-bold uppercase tracking-wider bg-gold-primary/10 border border-gold-primary/20 px-2 py-0.5 rounded-full">
+                    Valores Sob Consulta
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400 font-light leading-relaxed">
+                  Valores sob consulta. Entre em contato pelo WhatsApp para verificar as opções de tempo e investimentos.
+                </p>
+              </div>
+            );
+          }
+
+          if (items.length === 0) return null;
+
+          return (
+            <div className="bg-black/40 border border-white/5 rounded-2xl p-4 sm:p-5 space-y-3.5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold text-white uppercase tracking-widest flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-gold-primary" />
+                  Investimento por Duração
+                </h3>
+                <span className="text-[9px] text-gold-light font-bold uppercase tracking-wider bg-gold-primary/10 border border-gold-primary/20 px-2 py-0.5 rounded-full">
+                  Elite
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {items}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Presentear com Boost de Destaque */}
         <div className="relative overflow-hidden bg-gradient-to-br from-gold-primary/10 via-black/40 to-wine-primary/10 border border-gold-primary/20 rounded-2xl p-5 md:p-6 space-y-4">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gold-primary/5 blur-2xl rounded-full pointer-events-none" />
@@ -1240,6 +1307,15 @@ export default function ProfileDetailsClient({
                 Horário de Atendimento
               </h3>
               {(() => {
+                const isFlex = profile.business_hours?.consult_whatsapp || profile.is_consult_schedule;
+                if (isFlex) {
+                  return (
+                    <span className="inline-flex items-center gap-1.5 text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Sob Consulta
+                    </span>
+                  );
+                }
                 const { status, next } = getStatusExpediente(profile.business_hours);
                 if (status === 'Em expediente') {
                   return (
@@ -1266,24 +1342,30 @@ export default function ProfileDetailsClient({
               })()}
             </div>
 
-            {/* Resumo Agrupado e Limpo dos Horários */}
-            <div className="flex flex-wrap gap-2 pt-1">
-              {formatScheduleGrouped(profile.business_hours).map((item, idx) => (
-                <div 
-                  key={idx} 
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs border ${
-                    item.active 
-                      ? 'bg-white/5 border-white/10 text-gray-200' 
-                      : 'bg-black/20 border-white/5 text-gray-500'
-                  }`}
-                >
-                  <span className="font-semibold text-white">{item.dayText}:</span>
-                  <span className={item.active ? 'text-gold-light font-medium' : 'text-gray-500 italic'}>
-                    {item.timeText}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {profile.business_hours?.consult_whatsapp || profile.is_consult_schedule ? (
+              <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 p-3.5 rounded-xl text-xs text-gray-300">
+                <MessageCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Atendimento sem horário fixo. Consulte a disponibilidade diretamente no WhatsApp.</span>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {formatScheduleGrouped(profile.business_hours).map((item, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs border ${
+                      item.active 
+                        ? 'bg-white/5 border-white/10 text-gray-200' 
+                        : 'bg-black/20 border-white/5 text-gray-500'
+                    }`}
+                  >
+                    <span className="font-semibold text-white">{item.dayText}:</span>
+                    <span className={item.active ? 'text-gold-light font-medium' : 'text-gray-500 italic'}>
+                      {item.timeText}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

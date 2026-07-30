@@ -22,7 +22,9 @@ import {
   Play,
   Video,
   FileImage,
-  Clock
+  Clock,
+  DollarSign,
+  MessageCircle
 } from 'lucide-react';
 import ImageBlurSelector from '@/components/ImageBlurSelector';
 import { getCDNUrl } from '@/lib/mediaHelper';
@@ -100,6 +102,8 @@ export default function ProfileEditor() {
   };
 
   const [businessHours, setBusinessHours] = useState<any>(DEFAULT_BUSINESS_HOURS);
+  const [isConsultSchedule, setIsConsultSchedule] = useState(false);
+  const [priceRates, setPriceRates] = useState<any>({});
   const [imageConsent, setImageConsent] = useState(false);
 
   const formatPhone = (value: string) => {
@@ -150,8 +154,12 @@ export default function ProfileEditor() {
         setWhatsapp(formatPhone(data.whatsapp || user.user_metadata?.whatsapp || ''));
         if (data.business_hours && typeof data.business_hours === 'object' && Object.keys(data.business_hours).length > 0) {
           setBusinessHours(data.business_hours);
+          setIsConsultSchedule(Boolean(data.business_hours.consult_whatsapp || data.is_consult_schedule));
+          setPriceRates(data.rates || data.business_hours.rates || {});
         } else {
           setBusinessHours(DEFAULT_BUSINESS_HOURS);
+          setIsConsultSchedule(false);
+          setPriceRates({});
         }
         setWhatsappCustomMessage(data.whatsapp_custom_message || '');
         setNeighborhood(data.neighborhood || '');
@@ -452,6 +460,33 @@ export default function ProfileEditor() {
           setSaving(false);
           return;
         }
+
+        // Validações de taxas mínimas de elite
+        if (priceRates.min15 && Number(priceRates.min15) > 0 && Number(priceRates.min15) < 150) {
+          alert('O valor mínimo para 15 minutos neste portal de elite é R$ 150,00.');
+          setSaving(false);
+          return;
+        }
+        if (priceRates.min30 && Number(priceRates.min30) > 0 && Number(priceRates.min30) < 200) {
+          alert('O valor mínimo para 30 minutos neste portal de elite é R$ 200,00.');
+          setSaving(false);
+          return;
+        }
+        if (priceRates.min45 && Number(priceRates.min45) > 0 && Number(priceRates.min45) < 250) {
+          alert('O valor mínimo para 45 minutos neste portal de elite é R$ 250,00.');
+          setSaving(false);
+          return;
+        }
+        if (priceRates.hour2 && Number(priceRates.hour2) > 0 && Number(priceRates.hour2) < 500) {
+          alert('O valor mínimo para 2 horas neste portal de elite é R$ 500,00.');
+          setSaving(false);
+          return;
+        }
+        if (priceRates.overnight && Number(priceRates.overnight) > 0 && Number(priceRates.overnight) < 1500) {
+          alert('O valor mínimo para pernoite neste portal de elite é R$ 1.500,00.');
+          setSaving(false);
+          return;
+        }
       }
 
       // Se selecionou uma nova foto de perfil, faz upload para o Cloudflare R2
@@ -459,6 +494,19 @@ export default function ProfileEditor() {
         finalAvatarUrl = await uploadToR2(avatarFile);
         setAvatarUrl(finalAvatarUrl);
       }
+
+      const finalPriceRates = isConsultRate ? {} : {
+        min15: Number(priceRates.min15) || undefined,
+        min30: Number(priceRates.min30) || undefined,
+        min45: Number(priceRates.min45) || undefined,
+        hour1: Number(priceRates.hour1 || rate) || undefined,
+        hour2: Number(priceRates.hour2) || undefined,
+        overnight: Number(priceRates.overnight) || undefined,
+      };
+
+      const finalBusinessHours = isConsultSchedule 
+        ? { consult_whatsapp: true, rates: finalPriceRates } 
+        : { ...businessHours, consult_whatsapp: false, rates: finalPriceRates };
 
       const updatePayload: any = {
         name: stageName,
@@ -474,7 +522,8 @@ export default function ProfileEditor() {
         latitude: lat,
         longitude: lon,
         avatar_url: finalAvatarUrl,
-        business_hours: businessHours
+        business_hours: finalBusinessHours,
+        rates: finalPriceRates
       };
 
       // Helper: tenta atualizar com todos os campos; se alguma coluna não existir (42703), faz fallback
@@ -1189,6 +1238,104 @@ export default function ProfileEditor() {
               )}
             </div>
 
+            {/* Tabela de Preços por Duração (15min, 30min, 45min, 2h, Pernoite) */}
+            <div className="sm:col-span-2 pt-4 border-t border-white/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-gold-primary" />
+                  Outras Durações de Atendimento (Opcional)
+                </label>
+                <span className="text-[9px] text-gold-primary bg-gold-primary/10 border border-gold-primary/20 px-2 py-0.5 rounded font-semibold uppercase">
+                  Valores de Elite
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-400 font-light leading-relaxed">
+                Preencha os valores para outras opções de tempo. Deixe em branco se não realizar atendimentos nessa duração.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* 15 Minutos */}
+                <div className="space-y-1 bg-black/30 p-3 rounded-xl border border-white/5">
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-gray-300 font-semibold">15 Minutos</span>
+                    <span className="text-[9px] text-gold-light">Mín. R$ 150</span>
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="Ex: 150"
+                    value={isConsultRate ? '' : (priceRates.min15 || '')}
+                    disabled={isConsultRate}
+                    onChange={(e) => setPriceRates({ ...priceRates, min15: e.target.value })}
+                    className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-3 py-2 rounded-lg focus:border-gold-primary/50 focus:outline-none disabled:opacity-40"
+                  />
+                </div>
+
+                {/* 30 Minutos */}
+                <div className="space-y-1 bg-black/30 p-3 rounded-xl border border-white/5">
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-gray-300 font-semibold">30 Minutos</span>
+                    <span className="text-[9px] text-gold-light">Mín. R$ 200</span>
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="Ex: 200"
+                    value={isConsultRate ? '' : (priceRates.min30 || '')}
+                    disabled={isConsultRate}
+                    onChange={(e) => setPriceRates({ ...priceRates, min30: e.target.value })}
+                    className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-3 py-2 rounded-lg focus:border-gold-primary/50 focus:outline-none disabled:opacity-40"
+                  />
+                </div>
+
+                {/* 45 Minutos */}
+                <div className="space-y-1 bg-black/30 p-3 rounded-xl border border-white/5">
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-gray-300 font-semibold">45 Minutos</span>
+                    <span className="text-[9px] text-gold-light">Mín. R$ 250</span>
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="Ex: 250"
+                    value={isConsultRate ? '' : (priceRates.min45 || '')}
+                    disabled={isConsultRate}
+                    onChange={(e) => setPriceRates({ ...priceRates, min45: e.target.value })}
+                    className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-3 py-2 rounded-lg focus:border-gold-primary/50 focus:outline-none disabled:opacity-40"
+                  />
+                </div>
+
+                {/* 2 Horas */}
+                <div className="space-y-1 bg-black/30 p-3 rounded-xl border border-white/5">
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-gray-300 font-semibold">2 Horas</span>
+                    <span className="text-[9px] text-gold-light">Mín. R$ 500</span>
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="Ex: 500"
+                    value={isConsultRate ? '' : (priceRates.hour2 || '')}
+                    disabled={isConsultRate}
+                    onChange={(e) => setPriceRates({ ...priceRates, hour2: e.target.value })}
+                    className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-3 py-2 rounded-lg focus:border-gold-primary/50 focus:outline-none disabled:opacity-40"
+                  />
+                </div>
+
+                {/* Pernoite */}
+                <div className="space-y-1 bg-black/30 p-3 rounded-xl border border-white/5">
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-gray-300 font-semibold">Pernoite</span>
+                    <span className="text-[9px] text-gold-light">Mín. R$ 1.500</span>
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="Ex: 1500"
+                    value={isConsultRate ? '' : (priceRates.overnight || '')}
+                    disabled={isConsultRate}
+                    onChange={(e) => setPriceRates({ ...priceRates, overnight: e.target.value })}
+                    className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-3 py-2 rounded-lg focus:border-gold-primary/50 focus:outline-none disabled:opacity-40"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Mensagem Customizada do WhatsApp */}
             <div className="space-y-1.5 sm:col-span-2">
               <label htmlFor="whatsapp-custom-message-input" className="text-xs text-gray-400 font-medium flex items-center gap-1">
@@ -1397,76 +1544,102 @@ export default function ProfileEditor() {
 
         {/* Bloco 5: Grade Horária de Atendimento */}
         <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 md:p-6 space-y-4">
-          <div className="flex items-center gap-2 text-white font-medium text-sm">
-            <Clock className="w-4 h-4 text-gold-primary" />
-            <span>Grade Horária de Atendimento Semanal</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-dark-border/20 pb-4">
+            <div className="flex items-center gap-2 text-white font-medium text-sm">
+              <Clock className="w-4 h-4 text-gold-primary" />
+              <span>Grade Horária de Atendimento</span>
+            </div>
+
+            {/* Checkbox Sem Horário Fixo */}
+            <label className="flex items-center gap-2.5 bg-black/40 border border-white/10 hover:border-gold-primary/40 px-3.5 py-2 rounded-xl cursor-pointer select-none transition-colors">
+              <input
+                type="checkbox"
+                checked={isConsultSchedule}
+                onChange={(e) => setIsConsultSchedule(e.target.checked)}
+                className="w-4 h-4 rounded border-white/20 text-gold-primary focus:ring-0 bg-black/60 accent-gold-primary cursor-pointer"
+              />
+              <span className="text-xs text-gold-light font-bold">
+                Consultar horário de atendimento pelo WhatsApp
+              </span>
+            </label>
           </div>
-          <p className="text-[11px] text-gray-400 font-light leading-relaxed">
-            Defina os dias e horários em que você realiza atendimentos. Os clientes verão no seu perfil público se você está "Em expediente" ou quando retornará.
-          </p>
 
-          <div className="space-y-3.5">
-            {Object.keys(businessHours).map((day) => {
-              const info = businessHours[day] || { active: false, start: '09:00', end: '18:00' };
-              return (
-                <div key={day} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-black/30 border border-white/5">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id={`day-active-${day}`}
-                      checked={info.active}
-                      onChange={(e) => {
-                        setBusinessHours({
-                          ...businessHours,
-                          [day]: { ...info, active: e.target.checked }
-                        });
-                      }}
-                      className="rounded border-white/20 text-gold-primary focus:ring-0 focus:ring-offset-0 bg-black/40 accent-gold-primary w-4.5 h-4.5 cursor-pointer"
-                    />
-                    <label htmlFor={`day-active-${day}`} className="text-xs font-bold text-white uppercase min-w-[45px] cursor-pointer">
-                      {day}
-                    </label>
-                  </div>
+          {isConsultSchedule ? (
+            <div className="bg-gold-primary/10 border border-gold-primary/20 rounded-2xl p-5 flex items-center gap-3 text-gold-light">
+              <MessageCircle className="w-6 h-6 text-gold-primary shrink-0 animate-pulse" />
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-white">Horário Flexível Ativo</h4>
+                <p className="text-xs font-light text-gray-300 leading-relaxed">
+                  Seu perfil público exibirá a indicação <strong>"Horário a combinar pelo WhatsApp"</strong>. Os clientes poderão entrar em contato diretamente para consultar sua disponibilidade.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-[11px] text-gray-400 font-light leading-relaxed">
+                Marque os dias em que realiza atendimentos e defina seus horários.
+              </p>
 
-                  <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-gray-500">Das</span>
-                      <input
-                        type="time"
-                        title={`Horário de início — ${day}`}
-                        value={info.start || '09:00'}
-                        disabled={!info.active}
-                        onChange={(e) => {
-                          setBusinessHours({
-                            ...businessHours,
-                            [day]: { ...info, start: e.target.value }
-                          });
-                        }}
-                        className={`bg-dark-bg/60 border border-dark-border text-xs text-white px-2 py-1.5 rounded-lg focus:border-gold-primary/50 focus:outline-none transition-colors ${!info.active ? 'opacity-30 cursor-not-allowed' : ''}`}
-                      />
-                      <span className="text-[10px] text-gray-500">até às</span>
-                      <input
-                        type="time"
-                        title={`Horário de término — ${day}`}
-                        value={info.end || '18:00'}
-                        disabled={!info.active}
-                        onChange={(e) => {
-                          setBusinessHours({
-                            ...businessHours,
-                            [day]: { ...info, end: e.target.value }
-                          });
-                        }}
-                        className={`bg-dark-bg/60 border border-dark-border text-xs text-white px-2 py-1.5 rounded-lg focus:border-gold-primary/50 focus:outline-none transition-colors ${!info.active ? 'opacity-30 cursor-not-allowed' : ''}`}
-                      />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'].map((day) => {
+                  const info = businessHours[day] || { active: false, start: '09:00', end: '18:00' };
+                  return (
+                    <div key={day} className="flex items-center justify-between gap-2 p-3 rounded-xl bg-black/30 border border-white/5">
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="checkbox"
+                          id={`day-active-${day}`}
+                          checked={info.active}
+                          onChange={(e) => {
+                            setBusinessHours({
+                              ...businessHours,
+                              [day]: { ...info, active: e.target.checked }
+                            });
+                          }}
+                          className="rounded border-white/20 text-gold-primary focus:ring-0 bg-black/40 accent-gold-primary w-4 h-4 cursor-pointer"
+                        />
+                        <label htmlFor={`day-active-${day}`} className="text-xs font-bold text-white uppercase min-w-[36px] cursor-pointer">
+                          {day}
+                        </label>
+                      </div>
+
+                      {info.active ? (
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <input
+                            type="time"
+                            title={`Início ${day}`}
+                            value={info.start || '09:00'}
+                            onChange={(e) => {
+                              setBusinessHours({
+                                ...businessHours,
+                                [day]: { ...info, start: e.target.value }
+                              });
+                            }}
+                            className="bg-dark-bg/60 border border-dark-border text-xs text-white px-2 py-1 rounded-lg focus:border-gold-primary/50 focus:outline-none"
+                          />
+                          <span className="text-[10px] text-gray-500">às</span>
+                          <input
+                            type="time"
+                            title={`Fim ${day}`}
+                            value={info.end || '18:00'}
+                            onChange={(e) => {
+                              setBusinessHours({
+                                ...businessHours,
+                                [day]: { ...info, end: e.target.value }
+                              });
+                            }}
+                            className="bg-dark-bg/60 border border-dark-border text-xs text-white px-2 py-1 rounded-lg focus:border-gold-primary/50 focus:outline-none"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-gray-500 italic">Folga</span>
+                      )}
                     </div>
-                    {!info.active && (
-                      <span className="text-[9px] text-red-400 bg-red-500/10 px-2 py-0.5 rounded font-medium border border-red-500/20">Folga</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Bloco 6: Consentimento Legal de Imagens */}
