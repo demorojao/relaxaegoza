@@ -44,6 +44,7 @@ import { triggerRevalidate } from '@/lib/revalidate';
 import { getCDNUrl } from '@/lib/mediaHelper';
 import ReportModal from '@/components/ReportModal';
 import Watermark from '@/components/Watermark';
+import ImageLightboxModal from '@/components/ImageLightboxModal';
 
 const AVAILABLE_TAGS = ['Educada', 'Simpática', 'Ambiente Cheiroso', 'Excelente Massagem', 'Fiel às Fotos', 'Higiene Nota 10', 'Ótimo Atendimento'];
 
@@ -534,6 +535,8 @@ export default function ProfileDetailsClient({
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const parseBio = (bioText: string) => {
     if (!bioText) return { specialties: '', included: '', rules: '', raw: '' };
@@ -948,6 +951,19 @@ export default function ProfileDetailsClient({
             <span className="text-[10px] font-semibold tracking-wide uppercase text-white">Foto Real</span>
           </div>
         )}
+
+        {/* Botão Expandir HD (Lightbox) */}
+        <button
+          type="button"
+          onClick={() => {
+            setLightboxIndex(activePhotoIdx);
+            setIsLightboxOpen(true);
+          }}
+          className="absolute bottom-4 left-4 z-20 bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-md"
+        >
+          <Eye className="w-3.5 h-3.5 text-gold-primary" />
+          <span>Ver Fotos em HD</span>
+        </button>
 
         {/* Controles do Carrossel */}
         {adPhotosList.length > 1 && (
@@ -1666,6 +1682,15 @@ export default function ProfileDetailsClient({
         onClose={() => setIsReportModalOpen(false)}
         reportedProfileId={id}
         reportedProfileName={profile.name}
+      />
+
+      <ImageLightboxModal
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+        images={mediaToRender.length > 0 ? mediaToRender : [{ url: profile.avatar_url || '/avatar-placeholder.svg', media_type: 'photo' }]}
+        currentIndex={lightboxIndex}
+        onIndexChange={(newIdx) => setLightboxIndex(newIdx)}
+        profileName={profile.name}
       />
     </div>
     </div>

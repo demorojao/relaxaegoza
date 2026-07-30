@@ -8,6 +8,7 @@ import { getSupabaseServerClient } from '@/lib/supabaseServer';
 import { getStateFromCity } from '@/lib/slugify';
 import ProfileDetailsClient from './ProfileDetailsClient';
 import Logo from '@/components/Logo';
+import { getCDNUrl } from '@/lib/mediaHelper';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -79,17 +80,43 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = `${profile.name}, ${profile.age} anos - Relaxe & Goze`;
+  const title = `${profile.name}, ${profile.age} anos - Portal Relaxe & Goze`;
   const location = profile.neighborhood ? `${profile.neighborhood}, ${profile.city}` : profile.city;
-  const description = `${profile.name} - Atendimento de luxo em ${location}. Veja fotos reais, comodidades, avaliações e entre em contato direto pelo WhatsApp.`;
+  const description = `${profile.name} (${profile.age} anos) - Atendimento exclusivo e de alto padrão em ${location}. Confira fotos reais, vídeos, comodidades e agende pelo WhatsApp.`;
+  
+  const rawAvatar = profile.avatar_url || '/avatar-placeholder.svg';
+  const cdnAvatarUrl = getCDNUrl(rawAvatar);
+  
+  // Garantir que a URL da imagem seja absoluta para leitura pelo WhatsApp
+  const finalImageUrl = cdnAvatarUrl.startsWith('http') 
+    ? cdnAvatarUrl 
+    : `https://relaxaegoza.com.br${cdnAvatarUrl.startsWith('/') ? '' : '/'}${cdnAvatarUrl}`;
 
   return {
     title,
     description,
+    metadataBase: new URL('https://relaxaegoza.com.br'),
     openGraph: {
       title,
       description,
-      images: profile.avatar_url ? [{ url: profile.avatar_url }] : [],
+      url: `https://relaxaegoza.com.br/perfil/${id}`,
+      siteName: 'Relaxe & Goze - Portal de Elite',
+      locale: 'pt_BR',
+      type: 'profile',
+      images: [
+        {
+          url: finalImageUrl,
+          width: 800,
+          height: 800,
+          alt: `Perfil de ${profile.name}`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [finalImageUrl],
     },
   };
 }
