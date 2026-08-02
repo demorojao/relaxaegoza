@@ -69,11 +69,12 @@ export function cleanDescription(text: string | null | undefined): string {
     .replace(/\bINCLUSO\b\s*[:=]*/gi, '')
     .replace(/\bESPECIALIDADES\b\s*[:=]*/gi, '')
     .replace(/\bREGRAS\b\s*[:=]*/gi, '')
-    // Substitui quebras de linha por espaço
-    .replace(/\\n/g, ' ')
-    .replace(/\n+/g, ' ')
-    // Limpa múltiplos espaços
-    .replace(/\s+/g, ' ')
+    // Normaliza quebras de linha escapadas \n
+    .replace(/\\n/g, '\n')
+    // Substitui múltiplos espaços na mesma linha sem destruir quebras de linha
+    .replace(/[ \t]+/g, ' ')
+    // Limpa mais de 2 quebras de linha seguidas para no máximo parágrafos duplos
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 

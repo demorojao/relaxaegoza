@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Map, MapPin, SlidersHorizontal, Play } from 'lucide-react';
+import { Grid, Map, MapPin, SlidersHorizontal, Play, Navigation } from 'lucide-react';
 
 interface FilterBarProps {
   categoryFilter: string;
@@ -21,6 +21,7 @@ interface FilterBarProps {
   availableLocations: Record<string, string[]>;
   getActiveFilterCount: () => number;
   onOpenFilters: () => void;
+  onRecalculateLocation?: () => void;
   currentTab: 'ads' | 'models';
   setCurrentTab: (v: 'ads' | 'models') => void;
 }
@@ -45,6 +46,7 @@ export default function FilterBar({
   availableLocations,
   getActiveFilterCount,
   onOpenFilters,
+  onRecalculateLocation,
   currentTab,
   setCurrentTab
 }: FilterBarProps) {
@@ -198,8 +200,18 @@ export default function FilterBar({
                 <option key={city} value={city} className="bg-dark-bg text-white">{city}</option>
               ))}
             </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 z-10">
+              {onRecalculateLocation && (
+                <button
+                  type="button"
+                  onClick={onRecalculateLocation}
+                  className="text-gray-400 hover:text-gold-primary p-0.5 transition-colors cursor-pointer"
+                  title="Recalcular minha localização atual por GPS"
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <svg className="w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </div>

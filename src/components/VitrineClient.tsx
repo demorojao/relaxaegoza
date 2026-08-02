@@ -707,6 +707,62 @@ export default function VitrineClient({
     }, 300);
   };
 
+  const handleClearAllFilters = () => {
+    setCategoryFilter('');
+    setSpaceFilter(false);
+    setVerifiedFilter(false);
+    setAvailableFilter(false);
+    setDistanceFilter(0);
+    setCityFilter('');
+    setNeighborhoodFilter('');
+    setSelectedSpecialties([]);
+    setGenderFilter('');
+    setAgeFilter('');
+    setPriceFilter('');
+    setShowLocationFallbackWarning(false);
+  };
+
+  const handleRecalculateLocation = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('rg_detected_city');
+      sessionStorage.removeItem('rg_user_coords');
+    }
+    setDetectedCity('');
+    setUserCoords(null);
+    setCityFilter('');
+    setNeighborhoodFilter('');
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const coordsArr: [number, number] = [lat, lon];
+          setUserCoords(coordsArr);
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('rg_user_coords', JSON.stringify(coordsArr));
+          }
+          
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`)
+            .then(res => res.json())
+            .then(data => {
+              const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || data.address?.state_district;
+              if (city) {
+                setDetectedCity(city);
+                if (typeof window !== 'undefined') {
+                  sessionStorage.setItem('rg_detected_city', city);
+                }
+              }
+            })
+            .catch(err => console.error("Erro no reverse geocoding da cidade:", err));
+        },
+        () => {
+          alert('Não foi possível obter sua localização por GPS no momento. Você pode escolher a cidade manualmente no menu.');
+        }
+      );
+    }
+  };
+
   const handleToggleSpecialty = (name: string) => {
     setSelectedSpecialties(prev => 
       prev.includes(name) 
@@ -980,6 +1036,7 @@ export default function VitrineClient({
           availableLocations={availableLocations}
           getActiveFilterCount={getActiveFilterCount}
           onOpenFilters={() => setIsFilterDrawerOpen(true)}
+          onRecalculateLocation={handleRecalculateLocation}
           currentTab={currentTab}
           setCurrentTab={setCurrentTab}
         />
@@ -1104,6 +1161,7 @@ export default function VitrineClient({
             viewMode={viewMode === 'map' ? 'map' : 'grid'} 
             userCoords={userCoords} 
             showAdInfo={currentTab === 'ads'}
+            onClearFilters={handleClearAllFilters}
           />
         </>
       )}

@@ -1204,12 +1204,20 @@ export default function ProfileDetailsClient({
             const whatsappMessage = profile.whatsapp_custom_message
               || `Olá ${profile.name}! Vi seu anúncio no Relaxe & Goze e gostaria de agendar um horário.`;
             const whatsappLink = formatWhatsAppLink(profile.whatsapp, whatsappMessage) || '#';
+            const isInvalidLink = !whatsappLink || whatsappLink === '#';
             return (
               <a 
                 href={whatsappLink}
-                target="_blank"
+                target={isInvalidLink ? '_self' : '_blank'}
                 rel="noopener noreferrer"
-                onClick={logWhatsAppClick}
+                onClick={(e) => {
+                  if (isInvalidLink) {
+                    e.preventDefault();
+                    alert('⚠️ O contato do WhatsApp desta anunciante está em atualização pela nossa equipe.');
+                    return;
+                  }
+                  logWhatsAppClick();
+                }}
                 className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wide transition-all shadow-[0_0_20px_rgba(37,211,102,0.2)]"
               >
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />

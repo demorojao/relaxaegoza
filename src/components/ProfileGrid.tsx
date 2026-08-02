@@ -22,9 +22,10 @@ interface ProfileGridProps {
   viewMode: 'grid' | 'map';
   userCoords: [number, number] | null;
   showAdInfo?: boolean;
+  onClearFilters?: () => void;
 }
 
-export default function ProfileGrid({ loading, profiles, viewMode, userCoords, showAdInfo = true }: ProfileGridProps) {
+export default function ProfileGrid({ loading, profiles, viewMode, userCoords, showAdInfo = true, onClearFilters }: ProfileGridProps) {
   // Conversão de Profile[] para o mapa (filtrado estritamente pela mesma cidade para não misturar cidades distantes)
   const mapAdvertisers = React.useMemo(() => {
     const filteredWithCoords = profiles.filter(p => p.latitude && p.longitude);
@@ -134,13 +135,26 @@ export default function ProfileGrid({ loading, profiles, viewMode, userCoords, s
             key="empty"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full flex flex-col items-center justify-center py-32 text-center"
+            className="w-full flex flex-col items-center justify-center py-24 text-center bg-black/30 border border-white/5 rounded-3xl p-8 space-y-4"
           >
-            <Search className="w-12 h-12 text-gray-600 mb-4" />
-            <h3 className="text-xl font-medium text-white mb-2">Nenhum perfil encontrado</h3>
-            <p className="text-gray-500 text-sm max-w-md">
-              Não encontramos garotas que correspondam a estes filtros. Tente remover alguns filtros ou buscar em outra cidade.
-            </p>
+            <div className="w-14 h-14 rounded-2xl bg-gold-primary/10 border border-gold-primary/20 flex items-center justify-center">
+              <Search className="w-7 h-7 text-gold-primary" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-white uppercase tracking-wider">Nenhum anúncio encontrado</h3>
+              <p className="text-gray-400 text-xs max-w-md font-light leading-relaxed">
+                Não encontramos acompanhantes que correspondam aos filtros selecionados. Tente ajustar sua busca ou limpar os filtros.
+              </p>
+            </div>
+            {onClearFilters && (
+              <button
+                type="button"
+                onClick={onClearFilters}
+                className="mt-2 px-5 py-2.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer"
+              >
+                🔄 Limpar Filtros de Busca
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
