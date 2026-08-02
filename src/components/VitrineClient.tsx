@@ -59,7 +59,7 @@ export default function VitrineClient({
 }) {
   const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<'reels' | 'grid' | 'map'>('reels');
+  const [viewMode, setViewMode] = useState<'reels' | 'grid'>('reels');
   const [currentTab, setCurrentTab] = useState<'ads' | 'models'>('ads');
   const [userProfile, setUserProfile] = useState<any | null>(null);
   const [isAdModalOpen, setIsAdModalOpen] = useState(false);
@@ -1158,7 +1158,7 @@ export default function VitrineClient({
           <ProfileGrid 
             loading={loading} 
             profiles={profiles} 
-            viewMode={viewMode === 'map' ? 'map' : 'grid'} 
+            viewMode={viewMode} 
             userCoords={userCoords} 
             showAdInfo={currentTab === 'ads'}
             onClearFilters={handleClearAllFilters}
@@ -1619,17 +1619,7 @@ export default function VitrineClient({
             <span className="text-[9px] uppercase tracking-wider">Vitrine</span>
           </button>
 
-          {/* Map Tab */}
-          <button
-            onClick={() => setViewMode('map')}
-            className={cn(
-              "flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all cursor-pointer",
-              viewMode === 'map' ? "text-gold-primary font-bold scale-105" : "text-gray-400"
-            )}
-          >
-            <MapIcon className="w-5 h-5" />
-            <span className="text-[9px] uppercase tracking-wider">Mapa</span>
-          </button>
+
 
           {/* Anunciar / Painel Tab */}
           {user ? (

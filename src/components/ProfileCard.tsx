@@ -48,17 +48,20 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
     return list;
   }, [showAdInfo, profile.ad_photos, profile.photos, profile.avatar_url]);
 
+  const [imgError, setImgError] = useState(false);
   const currentPhoto = photosList[currentPhotoIndex] || profile.avatar_url || '/avatar-placeholder.svg';
 
   const handleNextPhoto = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setImgError(false);
     setCurrentPhotoIndex((prev) => (prev + 1) % photosList.length);
   };
 
   const handlePrevPhoto = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setImgError(false);
     setCurrentPhotoIndex((prev) => (prev - 1 + photosList.length) % photosList.length);
   };
 
@@ -72,6 +75,7 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
     const diffX = touchStartX - touchEndX;
 
     if (Math.abs(diffX) > 30) {
+      setImgError(false);
       if (diffX > 0) {
         // Swipe Esquerda -> Próxima foto
         setCurrentPhotoIndex((prev) => (prev + 1) % photosList.length);
@@ -102,21 +106,22 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
       >
         {/* Container da Imagem com Carrossel e Deslize (Swipe) */}
         <div 
-          className="relative w-full aspect-[3/3.8] overflow-hidden shrink-0 protected-media touch-pan-y"
+          className="relative w-full aspect-[3/3.8] overflow-hidden shrink-0 protected-media touch-pan-y bg-gradient-to-br from-wine-primary/20 via-black to-gold-primary/20"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
           
           <Image
-            key={currentPhoto}
-            src={getCDNUrl(currentPhoto) || '/avatar-placeholder.svg'}
+            key={`${currentPhoto}-${imgError}`}
+            src={imgError ? '/avatar-placeholder.svg' : (getCDNUrl(currentPhoto) || '/avatar-placeholder.svg')}
             alt={displayName}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
+            onError={() => setImgError(true)}
             priority={currentPhotoIndex === 0}
           />
           

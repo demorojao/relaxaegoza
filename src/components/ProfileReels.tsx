@@ -34,7 +34,7 @@ interface ProfileReelsProps {
   profiles: Profile[];
   photos: Record<string, { url: string; type: 'photo' | 'video' }[]>;
   loading: boolean;
-  setViewMode?: (v: 'reels' | 'grid' | 'map') => void;
+  setViewMode?: (v: 'reels' | 'grid') => void;
   onOpenFilters?: () => void;
   activeFiltersCount?: number;
   categoryFilter?: string;

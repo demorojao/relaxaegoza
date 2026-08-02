@@ -12,8 +12,8 @@ interface FilterBarProps {
   setAvailableFilter?: (v: boolean) => void;
   distanceFilter?: number;
   setDistanceFilter?: (v: number) => void;
-  viewMode: 'reels' | 'grid' | 'map';
-  setViewMode: (v: 'reels' | 'grid' | 'map') => void;
+  viewMode: 'reels' | 'grid';
+  setViewMode: (v: 'reels' | 'grid') => void;
   cityFilter: string;
   setCityFilter: (v: string) => void;
   neighborhoodFilter: string;
@@ -245,40 +245,29 @@ export default function FilterBar({
 
         {/* Linha secundária de controles no mobile, inline no desktop */}
         <div className="flex gap-2 items-center w-full sm:w-auto">
-          {/* Selector Drops vs Grid vs Map */}
+          {/* Selector Drops vs Grid */}
           <div className="flex flex-1 sm:flex-initial bg-black/40 border border-white/5 rounded-xl p-1 justify-around sm:justify-start">
             <button
               onClick={() => setViewMode('reels')}
-              className={`md:hidden flex-1 sm:flex-initial px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              className={`md:hidden flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 viewMode === 'reels' 
                   ? 'bg-gold-primary text-dark-bg font-bold shadow-sm' 
                   : 'text-gray-400 hover:text-white'
               }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
-              <span className="hidden sm:inline">Drops</span>
+              <span>Drops</span>
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`flex-1 sm:flex-initial px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 viewMode === 'grid' 
                   ? 'bg-gold-primary text-dark-bg font-bold shadow-sm' 
                   : 'text-gray-400 hover:text-white'
               }`}
             >
               <Grid className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Lista</span>
-            </button>
-            <button
-              onClick={() => setViewMode('map')}
-              className={`flex-1 sm:flex-initial px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                viewMode === 'map' 
-                  ? 'bg-gold-primary text-dark-bg font-bold shadow-sm' 
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Map className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Mapa</span>
+              <span>Lista</span>
             </button>
           </div>
 
