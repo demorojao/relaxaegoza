@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
     if (tags && Array.isArray(tags)) {
       for (const t of tags) {
-        revalidateTag(t, { expire: 0 });
+        (revalidateTag as any)(t);
         revalidatedTags.push(t);
       }
     }

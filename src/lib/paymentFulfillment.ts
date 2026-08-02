@@ -15,7 +15,7 @@ function serverRevalidate(city?: string, neighborhood?: string, profileId?: stri
       }
     }
     if (profileId) {
-      revalidateTag(`profile-${profileId}`, { expire: 0 });
+      (revalidateTag as any)(`profile-${profileId}`);
     }
   } catch (err) {
     console.error('Server revalidation error:', err);
