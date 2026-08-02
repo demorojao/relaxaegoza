@@ -265,10 +265,10 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
   return (
     <div id="clube-vip-section" className="space-y-5 pt-6 border-t border-gold-primary/30 bg-gradient-to-b from-gold-primary/10 via-black/50 to-transparent p-5 sm:p-6 rounded-2xl border shadow-xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h3 className="text-base sm:text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <Crown className="w-5.5 h-5.5 text-gold-primary animate-pulse" />
-            Clube VIP Exclusivo Relaxe & Goze
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base sm:text-lg font-bold text-white uppercase tracking-wider flex flex-wrap items-center gap-2">
+            <Crown className="w-5.5 h-5.5 text-gold-primary animate-pulse shrink-0" />
+            <span>Clube VIP Exclusivo Relaxe & Goze</span>
             <span className="text-[10px] bg-gold-primary/20 text-gold-light border border-gold-primary/30 px-2.5 py-0.5 rounded-full font-bold">
               {medias.length > 0 ? `${medias.length} ${medias.length === 1 ? 'Mídia' : 'Mídias'}` : 'Acervo VIP'}
             </span>
@@ -281,7 +281,7 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
         </div>
 
         {isSubscribed && subExpiresAt && (
-          <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1.5 shrink-0">
+          <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1.5 shrink-0 self-start sm:self-center">
             <Unlock className="w-3.5 h-3.5" /> Assinatura Ativa até {new Date(subExpiresAt).toLocaleDateString('pt-BR')}
           </span>
         )}
@@ -390,15 +390,17 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
 
       {/* Call to Action Exclusivo da Plataforma (Pix / Checkout Oficial) */}
       {!isSubscribed && (
-        <div className="bg-black/60 border border-gold-primary/40 p-4 sm:p-5 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="bg-black/70 border border-gold-primary/40 p-4 sm:p-5 rounded-2xl flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-center gap-3.5 flex-1 min-w-0">
             <div className="w-12 h-12 rounded-full bg-gold-primary/20 border border-gold-primary/40 flex items-center justify-center text-gold-primary shrink-0 shadow-lg">
               <Crown className="w-6 h-6 animate-pulse" />
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-white">Assinar o Clube Exclusivo de {providerName}</h4>
-              <p className="text-xs text-gray-300 font-light mt-0.5">
-                Desbloqueie todo o acervo privado por {priceFormatted} com pagamento 100% seguro via Pix.
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm sm:text-base font-bold text-white tracking-wide">
+                Assinar o Clube Exclusivo de {providerName}
+              </h4>
+              <p className="text-xs text-gray-300 font-light mt-0.5 leading-relaxed">
+                Desbloqueie todo o acervo privado por <strong className="text-gold-light font-semibold">{priceFormatted}</strong> com pagamento 100% seguro via Pix.
               </p>
             </div>
           </div>
@@ -406,7 +408,7 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
           <button
             onClick={handleSubscribePix}
             disabled={subscribing}
-            className="w-full md:w-auto px-6 py-3.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-gold-primary/20 shrink-0"
+            className="w-full lg:w-auto px-6 py-3.5 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-gold-primary/20 shrink-0"
           >
             <Sparkles className="w-4 h-4" />
             {subscribing ? 'Gerando Pix...' : `Assinar Agora com Pix (${priceFormatted})`}
