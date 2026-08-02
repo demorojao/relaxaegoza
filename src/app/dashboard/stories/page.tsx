@@ -557,11 +557,11 @@ export default function StoriesManager() {
 
   const tier = profile?.subscription_tier || 'free';
   const isGold = tier === 'gold';
-  const isPro = tier === 'pro' || tier === 'silver';
   const isBronze = tier === 'free' || !tier;
-  const limitText = isGold ? 'Ilimitado (Gold Premium)' : isPro ? `${storiesInLast24h}/3 mídias (Plano Pro)` : '0 mídias (Plano Bronze)';
+  const isPro = tier === 'pro' || tier === 'silver';
+  const limitText = 'Ilimitado (Gold Premium)';
 
-  if (isBronze) {
+  if (!isGold) {
     return (
       <div className="max-w-md mx-auto py-16 px-6 text-center space-y-6">
         <div className="mx-auto w-16 h-16 bg-gold-primary/10 border border-gold-primary/20 rounded-full flex items-center justify-center text-gold-primary animate-pulse">
@@ -570,10 +570,10 @@ export default function StoriesManager() {
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-white">Stories Efêmeros</h2>
           <p className="text-xs text-gray-400 leading-relaxed font-light">
-            A ferramenta de Stories é um benefício exclusivo para anunciantes dos planos <strong className="text-gold-light">Pro</strong> e <strong className="text-gold-light">Gold Premium</strong>.
+            A ferramenta de Stories e postagem de vídeos é um benefício exclusivo para anunciantes do plano <strong className="text-gold-light">Gold Premium</strong>.
           </p>
           <p className="text-xs text-gray-500 font-light">
-            Faça um upgrade no seu plano hoje para começar a publicar stories diários e alavancar a visibilidade do seu perfil.
+            Faça um upgrade no seu plano hoje para começar a publicar stories diários e vídeos na galeria, aumentando em até 10x as suas visitas.
           </p>
         </div>
         <div className="pt-4">
@@ -581,7 +581,7 @@ export default function StoriesManager() {
             href="/planos"
             className="inline-block px-8 py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold transition-all shadow-lg shadow-gold-primary/10 cursor-pointer"
           >
-            Ver Planos de Upgrade
+            Fazer Upgrade para Gold
           </a>
         </div>
       </div>
