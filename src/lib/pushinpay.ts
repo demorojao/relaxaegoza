@@ -25,7 +25,7 @@ export async function createPushinPayPixCharge({
   amountCents,
   webhookUrl,
 }: CreatePixPayload): Promise<PushinPayPixResponse> {
-  const token = process.env.PUSHINPAY_TOKEN || '68789|ucgYVKkINYBhrDbIu3R94HYntnKkfYdzR6sahzQic053fc9d';
+  const token = (process.env.PUSHINPAY_TOKEN || '').trim();
   if (!token) {
     throw new Error('PUSHINPAY_TOKEN não configurado no servidor');
   }
@@ -67,7 +67,7 @@ export async function createPushinPayPixCharge({
  * @param txId ID da transação gerada na PushinPay
  */
 export async function getPushinPayPixStatus(txId: string): Promise<PushinPayPixResponse | null> {
-  const token = process.env.PUSHINPAY_TOKEN || '68789|ucgYVKkINYBhrDbIu3R94HYntnKkfYdzR6sahzQic053fc9d';
+  const token = (process.env.PUSHINPAY_TOKEN || '').trim();
   if (!token || !txId) return null;
 
   try {
@@ -114,7 +114,7 @@ export async function requestPushinPayPixCashOut({
   value,
   pix_key,
 }: PushinPayCashOutPayload): Promise<PushinPayCashOutResponse> {
-  const token = process.env.PUSHINPAY_TOKEN || '68789|ucgYVKkINYBhrDbIu3R94HYntnKkfYdzR6sahzQic053fc9d';
+  const token = (process.env.PUSHINPAY_TOKEN || '').trim();
   if (!token) {
     throw new Error('PUSHINPAY_TOKEN não configurado no servidor');
   }

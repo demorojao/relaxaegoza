@@ -437,7 +437,7 @@ export default function ProfileEditor() {
         const cityRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityQueryStr)}&format=json&limit=1`, {
           headers: {
             'Accept': 'application/json',
-            'User-Agent': 'AuraPortal/1.0'
+            'User-Agent': 'RelaxeGozePortal/1.0'
           }
         });
         const cityData = await cityRes.json();

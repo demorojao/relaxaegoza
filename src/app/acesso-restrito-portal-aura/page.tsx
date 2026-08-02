@@ -43,14 +43,7 @@ export default function AdminRestrictedLoginPage() {
         throw new Error('Falha na autenticação do usuário.');
       }
 
-      // 2. Verificar o PIN de segurança localmente no client ou via API
-      const expectedPin = '9847';
-      if (pin.trim() !== expectedPin) {
-        await supabase.auth.signOut();
-        throw new Error('PIN de Segurança Admin incorreto.');
-      }
-
-      // 3. Confirmar que o usuário possui perfil com role === 'admin'
+      // 2. Confirmar que o usuário possui perfil com role === 'admin'
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
@@ -64,9 +57,9 @@ export default function AdminRestrictedLoginPage() {
 
       setSuccessMessage('Credenciais de Administrador validadas! Redirecionando...');
 
-      // 4. Redirecionar para o painel de moderação com o secret key
+      // 3. Redirecionar para o painel de moderação
       setTimeout(() => {
-        const adminSecret = process.env.NEXT_PUBLIC_ADMIN_ACCESS_SECRET || 'aura-master-secure-2026';
+        const adminSecret = process.env.NEXT_PUBLIC_ADMIN_ACCESS_SECRET || '';
         router.push(`/dashboard-interno-moderacao-aura?key=${adminSecret}`);
       }, 1000);
 

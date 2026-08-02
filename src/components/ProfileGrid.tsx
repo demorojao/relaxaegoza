@@ -25,29 +25,53 @@ interface ProfileGridProps {
 }
 
 export default function ProfileGrid({ loading, profiles, viewMode, userCoords, showAdInfo = true }: ProfileGridProps) {
-  // Conversão de Profile[] para o formato esperado pelo componente Map
-  const mapAdvertisers = profiles.map(p => ({
-    id: p.id,
-    stage_name: (showAdInfo && p.ad_title) ? p.ad_title : p.name,
-    age: p.age,
-    gender: 'Feminino',
-    description: p.bio || '',
-    whatsapp: p.whatsapp || '',
-    is_only_massage: p.category === 'massage' || p.category === 'both',
-    is_escort: p.category === 'escort' || p.category === 'both',
-    is_verified: p.verification_status === 'verified',
-    is_space_verified: p.is_space_verified || false,
-    is_available_now: p.is_available_now || false,
-    latitude: Number(p.latitude) || -23.5616,
-    longitude: Number(p.longitude) || -46.6560,
-    neighborhood: p.neighborhood || 'Jardins',
-    city: p.city,
-    rate: Number((showAdInfo && p.ad_price !== undefined && p.ad_price !== null) ? p.ad_price : p.price_per_hour) || 0,
-    photos: [(showAdInfo && p.ad_photos && p.ad_photos.length > 0) ? p.ad_photos[0] : (p.avatar_url || '/avatar-placeholder.svg')],
-    amenities: p.amenities || [],
-    tier: p.subscription_tier || 'free',
-    is_gold: p.subscription_tier === 'gold'
-  }));
+  // Conversão de Profile[] para o mapa (filtrado estritamente pela mesma cidade para não misturar cidades distantes)
+  const mapAdvertisers = React.useMemo(() => {
+    const filteredWithCoords = profiles.filter(p => p.latitude && p.longitude);
+    if (filteredWithCoords.length === 0) return [];
+
+    // Determina a cidade principal em exibição (a do primeiro perfil da lista ordenada)
+    const activeCityName = filteredWithCoords[0].city?.toLowerCase().trim();
+
+    // Filtra estritamente apenas as profissionais localizadas na MESMA cidade
+    const sameCityProfiles = filteredWithCoords.filter(p => 
+      p.city && activeCityName && p.city.toLowerCase().trim() === activeCityName
+    );
+
+    const baseList = sameCityProfiles.length > 0 ? sameCityProfiles : filteredWithCoords;
+
+    // Ordena priorizando Gold/Pro/Disponíveis
+    const sorted = [...baseList].sort((a, b) => {
+      if (a.subscription_tier === 'gold' && b.subscription_tier !== 'gold') return -1;
+      if (b.subscription_tier === 'gold' && a.subscription_tier !== 'gold') return 1;
+      if (a.is_available_now && !b.is_available_now) return -1;
+      if (b.is_available_now && !a.is_available_now) return 1;
+      return 0;
+    });
+
+    return sorted.slice(0, 60).map(p => ({
+      id: p.id,
+      stage_name: (showAdInfo && p.ad_title) ? p.ad_title : p.name,
+      age: p.age,
+      gender: 'Feminino',
+      description: p.bio || '',
+      whatsapp: p.whatsapp || '',
+      is_only_massage: p.category === 'massage' || p.category === 'both',
+      is_escort: p.category === 'escort' || p.category === 'both',
+      is_verified: p.verification_status === 'verified',
+      is_space_verified: p.is_space_verified || false,
+      is_available_now: p.is_available_now || false,
+      latitude: Number(p.latitude) || -23.5616,
+      longitude: Number(p.longitude) || -46.6560,
+      neighborhood: p.neighborhood || 'Jardins',
+      city: p.city,
+      rate: Number((showAdInfo && p.ad_price !== undefined && p.ad_price !== null) ? p.ad_price : p.price_per_hour) || 0,
+      photos: [(showAdInfo && p.ad_photos && p.ad_photos.length > 0) ? p.ad_photos[0] : (p.avatar_url || '/avatar-placeholder.svg')],
+      amenities: p.amenities || [],
+      tier: p.subscription_tier || 'free',
+      is_gold: p.subscription_tier === 'gold'
+    }));
+  }, [profiles, showAdInfo]);
 
   const mapCenter: [number, number] = userCoords
     ? userCoords

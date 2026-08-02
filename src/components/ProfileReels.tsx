@@ -403,7 +403,7 @@ export default function ProfileReels({
                       onContextMenu={(e) => e.preventDefault()}
                       controlsList="nodownload nofullscreen noremoteplayback"
                       disablePictureInPicture={true}
-                      preload={isActive ? "auto" : "metadata"}
+                      preload={isActive || Math.abs(index - activeIndex) <= 1 ? "auto" : "none"}
                       onClick={() => setIsPlaying(!isPlaying)}
                     />
                   ) : (

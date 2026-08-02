@@ -332,8 +332,8 @@ Authorization: Bearer <seu_token_aqui>
   const normalizedIp = ip.split(',')[0].trim();
 
   // 2. Instanciar o cliente Supabase utilizando chaves anon
-  const supabaseUrl = process.env.SUPABASE_URL || '';
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
   if (!supabaseUrl || !supabaseAnonKey) {
     if (pathname === '/') {

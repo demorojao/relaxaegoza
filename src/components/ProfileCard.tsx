@@ -142,8 +142,14 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
               <div />
             )}
 
-            {/* Selos de Confiança (Dupla Verificação) */}
-            <div className="flex gap-1">
+            {/* Selos de Confiança (Dupla Verificação & Top Avaliada) */}
+            <div className="flex items-center gap-1">
+              {profile.avg_rating && Number(profile.avg_rating) >= 4.8 && (profile.reviews_count || 0) >= 1 && (
+                <div className="bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full border border-gold-primary/40 text-gold-light text-[10px] font-bold flex items-center gap-1 shadow-md" title="Top Avaliada pelos Clientes">
+                  <Star className="w-3 h-3 fill-gold-primary text-gold-primary" />
+                  <span>{Number(profile.avg_rating).toFixed(1)}</span>
+                </div>
+              )}
               {profile.verification_status === 'verified' && (
                 <div className="bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-emerald-500/20 text-emerald-400" title="Perfil Verificado por Selfie">
                   <ShieldCheck className="w-3.5 h-3.5" />

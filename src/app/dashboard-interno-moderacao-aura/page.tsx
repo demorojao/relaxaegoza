@@ -9,11 +9,11 @@ interface PageProps {
 
 async function AdminDashboardPageContent({ searchParams }: PageProps) {
   const { key } = await searchParams;
-  const secret = process.env.ADMIN_ACCESS_SECRET || 'aura-master-secure-2026';
+  const secret = (process.env.ADMIN_ACCESS_SECRET || process.env.NEXT_PUBLIC_ADMIN_ACCESS_SECRET || '').trim();
 
   // Se a chave na URL (?key=...) não corresponder ao segredo do ambiente, retorna 404 (Not Found)
   // Fazendo com que a rota pareça completamente inexistente para hackers
-  if (key !== secret) {
+  if (!secret || key !== secret) {
     notFound();
   }
 

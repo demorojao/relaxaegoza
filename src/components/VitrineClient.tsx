@@ -202,12 +202,30 @@ export default function VitrineClient({
   useEffect(() => {
     checkUser();
     fetchSpecialties();
+    if (typeof window !== 'undefined') {
+      const cachedCity = sessionStorage.getItem('rg_detected_city');
+      const cachedCoords = sessionStorage.getItem('rg_user_coords');
+      if (cachedCity && cachedCoords) {
+        try {
+          setDetectedCity(cachedCity);
+          setUserCoords(JSON.parse(cachedCoords));
+          return;
+        } catch (e) {
+          // Fallback se JSON for inválido
+        }
+      }
+    }
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
-          setUserCoords([lat, lon]);
+          const coordsArr: [number, number] = [lat, lon];
+          setUserCoords(coordsArr);
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('rg_user_coords', JSON.stringify(coordsArr));
+          }
           
           // Reverse geocoding do OpenStreetMap Nominatim
           fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`)
@@ -216,6 +234,9 @@ export default function VitrineClient({
               const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || data.address?.state_district;
               if (city) {
                 setDetectedCity(city);
+                if (typeof window !== 'undefined') {
+                  sessionStorage.setItem('rg_detected_city', city);
+                }
               }
             })
             .catch(err => console.error("Erro no reverse geocoding da cidade:", err));

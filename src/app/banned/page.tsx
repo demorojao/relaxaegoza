@@ -61,7 +61,7 @@ export default function BannedPage() {
             rel="noopener noreferrer"
             className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider transition-all block cursor-pointer shadow-lg shadow-red-500/20 active:scale-[0.98]"
           >
-            Contatar Suporte Aura
+            Contatar Suporte Relaxe & Goze
           </a>
         </div>
       </div>

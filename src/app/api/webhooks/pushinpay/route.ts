@@ -3,12 +3,12 @@ import { fulfillPayment } from '@/lib/paymentFulfillment';
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Opcional: Validar o token de segurança no header x-pushinpay-token se configurado
+    // 1. Validar o token de segurança no header x-pushinpay-token se configurado
     const expectedToken = process.env.PUSHINPAY_WEBHOOK_SECRET;
     const receivedToken = req.headers.get('x-pushinpay-token');
 
-    if (expectedToken && receivedToken && expectedToken !== receivedToken) {
-      console.warn('Webhook PushinPay: token de validação inválido.');
+    if (expectedToken && receivedToken !== expectedToken) {
+      console.warn('Webhook PushinPay: token de validação inválido ou ausente.');
       return new Response('Unauthorized', { status: 401 });
     }
 

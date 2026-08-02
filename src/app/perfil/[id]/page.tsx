@@ -156,6 +156,15 @@ async function ProfilePageContent({ params }: Props) {
       addressCountry: 'BR',
       sublocality: profile.neighborhood || undefined,
     },
+    ...(profile.reviews_count && profile.reviews_count > 0 ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: Number(profile.avg_rating || 5).toFixed(1),
+        reviewCount: profile.reviews_count,
+        bestRating: '5',
+        worstRating: '1',
+      }
+    } : {}),
   };
 
   return (

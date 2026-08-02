@@ -61,7 +61,7 @@ export default function PricingPage() {
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.message || 'Erro de conexão com o Stripe.');
+      alert(err.message || 'Erro de conexão com o servidor de pagamento.');
     } finally {
       setLoadingTier(null);
     }

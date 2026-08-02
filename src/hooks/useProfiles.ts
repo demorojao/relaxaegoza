@@ -15,11 +15,13 @@ export function useProfiles(options: UseProfilesOptions) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const specialtiesKey = options.selectedSpecialties.join(',');
+
   useEffect(() => {
     const fetchProfiles = async () => {
       setLoading(true);
       let query = supabase.from('profiles').select(`
-        id, name, age, city, price_per_hour, avatar_url, subscription_tier, is_available_now, is_space_verified, verification_status, neighborhood, latitude, longitude, category, amenities, target_audience,
+        id, name, age, city, price_per_hour, avatar_url, subscription_tier, boost_expires_at, is_available_now, is_space_verified, verification_status, neighborhood, latitude, longitude, category, amenities, target_audience,
         specialties:profile_specialties(specialties(name))
       `);
 
@@ -65,9 +67,13 @@ export function useProfiles(options: UseProfilesOptions) {
           );
         }
 
-        // Algoritmo de Destaque (Boosting)
+        // Algoritmo de Destaque (Boosting & Tier Priority)
+        const now = Date.now();
         const getPriorityScore = (p: Profile) => {
           let score = 0;
+          if (p.boost_expires_at && new Date(p.boost_expires_at).getTime() > now) {
+            score += 2000;
+          }
           if (p.subscription_tier === 'gold') score += 1000;
           if (p.subscription_tier === 'pro') score += 500;
           if (p.is_available_now) score += 250;
@@ -87,7 +93,7 @@ export function useProfiles(options: UseProfilesOptions) {
     options.categoryFilter, 
     options.ageFilter, 
     options.priceFilter, 
-    options.selectedSpecialties, 
+    specialtiesKey, 
     options.spaceFilter
   ]);
 

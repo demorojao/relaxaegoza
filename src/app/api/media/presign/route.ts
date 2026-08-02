@@ -25,6 +25,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'fileName e contentType são obrigatórios.' }, { status: 400 });
     }
 
+    const allowedMimeTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
+      'video/mp4', 'video/quicktime', 'video/webm'
+    ];
+    if (!allowedMimeTypes.includes(contentType.toLowerCase())) {
+      return NextResponse.json({ error: 'Formato de mídia não suportado. Envie imagens (JPG, PNG, WebP) ou vídeos (MP4, MOV).' }, { status: 400 });
+    }
+
     // Forçar que o arquivo seja salvo no subdiretório do próprio usuário para segurança
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     const fileKey = `${user.id}/${Date.now()}_${sanitizedFileName}`;

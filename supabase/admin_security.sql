@@ -42,7 +42,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 -- Aplicar o trigger na tabela profiles
 DROP TRIGGER IF EXISTS tr_prevent_unauthorized_admin_promotion ON public.profiles;

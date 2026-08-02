@@ -5,20 +5,17 @@ function isValidAdminPin(inputPin: string | null): boolean {
   if (!inputPin) return false;
   const cleanInput = inputPin.trim();
   const envPin = (process.env.ADMIN_SECURITY_PIN || '').trim();
-  const validPins = ['9847', '1234', '0000'];
-  if (envPin && !validPins.includes(envPin)) {
-    validPins.push(envPin);
-  }
-  return validPins.includes(cleanInput);
+  if (!envPin) return false;
+  return cleanInput === envPin;
 }
 
 export async function POST(req: NextRequest) {
   try {
     // 1. Validar a assinatura de chave de acesso do cabeçalho para conter ataques direct api calls
     const adminSecret = req.headers.get('x-admin-secret')?.trim();
-    const expectedSecret = (process.env.ADMIN_ACCESS_SECRET || 'aura-master-secure-2026').trim();
+    const expectedSecret = (process.env.ADMIN_ACCESS_SECRET || '').trim();
 
-    if (!adminSecret || (adminSecret !== expectedSecret && adminSecret !== 'aura-master-secure-2026')) {
+    if (!adminSecret || !expectedSecret || adminSecret !== expectedSecret) {
       return NextResponse.json({ error: 'Acesso Proibido. Token de assinatura inválido.' }, { status: 403 });
     }
 
