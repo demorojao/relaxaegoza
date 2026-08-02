@@ -24,7 +24,10 @@ import {
   FileImage,
   Clock,
   DollarSign,
-  MessageCircle
+  MessageCircle,
+  Plane,
+  Navigation,
+  Compass
 } from 'lucide-react';
 import ImageBlurSelector from '@/components/ImageBlurSelector';
 import { getCDNUrl } from '@/lib/mediaHelper';
@@ -69,6 +72,53 @@ export default function ProfileEditor() {
   const [isConsultRate, setIsConsultRate] = useState(false);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+
+  const TOP_TOUR_CITIES = [
+    'São Paulo', 'Rio de Janeiro', 'Brasília', 'Curitiba', 
+    'Belo Horizonte', 'Florianópolis', 'Salvador', 'Goiânia', 
+    'Campinas', 'Santos', 'Balneário Camboriú', 'Vitória', 
+    'Porto Alegre', 'Recife', 'Fortaleza'
+  ];
+
+  const detectGPSLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocalização não é suportada pelo seu navegador.');
+      return;
+    }
+
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lon } = pos.coords;
+        setLatitude(lat);
+        setLongitude(lon);
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`, {
+            headers: { 'Accept': 'application/json', 'User-Agent': 'RelaxeGozePortal/1.0' }
+          });
+          const data = await res.json();
+          if (data && data.address) {
+            const detectedCity = data.address.city || data.address.town || data.address.municipality || data.address.state_district || '';
+            const detectedSub = data.address.suburb || data.address.neighbourhood || data.address.quarter || '';
+            if (detectedCity) setCity(detectedCity);
+            if (detectedSub) setNeighborhood(detectedSub);
+          }
+        } catch (e) {
+          console.error("Erro ao detectar localização por GPS:", e);
+        } finally {
+          setDetectingLocation(false);
+        }
+      },
+      (err) => {
+        console.error(err);
+        alert('Não foi possível acessar seu GPS. Permita o acesso à localização no navegador.');
+        setDetectingLocation(false);
+      },
+      { timeout: 10000 }
+    );
+  };
 
   // Avatar states
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -1147,19 +1197,73 @@ export default function ProfileEditor() {
               />
             </div>
 
-            {/* Cidade */}
-            <div className="space-y-1.5">
-              <label htmlFor="city-input" className="text-xs text-gray-400 font-medium">Cidade</label>
-              <input 
-                id="city-input"
-                type="text" 
-                title="Cidade"
-                value={city} 
-                onChange={(e) => setCity(e.target.value)} 
-                className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
-                required
-              />
+          {/* Módulo de Troca Rápida de Cidade / Tour */}
+          <div className="col-span-1 sm:col-span-2 bg-gradient-to-br from-gold-primary/10 via-black/40 to-wine-primary/10 border border-gold-primary/30 p-4 rounded-2xl space-y-3 shadow-lg">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-gold-primary/20 text-gold-light">
+                  <Plane className="w-5 h-5 text-gold-primary" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <span>Mudar Cidade de Atendimento (Tour Ativo)</span>
+                    <span className="bg-gold-primary text-dark-bg text-[9px] px-2 py-0.5 rounded-full font-extrabold">1-Clique</span>
+                  </h4>
+                  <p className="text-[11px] text-gray-400 font-light">
+                    Mude de cidade instantaneamente ao fazer tour. Seu anúncio entra direto na vitrine local.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={detectGPSLocation}
+                disabled={detectingLocation}
+                className="w-full sm:w-auto px-3 py-2 rounded-xl bg-blue-500/20 border border-blue-400/40 text-blue-300 hover:bg-blue-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+              >
+                <Navigation className={`w-3.5 h-3.5 ${detectingLocation ? 'animate-spin' : ''}`} />
+                <span>{detectingLocation ? 'Detectando GPS...' : '📍 Usar Meu GPS Atual'}</span>
+              </button>
             </div>
+
+            {/* Chips de Seleção Rápida de Cidade */}
+            <div className="pt-2 border-t border-white/5 space-y-1.5">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold block">Cidades de Tour Populares:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {TOP_TOUR_CITIES.map((c) => {
+                  const isCurrent = city.toLowerCase() === c.toLowerCase();
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCity(c)}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                        isCurrent
+                          ? 'bg-gold-primary border-gold-primary text-dark-bg font-bold shadow-md'
+                          : 'bg-black/50 border-white/10 text-gray-300 hover:text-white hover:border-gold-primary/40'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Cidade */}
+          <div className="space-y-1.5">
+            <label htmlFor="city-input" className="text-xs text-gray-400 font-medium">Cidade Atual de Atendimento</label>
+            <input 
+              id="city-input"
+              type="text" 
+              title="Cidade"
+              value={city} 
+              onChange={(e) => setCity(e.target.value)} 
+              className="w-full bg-dark-bg/60 border border-dark-border text-xs text-white px-4 py-3 rounded-xl focus:border-gold-primary/50 focus:outline-none transition-colors"
+              required
+            />
+          </div>
 
             {/* WhatsApp */}
             <div className="space-y-1.5">
