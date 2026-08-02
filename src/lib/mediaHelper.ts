@@ -15,29 +15,23 @@ export function getCDNUrl(url: string | null | undefined): string {
 
   // Prefixos conhecidos de storage
   const supabaseStoragePrefix = 'https://ivlaeilkomqhqwerojny.supabase.co/storage/v1/object/public/profile_media';
-  const r2PublicDefault = 'https://pub-cb3abcfa6e1b4245be005a2dc81dd7d3.r2.dev';
 
-  // Normalizar proxy local/Vercel do Supabase
+  // Normalizar proxy local/Vercel do Supabase se presente
   if (normalizedUrl.includes('/api/supabase-proxy/storage/v1/object/public/profile_media/')) {
     const parts = normalizedUrl.split('/api/supabase-proxy/storage/v1/object/public/profile_media/');
     normalizedUrl = `${supabaseStoragePrefix}/${parts[1]}`;
   }
 
-  // Se for um caminho de arquivo relativo salvo no banco (ex: "avatars/123.jpg")
-  if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
-    if (normalizedUrl.startsWith('/')) {
-      return normalizedUrl;
-    }
-    normalizedUrl = `${supabaseStoragePrefix}/${normalizedUrl}`;
+  // Se já for uma URL completa HTTP/HTTPS (Supabase, R2, ou externa), retorna diretamente
+  if (normalizedUrl.startsWith('http://') || normalizedUrl.startsWith('https://')) {
+    return normalizedUrl;
   }
 
-  const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL || r2PublicDefault;
-
-  if (cdnUrl && normalizedUrl.startsWith(supabaseStoragePrefix)) {
-    const cleanCdnUrl = cdnUrl.endsWith('/') ? cdnUrl.slice(0, -1) : cdnUrl;
-    return normalizedUrl.replace(supabaseStoragePrefix, cleanCdnUrl);
+  // Se for um caminho relativo estático (ex: "/avatar-placeholder.svg")
+  if (normalizedUrl.startsWith('/')) {
+    return normalizedUrl;
   }
-  
-  return normalizedUrl;
+
+  // Para caminhos salvos relativamente no banco (ex: "user_id/123.jpg"), construir URL do Supabase Storage
+  return `${supabaseStoragePrefix}/${normalizedUrl}`;
 }
-
