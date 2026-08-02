@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/supabaseServer';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from '@/lib/r2Server';
+import { r2Client, R2_BUCKET_NAME, buildR2PublicUrl } from '@/lib/r2Server';
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     await r2Client.send(command);
 
     // 5. Retornar a URL pública do Cloudflare R2
-    const publicUrl = `${R2_PUBLIC_URL}/${fileKey}`;
+    const publicUrl = buildR2PublicUrl(fileKey);
 
     return NextResponse.json({
       success: true,

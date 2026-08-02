@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/supabaseServer';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from '@/lib/r2Server';
+import { r2Client, R2_BUCKET_NAME, buildR2PublicUrl } from '@/lib/r2Server';
 
 export async function POST(req: NextRequest) {
   try {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     const presignedUrl = await getSignedUrl(r2Client, command, { expiresIn: 600 });
 
     // 5. Construir a URL pública final que será salva no banco
-    const publicUrl = `${R2_PUBLIC_URL}/${fileKey}`;
+    const publicUrl = buildR2PublicUrl(fileKey);
 
     return NextResponse.json({
       success: true,

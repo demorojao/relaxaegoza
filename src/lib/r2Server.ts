@@ -16,3 +16,12 @@ export const r2Client = new S3Client({
 
 export const R2_BUCKET_NAME = (process.env.R2_BUCKET_NAME || '').trim();
 export const R2_PUBLIC_URL = (process.env.R2_PUBLIC_URL || '').trim();
+
+/**
+ * Constrói uma URL pública limpa do R2 sem barras duplas.
+ */
+export function buildR2PublicUrl(fileKey: string): string {
+  const cleanBase = R2_PUBLIC_URL.replace(/\/+$/, '');
+  const cleanKey = fileKey.replace(/^\/+/, '');
+  return cleanBase ? `${cleanBase}/${cleanKey}` : cleanKey;
+}
