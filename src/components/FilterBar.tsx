@@ -10,6 +10,8 @@ interface FilterBarProps {
   setVerifiedFilter: (v: boolean) => void;
   availableFilter?: boolean;
   setAvailableFilter?: (v: boolean) => void;
+  distanceFilter?: number;
+  setDistanceFilter?: (v: number) => void;
   viewMode: 'reels' | 'grid' | 'map';
   setViewMode: (v: 'reels' | 'grid' | 'map') => void;
   cityFilter: string;
@@ -32,6 +34,8 @@ export default function FilterBar({
   setVerifiedFilter,
   availableFilter,
   setAvailableFilter,
+  distanceFilter,
+  setDistanceFilter,
   viewMode,
   setViewMode,
   cityFilter,
@@ -144,6 +148,30 @@ export default function FilterBar({
           >
             🛡️ Verificados
           </button>
+          {setDistanceFilter && (
+            <div className="relative">
+              <select
+                value={distanceFilter || 0}
+                title="Filtrar por Distância"
+                onChange={(e) => setDistanceFilter(Number(e.target.value))}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border appearance-none cursor-pointer pr-7 ${
+                  distanceFilter && distanceFilter > 0
+                    ? 'bg-linear-to-r from-blue-600 to-indigo-700 border-blue-500 text-white shadow-md shadow-blue-500/10'
+                    : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <option value={0} className="bg-dark-bg text-gray-400">📍 Qualquer Distância</option>
+                <option value={2} className="bg-dark-bg text-white">📍 Até 2 km de mim</option>
+                <option value={5} className="bg-dark-bg text-white">📍 Até 5 km de mim</option>
+                <option value={10} className="bg-dark-bg text-white">📍 Até 10 km de mim</option>
+                <option value={25} className="bg-dark-bg text-white">📍 Até 25 km de mim</option>
+                <option value={50} className="bg-dark-bg text-white">📍 Até 50 km de mim</option>
+              </select>
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">
+                ▼
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

@@ -1023,6 +1023,12 @@ export default function ProfileDetailsClient({
                 <span>{profile.verification_title || 'Verificado'}</span>
               </div>
             )}
+            {profile.is_video_verified && (
+              <div className="bg-purple-500/10 border border-purple-500/30 text-purple-300 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-md" title="Foto 100% Real Verificada em Vídeo">
+                <Video className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <span>Vídeo Verificado</span>
+              </div>
+            )}
             {profile.avg_rating && Number(profile.avg_rating) >= 4.8 && (
               <div className="bg-gradient-to-r from-gold-primary/20 to-gold-primary/10 border border-gold-primary/40 text-gold-light px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-md" title="Excelente pontuação de satisfação dos clientes">
                 <Star className="w-3.5 h-3.5 fill-gold-primary text-gold-primary" />

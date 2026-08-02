@@ -176,6 +176,7 @@ export default function VitrineClient({
   const [spaceFilter, setSpaceFilter] = useState<boolean>(false);
   const [verifiedFilter, setVerifiedFilter] = useState<boolean>(false);
   const [availableFilter, setAvailableFilter] = useState<boolean>(false);
+  const [distanceFilter, setDistanceFilter] = useState<number>(0);
   const [genderFilter, setGenderFilter] = useState<'Feminino' | 'Masculino' | 'Trans' | ''>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -484,13 +485,13 @@ export default function VitrineClient({
   };
 
   useEffect(() => {
-    const hasActiveFilters = cityFilter || neighborhoodFilter || categoryFilter || ageFilter || priceFilter || selectedSpecialties.length > 0 || spaceFilter || verifiedFilter || availableFilter || genderFilter || currentTab !== 'ads';
+    const hasActiveFilters = cityFilter || neighborhoodFilter || categoryFilter || ageFilter || priceFilter || selectedSpecialties.length > 0 || spaceFilter || verifiedFilter || availableFilter || genderFilter || distanceFilter > 0 || currentTab !== 'ads';
     if (hasActiveFilters) {
       fetchProfiles();
     } else {
       setProfiles(sortProfiles(initialProfiles, userCoords));
     }
-  }, [cityFilter, neighborhoodFilter, categoryFilter, ageFilter, priceFilter, selectedSpecialties, spaceFilter, verifiedFilter, availableFilter, genderFilter, initialProfiles, userCoords, currentTab]);
+  }, [cityFilter, neighborhoodFilter, categoryFilter, ageFilter, priceFilter, selectedSpecialties, spaceFilter, verifiedFilter, availableFilter, genderFilter, distanceFilter, initialProfiles, userCoords, currentTab]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -668,6 +669,11 @@ export default function VitrineClient({
           }
           return p;
         });
+
+        // Filtro por Raio de Distância Máxima (em KM)
+        if (distanceFilter && distanceFilter > 0) {
+          filteredData = filteredData.filter(p => (p as any).distance !== undefined && (p as any).distance <= distanceFilter);
+        }
       }
 
       // Reordenar por tier, boost e proximidade (se houver)
@@ -864,6 +870,7 @@ export default function VitrineClient({
     if (spaceFilter) count++;
     if (verifiedFilter) count++;
     if (genderFilter) count++;
+    if (distanceFilter > 0) count++;
     return count;
   };
 
@@ -962,6 +969,8 @@ export default function VitrineClient({
           setVerifiedFilter={setVerifiedFilter}
           availableFilter={availableFilter}
           setAvailableFilter={setAvailableFilter}
+          distanceFilter={distanceFilter}
+          setDistanceFilter={setDistanceFilter}
           viewMode={viewMode}
           setViewMode={setViewMode}
           cityFilter={cityFilter}

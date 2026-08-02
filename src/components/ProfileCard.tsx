@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, DollarSign, Star, ShieldCheck, Building2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, DollarSign, Star, ShieldCheck, Building2, Sparkles, ChevronLeft, ChevronRight, Video } from 'lucide-react';
 import { Profile } from '../types';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -153,6 +153,12 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
               {profile.verification_status === 'verified' && (
                 <div className="bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-emerald-500/20 text-emerald-400" title="Perfil Verificado por Selfie">
                   <ShieldCheck className="w-3.5 h-3.5" />
+                </div>
+              )}
+              {profile.is_video_verified && (
+                <div className="bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-purple-500/40 text-purple-300 text-[9px] font-bold flex items-center gap-0.5 shadow-md" title="Foto 100% Real Verificada em Vídeo">
+                  <Video className="w-3 h-3 text-purple-400" />
+                  <span>Vídeo</span>
                 </div>
               )}
               {profile.is_space_verified && (

@@ -16,6 +16,8 @@ export interface Profile {
   subscription_tier?: 'free' | 'pro' | 'gold';
   is_available_now?: boolean;
   is_space_verified?: boolean;
+  is_video_verified?: boolean;
+  video_verification_url?: string;
   verification_status?: 'none' | 'pending' | 'verified' | 'rejected';
   specialties?: ProfileSpecialty[];
   avg_rating?: number;
