@@ -96,7 +96,7 @@ export default function ProfileEditor() {
 
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`, {
-            headers: { 'Accept': 'application/json', 'User-Agent': 'RelaxeGozePortal/1.0' }
+            headers: { 'Accept': 'application/json' }
           });
           const data = await res.json();
           if (data && data.address) {
@@ -367,8 +367,11 @@ export default function ProfileEditor() {
     e.preventDefault();
     if (!user) return;
 
-    // Validar WhatsApp
-    const rawWhatsapp = whatsapp.replace(/\D/g, '');
+    // Validar WhatsApp (suporta números com ou sem DDI 55)
+    let rawWhatsapp = whatsapp.replace(/\D/g, '');
+    if (rawWhatsapp.startsWith('55') && (rawWhatsapp.length === 12 || rawWhatsapp.length === 13)) {
+      rawWhatsapp = rawWhatsapp.slice(2);
+    }
     if (rawWhatsapp.length < 10 || rawWhatsapp.length > 11) {
       alert('Por favor, informe um número de WhatsApp válido com DDD (10 ou 11 dígitos).');
       return;
@@ -467,38 +470,41 @@ export default function ProfileEditor() {
     const formattedBio = bioParts.join('\n\n') || cleanDescription(presentationBio);
 
     // Geocodificação automática via Nominatim API
-    let lat = latitude;
-    let lon = longitude;
+    let lat: number | null = latitude;
+    let lon: number | null = longitude;
     try {
-      const queryStr = `${cleanNeighborhood}, ${cleanCity}, Brazil`;
-      const geocodeRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryStr)}&format=json&limit=1`, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'AuraPortal/1.0'
-        }
-      });
-      const geocodeData = await geocodeRes.json();
-      if (geocodeData && geocodeData.length > 0) {
-        lat = parseFloat(geocodeData[0].lat);
-        lon = parseFloat(geocodeData[0].lon);
-      } else {
-        // Fallback para buscar apenas por cidade
-        const cityQueryStr = `${cleanCity}, Brazil`;
-        const cityRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityQueryStr)}&format=json&limit=1`, {
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'RelaxeGozePortal/1.0'
-          }
+      if (cleanCity) {
+        const queryStr = cleanNeighborhood ? `${cleanNeighborhood}, ${cleanCity}, Brazil` : `${cleanCity}, Brazil`;
+        const geocodeRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryStr)}&format=json&limit=1`, {
+          headers: { 'Accept': 'application/json' }
         });
-        const cityData = await cityRes.json();
-        if (cityData && cityData.length > 0) {
-          lat = parseFloat(cityData[0].lat);
-          lon = parseFloat(cityData[0].lon);
+        if (geocodeRes.ok) {
+          const geocodeData = await geocodeRes.json();
+          if (geocodeData && geocodeData.length > 0 && geocodeData[0].lat && geocodeData[0].lon) {
+            lat = parseFloat(geocodeData[0].lat);
+            lon = parseFloat(geocodeData[0].lon);
+          } else if (cleanNeighborhood) {
+            // Fallback para buscar apenas por cidade se bairro não retornou nada
+            const cityQueryStr = `${cleanCity}, Brazil`;
+            const cityRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityQueryStr)}&format=json&limit=1`, {
+              headers: { 'Accept': 'application/json' }
+            });
+            if (cityRes.ok) {
+              const cityData = await cityRes.json();
+              if (cityData && cityData.length > 0 && cityData[0].lat && cityData[0].lon) {
+                lat = parseFloat(cityData[0].lat);
+                lon = parseFloat(cityData[0].lon);
+              }
+            }
+          }
         }
       }
     } catch (e) {
       console.error("Erro ao geocodificar ao salvar perfil:", e);
     }
+
+    if (lat !== null && (isNaN(lat) || !isFinite(lat))) lat = null;
+    if (lon !== null && (isNaN(lon) || !isFinite(lon))) lon = null;
 
     try {
       let finalAvatarUrl = avatarUrl;
@@ -576,7 +582,7 @@ export default function ProfileEditor() {
         rates: finalPriceRates
       };
 
-      // Helper: tenta atualizar com todos os campos; se alguma coluna não existir (42703), faz fallback
+      // Helper: tenta atualizar com todos os campos; se alguma coluna não existir (42703), faz fallback progressivo
       const tryUpdate = async (payload: any): Promise<any> => {
         const { data, error } = await supabase
           .from('profiles')
@@ -587,14 +593,62 @@ export default function ProfileEditor() {
         return { data, error };
       };
 
-      let result = await tryUpdate({ ...updatePayload, gender, whatsapp_custom_message: whatsappCustomMessage });
-      
+      let fullPayload = {
+        ...updatePayload,
+        gender,
+        whatsapp_custom_message: whatsappCustomMessage
+      };
+
+      let result = await tryUpdate(fullPayload);
+
+      // Fallback 1: sem whatsapp_custom_message
       if (result.error?.code === '42703') {
-        result = await tryUpdate({ ...updatePayload, gender });
+        const p1 = { ...updatePayload, gender };
+        delete p1.whatsapp_custom_message;
+        result = await tryUpdate(p1);
       }
+
+      // Fallback 2: sem whatsapp_custom_message nem gender
       if (result.error?.code === '42703') {
-        result = await tryUpdate(updatePayload);
+        const p2 = { ...updatePayload };
+        delete p2.gender;
+        delete p2.whatsapp_custom_message;
+        result = await tryUpdate(p2);
       }
+
+      // Fallback 3: sem campos estruturados extras (rates, business_hours, target_audience, amenities)
+      if (result.error?.code === '42703') {
+        const p3: any = {
+          name: stageName,
+          age: Number(age),
+          whatsapp: rawWhatsapp,
+          neighborhood: cleanNeighborhood,
+          city: cleanCity,
+          price_per_hour: isConsultRate ? 0 : Number(rate),
+          bio: formattedBio,
+          category,
+          latitude: lat,
+          longitude: lon,
+          avatar_url: finalAvatarUrl
+        };
+        result = await tryUpdate(p3);
+      }
+
+      // Fallback 4: colunas essenciais absolutas
+      if (result.error?.code === '42703') {
+        const p4: any = {
+          name: stageName,
+          age: Number(age),
+          whatsapp: rawWhatsapp,
+          neighborhood: cleanNeighborhood,
+          city: cleanCity,
+          price_per_hour: isConsultRate ? 0 : Number(rate),
+          bio: formattedBio,
+          avatar_url: finalAvatarUrl
+        };
+        result = await tryUpdate(p4);
+      }
+
       if (result.error) throw result.error;
 
       // Sincronizar estado local com a resposta real do banco (pós-trigger)
