@@ -12,9 +12,18 @@ interface ProfileGridProps {
   viewMode?: string;
   showAdInfo?: boolean;
   onClearFilters?: () => void;
+  favorites?: string[];
+  onToggleFavorite?: (id: string) => void;
 }
 
-export default function ProfileGrid({ loading, profiles, showAdInfo = true, onClearFilters }: ProfileGridProps) {
+export default function ProfileGrid({ 
+  loading, 
+  profiles, 
+  showAdInfo = true, 
+  onClearFilters,
+  favorites = [],
+  onToggleFavorite
+}: ProfileGridProps) {
   return (
     <div id="vitrine-grid" className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pb-24 relative z-10">
       <AnimatePresence mode="wait">
@@ -42,7 +51,13 @@ export default function ProfileGrid({ loading, profiles, showAdInfo = true, onCl
           >
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {profiles.map(profile => (
-                <ProfileCard key={profile.id} profile={profile} showAdInfo={showAdInfo} />
+                <ProfileCard 
+                  key={profile.id} 
+                  profile={profile} 
+                  showAdInfo={showAdInfo} 
+                  isFavorite={favorites.includes(profile.id)}
+                  onToggleFavorite={onToggleFavorite}
+                />
               ))}
             </div>
           </motion.div>

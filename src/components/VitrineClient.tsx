@@ -178,7 +178,33 @@ export default function VitrineClient({
   const [availableFilter, setAvailableFilter] = useState<boolean>(false);
   const [distanceFilter, setDistanceFilter] = useState<number>(0);
   const [genderFilter, setGenderFilter] = useState<'Feminino' | 'Masculino' | 'Trans' | ''>('');
+  const [favoritesFilter, setFavoritesFilter] = useState<boolean>(false);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Carregar favoritos salvos do localStorage ao montar
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedFavs = localStorage.getItem('aura_favorites');
+      if (savedFavs) {
+        try {
+          setFavorites(JSON.parse(savedFavs));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
+
+  const handleToggleFavorite = (profileId: string) => {
+    setFavorites(prev => {
+      const next = prev.includes(profileId) ? prev.filter(id => id !== profileId) : [...prev, profileId];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('aura_favorites', JSON.stringify(next));
+      }
+      return next;
+    });
+  };
 
   // States do Matchmaker Quiz
   const [isQuizOpen, setIsQuizOpen] = useState(false);
@@ -485,13 +511,13 @@ export default function VitrineClient({
   };
 
   useEffect(() => {
-    const hasActiveFilters = cityFilter || neighborhoodFilter || categoryFilter || ageFilter || priceFilter || selectedSpecialties.length > 0 || spaceFilter || verifiedFilter || availableFilter || genderFilter || distanceFilter > 0 || currentTab !== 'ads';
+    const hasActiveFilters = cityFilter || neighborhoodFilter || categoryFilter || ageFilter || priceFilter || selectedSpecialties.length > 0 || spaceFilter || verifiedFilter || availableFilter || genderFilter || distanceFilter > 0 || favoritesFilter || currentTab !== 'ads';
     if (hasActiveFilters) {
       fetchProfiles();
     } else {
       setProfiles(sortProfiles(initialProfiles, userCoords));
     }
-  }, [cityFilter, neighborhoodFilter, categoryFilter, ageFilter, priceFilter, selectedSpecialties, spaceFilter, verifiedFilter, availableFilter, genderFilter, distanceFilter, initialProfiles, userCoords, currentTab]);
+  }, [cityFilter, neighborhoodFilter, categoryFilter, ageFilter, priceFilter, selectedSpecialties, spaceFilter, verifiedFilter, availableFilter, genderFilter, distanceFilter, favoritesFilter, favorites, initialProfiles, userCoords, currentTab]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -655,6 +681,11 @@ export default function VitrineClient({
         filteredData = filteredData.filter(p => p.gender === genderFilter);
       }
 
+      // Filtro de Favoritos
+      if (favoritesFilter) {
+        filteredData = filteredData.filter(p => favorites.includes(p.id));
+      }
+
       // 4. Calcular distância se as coordenadas do usuário estiverem ativas
       if (userCoords) {
         filteredData = filteredData.map(p => {
@@ -719,6 +750,7 @@ export default function VitrineClient({
     setGenderFilter('');
     setAgeFilter('');
     setPriceFilter('');
+    setFavoritesFilter(false);
     setShowLocationFallbackWarning(false);
   };
 
@@ -1107,6 +1139,20 @@ export default function VitrineClient({
                 Verificadas
               </button>
 
+              {/* Meus Favoritos */}
+              <button
+                onClick={() => setFavoritesFilter(prev => !prev)}
+                className={cn(
+                  "px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border cursor-pointer select-none active:scale-95",
+                  favoritesFilter
+                    ? "bg-red-500/20 text-red-400 border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+                    : "bg-black/40 border-white/10 text-gray-300 hover:border-red-500/30 hover:text-white"
+                )}
+              >
+                <Heart className={cn("w-3.5 h-3.5 text-red-400", favoritesFilter && "fill-red-500")} />
+                Favoritos {favorites.length > 0 && <span className="text-[10px] bg-red-500/30 px-1.5 py-0.2 rounded-full font-semibold">{favorites.length}</span>}
+              </button>
+
               {/* Com Local Próprio */}
               <button
                 onClick={() => setSpaceFilter(prev => !prev)}
@@ -1162,6 +1208,8 @@ export default function VitrineClient({
             userCoords={userCoords} 
             showAdInfo={currentTab === 'ads'}
             onClearFilters={handleClearAllFilters}
+            favorites={favorites}
+            onToggleFavorite={handleToggleFavorite}
           />
         </>
       )}

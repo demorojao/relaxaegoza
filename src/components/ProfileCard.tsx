@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, DollarSign, Star, ShieldCheck, Building2, Sparkles, ChevronLeft, ChevronRight, Video } from 'lucide-react';
+import { MapPin, DollarSign, Star, ShieldCheck, Building2, Sparkles, ChevronLeft, ChevronRight, Video, Heart } from 'lucide-react';
 import { Profile } from '../types';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -14,9 +14,11 @@ import { getCDNUrl } from '../lib/mediaHelper';
 interface ProfileCardProps {
   profile: Profile;
   showAdInfo?: boolean;
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: string) => void;
 }
 
-export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardProps) {
+export default function ProfileCard({ profile, showAdInfo = true, isFavorite = false, onToggleFavorite }: ProfileCardProps) {
   const specialtyNames = profile.specialties?.map(s => s.specialties?.name).filter(Boolean) || [];
 
   const isGold = profile.subscription_tier === 'gold';
@@ -171,6 +173,25 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
                   <Building2 className="w-3.5 h-3.5" />
                 </div>
               )}
+
+              {/* Botão de Favoritar (Coração) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (onToggleFavorite) onToggleFavorite(profile.id);
+                }}
+                className={cn(
+                  "p-1.5 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-lg active:scale-90 pointer-events-auto ml-1",
+                  isFavorite
+                    ? "bg-red-500/20 text-red-500 border border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.4)]"
+                    : "bg-black/50 text-gray-300 border border-white/10 hover:text-red-400 hover:border-red-500/30"
+                )}
+                title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+              >
+                <Heart className={cn("w-3.5 h-3.5 transition-transform", isFavorite && "fill-red-500 scale-110")} />
+              </button>
             </div>
           </div>
 
