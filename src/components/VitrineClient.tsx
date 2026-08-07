@@ -421,7 +421,7 @@ export default function VitrineClient({
     }
   }, [storyProgress, isVideo]);
 
-  // Helper: ordena perfis dando peso absoluto para tiers e proximidade se userCoords estiver ativo
+  // Helper: ordena perfis seguindo estritamente a hierarquia do portal (Tier > Boost > Nota de Avaliação > Qtd Avaliações > Disponibilidade > Proximidade GPS > Recência)
   const sortProfiles = (profilesList: Profile[], coords: [number, number] | null) => {
     const dataWithDistance = coords 
       ? profilesList.map(p => {
@@ -439,45 +439,45 @@ export default function VitrineClient({
       : profilesList;
 
     return [...dataWithDistance].sort((a, b) => {
-      // 1. Categoria de Assinatura (Gold > Pro > Free)
+      // 1. Categoria de Assinatura (Gold = 3 > Pro = 2 > Free = 1) -> GOLD É SEMPRE PRIMEIRO!
       const tierOrder: Record<string, number> = { gold: 3, pro: 2, free: 1 };
       const tierA = tierOrder[a.subscription_tier || 'free'] || 1;
       const tierB = tierOrder[b.subscription_tier || 'free'] || 1;
       if (tierA !== tierB) return tierB - tierA;
 
-      // 2. Status Boost Ativo (Com boost > Sem boost)
+      // 2. Status Boost Ativo (Com boost > Sem boost dentro do mesmo plano)
       const isBoostedA = a.boost_expires_at && new Date(a.boost_expires_at) > new Date() ? 1 : 0;
       const isBoostedB = b.boost_expires_at && new Date(b.boost_expires_at) > new Date() ? 1 : 0;
       if (isBoostedA !== isBoostedB) return isBoostedB - isBoostedA;
 
-      // 2.5. Pontos de Avaliação (avg_rating)
-      const ratingA = a.avg_rating || 0;
-      const ratingB = b.avg_rating || 0;
-      if (ratingA !== ratingB) return ratingB - ratingA;
-
-      // 2.6. Quantidade de Comentários/Avaliações (reviews_count)
-      const reviewsA = a.reviews_count || 0;
-      const reviewsB = b.reviews_count || 0;
-      if (reviewsA !== reviewsB) return reviewsB - reviewsA;
-
-      // 3. Se ambas possuem Boost, ordenar pela recência (quem expira mais tarde = pagou por último)
+      // 3. Se ambas possuem Boost ativo, recência da contratação do boost (expira mais tarde vem primeiro)
       if (isBoostedA && isBoostedB) {
         const timeA = new Date(a.boost_expires_at!).getTime();
         const timeB = new Date(b.boost_expires_at!).getTime();
         if (timeA !== timeB) return timeB - timeA;
       }
 
-      // 4. Proximidade (Mais perto > Mais longe)
-      const distA = (a as any).distance !== undefined ? (a as any).distance : Infinity;
-      const distB = (b as any).distance !== undefined ? (b as any).distance : Infinity;
-      if (distA !== distB) return distA - distB;
+      // 4. Pontos de Avaliação (avg_rating: 5.0 > 4.9 > 4.8)
+      const ratingA = Number(a.avg_rating !== undefined ? a.avg_rating : 5.0);
+      const ratingB = Number(b.avg_rating !== undefined ? b.avg_rating : 5.0);
+      if (ratingA !== ratingB) return ratingB - ratingA;
 
-      // 5. Disponibilidade ("Disponível Agora" primeiro)
+      // 5. Quantidade de Comentários/Avaliações (reviews_count)
+      const reviewsA = Number(a.reviews_count || 0);
+      const reviewsB = Number(b.reviews_count || 0);
+      if (reviewsA !== reviewsB) return reviewsB - reviewsA;
+
+      // 6. Disponibilidade ("Disponível Agora" primeiro)
       const availA = a.is_available_now && (!a.available_until || new Date(a.available_until) > new Date()) ? 1 : 0;
       const availB = b.is_available_now && (!b.available_until || new Date(b.available_until) > new Date()) ? 1 : 0;
       if (availA !== availB) return availB - availA;
 
-      // 6. Recência (Mais novo primeiro)
+      // 7. Proximidade (Distância em km quando GPS do usuário estiver ativo)
+      const distA = (a as any).distance !== undefined ? (a as any).distance : Infinity;
+      const distB = (b as any).distance !== undefined ? (b as any).distance : Infinity;
+      if (distA !== distB) return distA - distB;
+
+      // 8. Recência de cadastro no site (Mais novo primeiro)
       const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
       const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
       return dateB - dateA;

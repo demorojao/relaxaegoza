@@ -319,7 +319,7 @@ export default function ProfileReels({
           <div className="flex gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-1">
             <button
               onClick={() => { setCategoryFilter(''); setSpaceFilter(false); }}
-              className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 categoryFilter === '' && !spaceFilter
                   ? 'bg-linear-to-r from-gold-primary/80 to-gold-dark/80 border-gold-primary/20 text-dark-bg shadow-md'
                   : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
@@ -329,7 +329,7 @@ export default function ProfileReels({
             </button>
             <button
               onClick={() => { setCategoryFilter('escort'); setSpaceFilter(false); }}
-              className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 categoryFilter === 'escort' && !spaceFilter
                   ? 'bg-linear-to-r from-wine-primary/80 to-wine-dark/80 border-wine-primary/20 text-white shadow-md'
                   : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
@@ -339,7 +339,7 @@ export default function ProfileReels({
             </button>
             <button
               onClick={() => { setCategoryFilter('massage'); setSpaceFilter(false); }}
-              className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 categoryFilter === 'massage' && !spaceFilter
                   ? 'bg-linear-to-r from-gold-primary/80 to-gold-dark/80 border-gold-primary/20 text-dark-bg shadow-md'
                   : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
@@ -349,7 +349,7 @@ export default function ProfileReels({
             </button>
             <button
               onClick={() => { setSpaceFilter(true); }}
-              className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
                 spaceFilter
                   ? 'bg-linear-to-r from-emerald-600/80 to-emerald-800/80 border-emerald-600/20 text-white shadow-md'
                   : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'

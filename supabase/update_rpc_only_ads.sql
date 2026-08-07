@@ -2,7 +2,7 @@
 DROP FUNCTION IF EXISTS public.get_premium_profiles(text, text);
 DROP FUNCTION IF EXISTS public.get_premium_profiles(text, text, boolean);
 
--- Re-create the function with the new p_only_ads parameter
+-- Re-create the function with avg_rating, reviews_count, is_video_verified and complete ordering hierarchy
 CREATE OR REPLACE FUNCTION public.get_premium_profiles(
   p_city_slug text DEFAULT NULL,
   p_neighborhood_slug text DEFAULT NULL,
@@ -25,6 +25,7 @@ BEGIN
       p.available_until,
       p.created_at,
       p.is_space_verified,
+      p.is_video_verified,
       p.verification_status,
       p.neighborhood,
       p.latitude,
@@ -35,6 +36,24 @@ BEGIN
       p.whatsapp,
       p.whatsapp_custom_message,
       p.boost_expires_at,
+      -- Dynamic average rating computed from public.reviews table (default 5.0 for new profiles)
+      COALESCE(
+        (
+          SELECT ROUND(AVG((r.rating_massage + r.rating_service + r.rating_environment) / 3.0), 1)
+          FROM public.reviews r
+          WHERE r.provider_id = p.id
+        ),
+        5.0
+      ) AS avg_rating,
+      -- Dynamic reviews count from public.reviews table
+      COALESCE(
+        (
+          SELECT COUNT(*)::int
+          FROM public.reviews r
+          WHERE r.provider_id = p.id
+        ),
+        0
+      ) AS reviews_count,
       -- Ad fields
       a.title AS ad_title,
       a.description AS ad_description,
@@ -64,13 +83,13 @@ BEGIN
       AND (p_city_slug IS NULL OR public.slugify(p.city) = p_city_slug)
       AND (p_neighborhood_slug IS NULL OR public.slugify(p.neighborhood) = p_neighborhood_slug)
     ORDER BY 
-      -- 1. Subscription Tier (gold > pro > free)
+      -- 1. Subscription Tier (gold > pro > free) -> GOLD IS ALWAYS FIRST!
       CASE p.subscription_tier 
         WHEN 'gold' THEN 3
         WHEN 'pro' THEN 2
         ELSE 1
       END DESC,
-      -- 2. Active Boost Status
+      -- 2. Active Boost Status (boosted > non-boosted)
       CASE 
         WHEN p.boost_expires_at > now() THEN 1 
         ELSE 0 
@@ -80,12 +99,30 @@ BEGIN
         WHEN p.boost_expires_at > now() THEN p.boost_expires_at 
         ELSE NULL 
       END DESC NULLS LAST,
-      -- 4. Availability ("Available Now" and not expired)
+      -- 4. Average Rating Points (5.0 > 4.9 > 4.8)
+      COALESCE(
+        (
+          SELECT ROUND(AVG((r.rating_massage + r.rating_service + r.rating_environment) / 3.0), 1)
+          FROM public.reviews r
+          WHERE r.provider_id = p.id
+        ),
+        5.0
+      ) DESC,
+      -- 5. Reviews Count (more reviews > fewer reviews)
+      COALESCE(
+        (
+          SELECT COUNT(*)::int
+          FROM public.reviews r
+          WHERE r.provider_id = p.id
+        ),
+        0
+      ) DESC,
+      -- 6. Availability ("Available Now" and not expired)
       CASE 
         WHEN p.is_available_now AND (p.available_until IS NULL OR p.available_until > now()) THEN 1 
         ELSE 0 
       END DESC,
-      -- 5. Profile recency (newest profile first)
+      -- 7. Profile recency (newest profile first)
       p.created_at DESC
   )
   SELECT json_agg(to_jsonb(fp)) INTO result

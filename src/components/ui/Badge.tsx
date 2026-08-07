@@ -19,7 +19,7 @@ interface BadgeProps {
 }
 
 export function Badge({ children, variant = 'outline', className, isPulsing = false }: BadgeProps) {
-  const baseStyles = 'inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full transition-all duration-300';
+  const baseStyles = 'inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-full transition-all duration-300';
   
   const variantStyles = {
     gold: 'bg-gradient-to-r from-gold-primary to-gold-dark text-dark-bg border border-gold-primary/20 shadow-[0_0_8px_rgba(197,168,128,0.2)]',

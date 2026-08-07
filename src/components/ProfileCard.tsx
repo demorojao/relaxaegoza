@@ -150,7 +150,7 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
             {/* Selos de Confiança (Dupla Verificação & Top Avaliada) */}
             <div className="flex items-center gap-1">
               {profile.avg_rating && Number(profile.avg_rating) >= 4.8 && (profile.reviews_count || 0) >= 1 && (
-                <div className="bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full border border-gold-primary/40 text-gold-light text-[10px] font-bold flex items-center gap-1 shadow-md" title="Top Avaliada pelos Clientes">
+                <div className="bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full border border-gold-primary/40 text-gold-light text-[11px] font-bold flex items-center gap-1 shadow-md" title="Top Avaliada pelos Clientes">
                   <Star className="w-3 h-3 fill-gold-primary text-gold-primary" />
                   <span>{Number(profile.avg_rating).toFixed(1)}</span>
                 </div>
@@ -161,7 +161,7 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
                 </div>
               )}
               {profile.is_video_verified && (
-                <div className="bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-purple-500/40 text-purple-300 text-[9px] font-bold flex items-center gap-0.5 shadow-md" title="Foto 100% Real Verificada em Vídeo">
+                <div className="bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-purple-500/40 text-purple-300 text-[10px] font-bold flex items-center gap-0.5 shadow-md" title="Foto 100% Real Verificada em Vídeo">
                   <Video className="w-3 h-3 text-purple-400" />
                   <span>Vídeo</span>
                 </div>
@@ -223,38 +223,38 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
               <h3 className="text-sm sm:text-base font-bold text-white tracking-tight drop-shadow-md line-clamp-2 leading-tight flex items-center gap-1 flex-wrap">
                 <span>{displayName}</span>
                 {isGold && (
-                  <span className="text-[10px] sm:text-xs text-gold-primary shrink-0 inline-block animate-bounce" title="Gold VIP">👑</span>
+                  <span className="text-xs sm:text-sm text-gold-primary shrink-0 inline-block animate-bounce" title="Gold VIP">👑</span>
                 )}
               </h3>
             </div>
             
             {/* Idade e Preço */}
-            <div className="flex items-center justify-between text-xs font-semibold mt-0.5 border-b border-white/5 pb-1">
-              <span className="font-light text-white/70 text-[10px] sm:text-xs">
+            <div className="flex items-center justify-between text-xs sm:text-sm font-semibold mt-0.5 border-b border-white/5 pb-1">
+              <span className="font-light text-white/70 text-xs sm:text-sm">
                 {profile.age} anos
               </span>
               
               {(!displayPrice || Number(displayPrice) < 300) ? (
-                <span className="text-[10px] sm:text-xs font-bold text-gold-light uppercase tracking-wide">
+                <span className="text-xs font-bold text-gold-light uppercase tracking-wide">
                   Consultar valor
                 </span>
               ) : (
                 <div className="flex items-center text-gold-light">
-                  <DollarSign className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 -mr-0.5 shrink-0" />
+                  <DollarSign className="w-3 sm:w-3.5 h-3 sm:h-3.5 -mr-0.5 shrink-0" />
                   <span className="text-xs sm:text-sm">{displayPrice}</span>
-                  <span className="text-[9px] text-white/50 font-normal ml-0.5">/h</span>
+                  <span className="text-[10px] text-white/50 font-normal ml-0.5">/h</span>
                 </div>
               )}
             </div>
 
             {/* Cidade e Avaliação */}
-            <div className="flex items-center text-[9px] sm:text-xs text-gray-300 justify-between">
+            <div className="flex items-center text-xs sm:text-sm text-gray-300 justify-between">
               <div className="flex items-center gap-0.5 sm:gap-1 truncate max-w-[75%]">
-                <MapPin className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 text-wine-light/90 shrink-0" />
+                <MapPin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-wine-light/90 shrink-0" />
                 <span className="truncate">
                   {profile.city}
                   {(profile as any).distance !== undefined && (
-                    <span className="text-[8px] text-emerald-400 font-bold ml-1 shrink-0">
+                    <span className="text-[9px] text-emerald-400 font-bold ml-1 shrink-0">
                       ({(profile as any).distance.toFixed(1)} km)
                     </span>
                   )}
@@ -262,14 +262,14 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
               </div>
               
               <div className="flex items-center gap-0.5 text-gold-primary shrink-0">
-                <Star className="w-2.5 sm:w-3 h-2.5 sm:h-3 fill-gold-primary" />
-                <span className="font-medium text-[9px] sm:text-[11px]">
-                  {profile.avg_rating && profile.avg_rating > 0 
+                <Star className="w-3 h-3 fill-gold-primary" />
+                <span className="font-medium text-xs sm:text-sm">
+                  {profile.avg_rating && Number(profile.avg_rating) > 0 
                     ? Number(profile.avg_rating).toFixed(1) 
-                    : '4.9'}
+                    : '5.0'}
                 </span>
                 {profile.reviews_count !== undefined && profile.reviews_count > 0 && (
-                  <span className="text-[8px] sm:text-[10px] text-gray-400 font-light ml-0.5">
+                  <span className="text-[9px] sm:text-xs text-gray-400 font-light ml-0.5">
                     ({profile.reviews_count})
                   </span>
                 )}
@@ -278,7 +278,7 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
 
             {/* Categoria e Especialidades (Tags Limpas) */}
             <div className="flex flex-col gap-1 border-t border-white/5 pt-1.5 mt-0.5">
-              <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-gray-400 font-medium font-sans">
+              <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-400 font-medium font-sans">
                 <span className="truncate text-gray-300">
                   {profile.category === 'massage' 
                     ? '🧘 Massagens' 
@@ -287,7 +287,7 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
                       : '✨ Ambos'}
                 </span>
                 {profile.target_audience && profile.target_audience.length > 0 && (
-                  <span className="text-[8px] bg-wine-primary/20 border border-wine-primary/30 text-wine-light px-1 py-0.2 rounded shrink-0">
+                  <span className="text-[9px] bg-wine-primary/20 border border-wine-primary/30 text-wine-light px-1 py-0.2 rounded shrink-0">
                     👥 {profile.target_audience.join(', ')}
                   </span>
                 )}
@@ -297,12 +297,12 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
               {specialtyNames.length > 0 && (
                 <div className="flex flex-wrap gap-1 pt-0.5">
                   {specialtyNames.slice(0, 2).map((spec) => (
-                    <span key={spec} className="text-[8px] bg-gold-primary/10 border border-gold-primary/20 text-gold-light px-1.5 py-0.5 rounded-md font-medium truncate max-w-[120px]">
+                    <span key={spec} className="text-[9.5px] bg-gold-primary/10 border border-gold-primary/20 text-gold-light px-1.5 py-0.5 rounded-md font-medium truncate max-w-[120px]">
                       ✨ {spec}
                     </span>
                   ))}
                   {specialtyNames.length > 2 && (
-                    <span className="text-[8px] text-gray-400 font-light self-center">
+                    <span className="text-[9px] text-gray-400 font-light self-center">
                       +{specialtyNames.length - 2}
                     </span>
                   )}
@@ -313,7 +313,7 @@ export default function ProfileCard({ profile, showAdInfo = true }: ProfileCardP
 
           {/* Descrição / Biografia do Anúncio */}
           {cleanDesc && (
-            <p className="text-[10px] sm:text-xs text-gray-400 line-clamp-2 leading-relaxed pt-1.5 border-t border-white/5 font-light">
+            <p className="text-xs sm:text-sm text-gray-400 line-clamp-2 leading-relaxed pt-1.5 border-t border-white/5 font-light">
               {cleanDesc}
             </p>
           )}
