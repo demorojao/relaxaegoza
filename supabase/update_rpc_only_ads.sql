@@ -25,7 +25,6 @@ BEGIN
       p.available_until,
       p.created_at,
       p.is_space_verified,
-      p.is_video_verified,
       p.verification_status,
       p.neighborhood,
       p.latitude,
