@@ -27,16 +27,36 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Aumento suave no tamanho base da fonte em telas móveis para melhorar a legibilidade */
+/* Aumento significativo no tamanho base da fonte e regras tipográficas para telas móveis */
 @media (max-width: 768px) {
   html {
-    font-size: 17px;
+    font-size: 18px;
+  }
+  
+  /* Garante legibilidade excelente em telas pequenas substituindo textos microscópicos */
+  .text-\[9px\], 
+  .text-\[9\.5px\], 
+  .text-\[10px\], 
+  .text-\[10\.5px\], 
+  .text-\[11px\] {
+    font-size: 0.78125rem !important; /* ~14px em base 18px */
+    line-height: 1.35 !important;
+  }
+
+  .text-xs {
+    font-size: 0.84375rem !important; /* ~15px em base 18px */
+    line-height: 1.4 !important;
+  }
+
+  .text-sm {
+    font-size: 0.9375rem !important; /* ~17px em base 18px */
+    line-height: 1.45 !important;
   }
 }
 
 @media (max-width: 480px) {
   html {
-    font-size: 17.5px;
+    font-size: 18.5px;
   }
 }
 

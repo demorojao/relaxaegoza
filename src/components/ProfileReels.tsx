@@ -572,7 +572,7 @@ export default function ProfileReels({
                       className="object-cover"
                     />
                   </div>
-                  <span className="text-[9px] text-gold-primary mt-1 font-bold tracking-wider">Perfil</span>
+                  <span className="text-xs text-gold-primary mt-1 font-bold tracking-wider">Perfil</span>
                 </Link>
 
                 {/* WhatsApp Quick CTA Button */}
@@ -586,7 +586,7 @@ export default function ProfileReels({
                     <button className="w-10 h-10 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 active:scale-95 transition-all duration-300">
                       <span className="text-lg font-sans">💬</span>
                     </button>
-                    <span className="text-[9px] text-gray-300 mt-1 font-semibold tracking-wider font-sans group-hover:text-white">Whats</span>
+                    <span className="text-xs text-gray-200 mt-1 font-bold tracking-wider font-sans group-hover:text-white">Whats</span>
                   </a>
                 )}
 
@@ -598,7 +598,7 @@ export default function ProfileReels({
                   <div className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all duration-300">
                     <MessageCircle className="w-4.5 h-4.5" />
                   </div>
-                  <span className="text-[9px] text-gray-300 mt-1 font-semibold tracking-wider">Avaliações</span>
+                  <span className="text-xs text-gray-200 mt-1 font-bold tracking-wider">Avaliações</span>
                 </button>
 
                 {/* Favorite Heart Button */}
@@ -612,7 +612,7 @@ export default function ProfileReels({
                   )}>
                     <Heart className={cn("w-4.5 h-4.5", isFavorited ? 'fill-red-500' : '')} />
                   </div>
-                  <span className="text-[9px] text-gray-300 mt-1 font-semibold tracking-wider">Favoritar</span>
+                  <span className="text-xs text-gray-200 mt-1 font-bold tracking-wider">Favoritar</span>
                 </button>
 
                 {/* Share Button */}
@@ -623,7 +623,7 @@ export default function ProfileReels({
                   <div className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all duration-300">
                     <Share2 className="w-4.5 h-4.5" />
                   </div>
-                  <span className="text-[9px] text-gray-300 mt-1 font-semibold tracking-wider">Partilhar</span>
+                  <span className="text-xs text-gray-200 mt-1 font-bold tracking-wider">Partilhar</span>
                 </button>
 
                 {/* Video Sound Toggle (Global) */}
@@ -635,7 +635,7 @@ export default function ProfileReels({
                     <div className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all duration-300">
                       {isMuted ? <VolumeX className="w-4.5 h-4.5" /> : <Volume2 className="w-4.5 h-4.5" />}
                     </div>
-                    <span className="text-[9px] text-gray-300 mt-1 font-semibold tracking-wider">Som</span>
+                    <span className="text-xs text-gray-200 mt-1 font-bold tracking-wider">Som</span>
                   </button>
                 )}
               </div>

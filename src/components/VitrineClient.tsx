@@ -1652,7 +1652,7 @@ export default function VitrineClient({
             )}
           >
             <Play className={cn("w-5 h-5", viewMode === 'reels' ? "fill-gold-primary" : "")} />
-            <span className="text-[9px] uppercase tracking-wider">Drops</span>
+            <span className="text-xs uppercase tracking-wider font-bold">Drops</span>
           </button>
 
           {/* Vitrine (Grid) Tab */}
@@ -1664,7 +1664,7 @@ export default function VitrineClient({
             )}
           >
             <Grid className="w-5 h-5" />
-            <span className="text-[9px] uppercase tracking-wider">Vitrine</span>
+            <span className="text-xs uppercase tracking-wider font-bold">Vitrine</span>
           </button>
 
 
@@ -1678,7 +1678,7 @@ export default function VitrineClient({
                   className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-gold-light hover:text-white transition-all cursor-pointer"
                 >
                   <Sparkles className="w-5 h-5" />
-                  <span className="text-[9px] uppercase tracking-wider font-semibold">Anúncio</span>
+                  <span className="text-xs uppercase tracking-wider font-bold">Anúncio</span>
                 </button>
               )}
               <Link
@@ -1686,7 +1686,7 @@ export default function VitrineClient({
                 className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-gray-400 hover:text-white transition-all cursor-pointer"
               >
                 <LayoutDashboard className="w-5 h-5 text-gold-light" />
-                <span className="text-[9px] uppercase tracking-wider">Painel</span>
+                <span className="text-xs uppercase tracking-wider font-bold">Painel</span>
               </Link>
             </>
           ) : (
@@ -1697,7 +1697,7 @@ export default function VitrineClient({
               <div className="w-5 h-5 rounded-full bg-gradient-to-br from-gold-primary to-gold-dark flex items-center justify-center text-dark-bg font-extrabold text-xs shadow-md shadow-gold-primary/20">
                 +
               </div>
-              <span className="text-[9px] uppercase tracking-wider font-semibold">Anunciar</span>
+              <span className="text-xs uppercase tracking-wider font-extrabold">Anunciar</span>
             </Link>
           )}
         </div>
