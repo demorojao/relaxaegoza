@@ -20,8 +20,8 @@ export default function AuraStories({ storiesProfiles, handleOpenStory, overlay 
     }`}>
       {/* Label "Disponíveis Agora" */}
       <div className="flex items-center gap-2 mb-2 px-1">
-        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-        <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-gold-light/70">Stories — Disponíveis Agora</span>
+        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+        <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-gold-light">Stories — Disponíveis Agora</span>
       </div>
 
       {/* Scrollable row of story avatars OR empty state */}
@@ -33,12 +33,12 @@ export default function AuraStories({ storiesProfiles, handleOpenStory, overlay 
               <div className="w-12 h-12 rounded-full border-2 border-dashed border-gold-primary/40 flex items-center justify-center bg-gold-primary/5 group-hover:bg-gold-primary/10 transition-all">
                 <span className="text-gold-primary text-xl font-light leading-none">+</span>
               </div>
-              <span className="text-[9px] text-gray-500 group-hover:text-gold-light transition-colors max-w-[60px] truncate text-center">
+              <span className="text-xs text-gray-400 group-hover:text-gold-light transition-colors max-w-[70px] truncate text-center font-medium">
                 Criar Story
               </span>
             </Link>
           )}
-          <span className="text-[10px] text-gray-600 italic">Nenhum story ativo no momento.</span>
+          <span className="text-xs sm:text-sm text-gray-400 font-light italic">Nenhum story ativo no momento.</span>
         </div>
       ) : (
         <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x">
@@ -70,7 +70,7 @@ export default function AuraStories({ storiesProfiles, handleOpenStory, overlay 
                   </div>
                   <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-dark-bg rounded-full animate-pulse" />
                 </div>
-                <span className="text-[9px] font-semibold text-gray-300 group-hover:text-gold-light transition-colors max-w-[60px] truncate drop-shadow-md">
+                <span className="text-xs font-semibold text-gray-200 group-hover:text-gold-light transition-colors max-w-[70px] truncate drop-shadow-md">
                   {profile.name}
                 </span>
               </button>

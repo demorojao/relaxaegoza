@@ -53,8 +53,8 @@ export default function FilterBar({
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 relative z-10 space-y-3">
       {/* Luxury Badging Line */}
-      <div className="flex justify-center md:justify-start items-center gap-1.5 px-1 py-0.5 text-[9px] sm:text-[10px] text-gray-500 font-light tracking-wide">
-        <span className="w-1 h-1 rounded-full bg-gold-primary shrink-0 animate-pulse" />
+      <div className="flex justify-center md:justify-start items-center gap-1.5 px-1 py-0.5 text-xs sm:text-xs text-gray-400 font-normal tracking-wide">
+        <span className="w-1.5 h-1.5 rounded-full bg-gold-primary shrink-0 animate-pulse" />
         <span>Vitrine de alto padrão para acompanhantes de luxo e massoterapeutas de elite</span>
       </div>
 
@@ -63,7 +63,7 @@ export default function FilterBar({
         <div className="inline-flex bg-black/50 border border-white/5 p-1 rounded-xl gap-1">
           <button
             onClick={() => setCurrentTab('ads')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'ads'
                 ? 'bg-linear-to-r from-gold-primary to-gold-dark text-dark-bg shadow-md'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -73,7 +73,7 @@ export default function FilterBar({
           </button>
           <button
             onClick={() => setCurrentTab('models')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'models'
                 ? 'bg-linear-to-r from-gold-primary to-gold-dark text-dark-bg shadow-md'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -89,10 +89,10 @@ export default function FilterBar({
         <div className="flex flex-wrap gap-1.5 sm:gap-2">
           <button
             onClick={() => { setCategoryFilter(''); setSpaceFilter(false); if (setAvailableFilter) setAvailableFilter(false); }}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
+            className={`px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
               categoryFilter === '' && !spaceFilter && !availableFilter && !verifiedFilter
                 ? 'bg-linear-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md shadow-gold-primary/10'
-                : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
             Todos
@@ -100,10 +100,10 @@ export default function FilterBar({
           {setAvailableFilter && (
             <button
               onClick={() => { setAvailableFilter(!availableFilter); }}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border flex items-center gap-1.5 ${
+              className={`px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase transition-all whitespace-nowrap border flex items-center gap-1.5 ${
                 availableFilter
                   ? 'bg-emerald-500 border-emerald-400 text-dark-bg shadow-md shadow-emerald-500/20'
-                  : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                  : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
               }`}
             >
               <span className={`w-2 h-2 rounded-full ${availableFilter ? 'bg-dark-bg' : 'bg-emerald-400 animate-pulse'}`} />
@@ -112,40 +112,40 @@ export default function FilterBar({
           )}
           <button
             onClick={() => { setCategoryFilter('escort'); setSpaceFilter(false); }}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
+            className={`px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
               categoryFilter === 'escort' && !spaceFilter
                 ? 'bg-linear-to-r from-wine-primary to-wine-dark border-wine-primary text-white shadow-md shadow-wine-primary/10'
-                : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
             🔥 Acompanhantes
           </button>
           <button
             onClick={() => { setCategoryFilter('massage'); setSpaceFilter(false); }}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
+            className={`px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
               categoryFilter === 'massage' && !spaceFilter
                 ? 'bg-linear-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md shadow-gold-primary/10'
-                : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
             🧘 Massagens
           </button>
           <button
             onClick={() => { setSpaceFilter(!spaceFilter); }}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
+            className={`px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
               spaceFilter
                 ? 'bg-linear-to-r from-emerald-600 to-emerald-800 border-emerald-600 text-white shadow-md shadow-emerald-600/10'
-                : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
             🏠 Com Espaço
           </button>
           <button
             onClick={() => { setVerifiedFilter(!verifiedFilter); }}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
+            className={`px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase transition-all whitespace-nowrap border ${
               verifiedFilter
                 ? 'bg-linear-to-r from-emerald-500 to-emerald-700 border-emerald-500 text-white shadow-md shadow-emerald-500/10'
-                : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
             🛡️ Verificados
@@ -156,10 +156,10 @@ export default function FilterBar({
                 value={distanceFilter || 0}
                 title="Filtrar por Distância"
                 onChange={(e) => setDistanceFilter(Number(e.target.value))}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap border appearance-none cursor-pointer pr-7 ${
+                className={`px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase transition-all whitespace-nowrap border appearance-none cursor-pointer pr-7 ${
                   distanceFilter && distanceFilter > 0
                     ? 'bg-linear-to-r from-blue-600 to-indigo-700 border-blue-500 text-white shadow-md shadow-blue-500/10'
-                    : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                    : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
                 }`}
               >
                 <option value={0} className="bg-dark-bg text-gray-400">📍 Qualquer Distância</option>
@@ -169,7 +169,7 @@ export default function FilterBar({
                 <option value={25} className="bg-dark-bg text-white">📍 Até 25 km de mim</option>
                 <option value={50} className="bg-dark-bg text-white">📍 Até 50 km de mim</option>
               </select>
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">
                 ▼
               </div>
             </div>

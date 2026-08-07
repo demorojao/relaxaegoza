@@ -299,8 +299,8 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
 
             {/* Categoria e Especialidades (Tags Limpas) */}
             <div className="flex flex-col gap-1 border-t border-white/5 pt-1.5 mt-0.5">
-              <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-400 font-medium font-sans">
-                <span className="truncate text-gray-300">
+              <div className="flex items-center justify-between text-xs sm:text-xs text-gray-300 font-medium font-sans">
+                <span className="truncate font-semibold">
                   {profile.category === 'massage' 
                     ? '🧘 Massagens' 
                     : profile.category === 'escort' 
@@ -308,7 +308,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
                       : '✨ Ambos'}
                 </span>
                 {profile.target_audience && profile.target_audience.length > 0 && (
-                  <span className="text-[9px] bg-wine-primary/20 border border-wine-primary/30 text-wine-light px-1 py-0.2 rounded shrink-0">
+                  <span className="text-[10px] sm:text-xs bg-wine-primary/20 border border-wine-primary/30 text-wine-light px-1.5 py-0.5 rounded shrink-0 font-medium">
                     👥 {profile.target_audience.join(', ')}
                   </span>
                 )}
@@ -318,12 +318,12 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
               {specialtyNames.length > 0 && (
                 <div className="flex flex-wrap gap-1 pt-0.5">
                   {specialtyNames.slice(0, 2).map((spec) => (
-                    <span key={spec} className="text-[9.5px] bg-gold-primary/10 border border-gold-primary/20 text-gold-light px-1.5 py-0.5 rounded-md font-medium truncate max-w-[120px]">
+                    <span key={spec} className="text-[10.5px] sm:text-xs bg-gold-primary/10 border border-gold-primary/20 text-gold-light px-1.5 py-0.5 rounded-md font-semibold truncate max-w-[130px]">
                       ✨ {spec}
                     </span>
                   ))}
                   {specialtyNames.length > 2 && (
-                    <span className="text-[9px] text-gray-400 font-light self-center">
+                    <span className="text-[10px] text-gray-400 font-medium self-center">
                       +{specialtyNames.length - 2}
                     </span>
                   )}
