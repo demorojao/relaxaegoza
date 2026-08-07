@@ -237,41 +237,41 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
         </div>
 
         {/* Informações Abaixo da Foto (Bloco Não-Sobreposto) */}
-        <div className="p-3 bg-black/40 flex-1 flex flex-col justify-between gap-1 sm:gap-1.5 z-10 group-hover:bg-black/60 transition-colors border-t border-white/5">
+        <div className="p-2.5 sm:p-3 bg-black/40 flex-1 flex flex-col justify-between gap-1 sm:gap-1.5 z-10 group-hover:bg-black/60 transition-colors border-t border-white/5">
           <div className="flex flex-col gap-1 sm:gap-1.5">
             {/* Nome / Título do Anúncio */}
             <div className="min-w-0">
-              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight drop-shadow-md line-clamp-2 leading-tight flex items-center gap-1 flex-wrap">
+              <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight drop-shadow-md line-clamp-2 leading-tight flex items-center gap-1 flex-wrap">
                 <span>{displayName}</span>
                 {isGold && (
-                  <span className="text-xs sm:text-sm text-gold-primary shrink-0 inline-block animate-bounce" title="Gold VIP">👑</span>
+                  <span className="text-xs text-gold-primary shrink-0 inline-block animate-bounce" title="Gold VIP">👑</span>
                 )}
               </h3>
             </div>
             
             {/* Idade e Preço */}
-            <div className="flex items-center justify-between text-xs sm:text-sm font-semibold mt-0.5 border-b border-white/5 pb-1">
-              <span className="font-light text-white/70 text-xs sm:text-sm">
+            <div className="flex items-center justify-between text-[11px] sm:text-xs font-semibold mt-0.5 border-b border-white/5 pb-1">
+              <span className="font-light text-white/70 text-[11px] sm:text-xs">
                 {profile.age} anos
               </span>
               
               {(!displayPrice || Number(displayPrice) < 300) ? (
-                <span className="text-xs font-bold text-gold-light uppercase tracking-wide">
+                <span className="text-[10px] sm:text-xs font-bold text-gold-light uppercase tracking-wide">
                   Consultar valor
                 </span>
               ) : (
                 <div className="flex items-center text-gold-light">
-                  <DollarSign className="w-3 sm:w-3.5 h-3 sm:h-3.5 -mr-0.5 shrink-0" />
-                  <span className="text-xs sm:text-sm">{displayPrice}</span>
-                  <span className="text-[10px] text-white/50 font-normal ml-0.5">/h</span>
+                  <DollarSign className="w-3 h-3 -mr-0.5 shrink-0" />
+                  <span className="text-[11px] sm:text-xs">{displayPrice}</span>
+                  <span className="text-[9px] text-white/50 font-normal ml-0.5">/h</span>
                 </div>
               )}
             </div>
 
             {/* Cidade e Avaliação */}
-            <div className="flex items-center text-xs sm:text-sm text-gray-300 justify-between">
+            <div className="flex items-center text-[11px] sm:text-xs text-gray-300 justify-between">
               <div className="flex items-center gap-0.5 sm:gap-1 truncate max-w-[75%]">
-                <MapPin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-wine-light/90 shrink-0" />
+                <MapPin className="w-3 h-3 text-wine-light/90 shrink-0" />
                 <span className="truncate">
                   {profile.city}
                   {(profile as any).distance !== undefined && (
@@ -284,7 +284,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
               
               <div className="flex items-center gap-0.5 text-gold-primary shrink-0">
                 <Star className="w-3 h-3 fill-gold-primary" />
-                <span className="font-medium text-xs sm:text-sm">
+                <span className="font-medium text-[11px] sm:text-xs">
                   {profile.avg_rating && Number(profile.avg_rating) > 0 
                     ? Number(profile.avg_rating).toFixed(1) 
                     : '5.0'}
@@ -299,7 +299,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
 
             {/* Categoria e Especialidades (Tags Limpas) */}
             <div className="flex flex-col gap-1 border-t border-white/5 pt-1.5 mt-0.5">
-              <div className="flex items-center justify-between text-xs sm:text-xs text-gray-300 font-medium font-sans">
+              <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-300 font-medium font-sans">
                 <span className="truncate font-semibold">
                   {profile.category === 'massage' 
                     ? '🧘 Massagens' 
@@ -308,7 +308,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
                       : '✨ Ambos'}
                 </span>
                 {profile.target_audience && profile.target_audience.length > 0 && (
-                  <span className="text-[10px] sm:text-xs bg-wine-primary/20 border border-wine-primary/30 text-wine-light px-1.5 py-0.5 rounded shrink-0 font-medium">
+                  <span className="text-[9px] sm:text-[10px] bg-wine-primary/20 border border-wine-primary/30 text-wine-light px-1 py-0.2 rounded shrink-0 font-medium">
                     👥 {profile.target_audience.join(', ')}
                   </span>
                 )}
@@ -318,12 +318,12 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
               {specialtyNames.length > 0 && (
                 <div className="flex flex-wrap gap-1 pt-0.5">
                   {specialtyNames.slice(0, 2).map((spec) => (
-                    <span key={spec} className="text-[10.5px] sm:text-xs bg-gold-primary/10 border border-gold-primary/20 text-gold-light px-1.5 py-0.5 rounded-md font-semibold truncate max-w-[130px]">
+                    <span key={spec} className="text-[9.5px] sm:text-[10.5px] bg-gold-primary/10 border border-gold-primary/20 text-gold-light px-1.5 py-0.5 rounded-md font-medium truncate max-w-[120px]">
                       ✨ {spec}
                     </span>
                   ))}
                   {specialtyNames.length > 2 && (
-                    <span className="text-[10px] text-gray-400 font-medium self-center">
+                    <span className="text-[9px] text-gray-400 font-medium self-center">
                       +{specialtyNames.length - 2}
                     </span>
                   )}
@@ -334,7 +334,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
 
           {/* Descrição / Biografia do Anúncio */}
           {cleanDesc && (
-            <p className="text-xs sm:text-sm text-gray-400 line-clamp-2 leading-relaxed pt-1.5 border-t border-white/5 font-light">
+            <p className="text-[10.5px] sm:text-xs text-gray-400 line-clamp-2 leading-relaxed pt-1.5 border-t border-white/5 font-light">
               {cleanDesc}
             </p>
           )}

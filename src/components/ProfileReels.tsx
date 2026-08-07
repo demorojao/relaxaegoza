@@ -557,22 +557,22 @@ export default function ProfileReels({
               </AnimatePresence>
 
               {/* Right Side Action Menu — Unificado e Centralizado para evitar sobreposição */}
-              <div className="absolute right-3.5 top-[45%] -translate-y-1/2 z-20 flex flex-col items-center gap-3.5">
+              <div className="absolute right-3 top-[45%] -translate-y-1/2 z-20 flex flex-col items-center gap-3">
                 {/* Avatar do perfil integrado à coluna */}
                 <Link 
                   href={`/perfil/${profile.id}`} 
                   className="flex flex-col items-center group mb-1"
                 >
-                  <div className="w-11 h-11 rounded-full border-2 border-gold-primary overflow-hidden relative shadow-lg shadow-gold-primary/20 group-hover:scale-105 transition-transform duration-300">
+                  <div className="w-10 h-10 rounded-full border-2 border-gold-primary overflow-hidden relative shadow-lg shadow-gold-primary/20 group-hover:scale-105 transition-transform duration-300">
                     <Image
                       src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'}
                       alt={profile.ad_title || profile.name}
                       fill
-                      sizes="44px"
+                      sizes="40px"
                       className="object-cover"
                     />
                   </div>
-                  <span className="text-xs text-gold-primary mt-1 font-bold tracking-wider">Perfil</span>
+                  <span className="w-12 text-center text-[9.5px] text-gold-primary mt-1 font-semibold tracking-wide truncate">Perfil</span>
                 </Link>
 
                 {/* WhatsApp Quick CTA Button */}
@@ -583,10 +583,10 @@ export default function ProfileReels({
                     rel="noopener noreferrer"
                     className="flex flex-col items-center group"
                   >
-                    <button className="w-10 h-10 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 active:scale-95 transition-all duration-300">
-                      <span className="text-lg font-sans">💬</span>
+                    <button className="w-9.5 h-9.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 active:scale-95 transition-all duration-300">
+                      <span className="text-base font-sans">💬</span>
                     </button>
-                    <span className="text-xs text-gray-200 mt-1 font-bold tracking-wider font-sans group-hover:text-white">Whats</span>
+                    <span className="w-12 text-center text-[9.5px] text-gray-300 mt-1 font-semibold tracking-wide font-sans group-hover:text-white truncate">Whats</span>
                   </a>
                 )}
 
@@ -595,10 +595,10 @@ export default function ProfileReels({
                   onClick={() => setShowReviewsDrawer(true)}
                   className="flex flex-col items-center group"
                 >
-                  <div className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all duration-300">
-                    <MessageCircle className="w-4.5 h-4.5" />
+                  <div className="w-9.5 h-9.5 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all duration-300">
+                    <MessageCircle className="w-4 h-4" />
                   </div>
-                  <span className="text-xs text-gray-200 mt-1 font-bold tracking-wider">Avaliações</span>
+                  <span className="w-12 text-center text-[9.5px] text-gray-300 mt-1 font-semibold tracking-wide leading-tight">Avaliações</span>
                 </button>
 
                 {/* Favorite Heart Button */}
@@ -607,12 +607,12 @@ export default function ProfileReels({
                   className="flex flex-col items-center group"
                 >
                   <div className={cn(
-                    "w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center shadow-lg active:scale-90 transition-all duration-300",
+                    "w-9.5 h-9.5 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center shadow-lg active:scale-90 transition-all duration-300",
                     isFavorited ? 'text-red-500 border-red-500/30' : 'text-white'
                   )}>
-                    <Heart className={cn("w-4.5 h-4.5", isFavorited ? 'fill-red-500' : '')} />
+                    <Heart className={cn("w-4 h-4", isFavorited ? 'fill-red-500' : '')} />
                   </div>
-                  <span className="text-xs text-gray-200 mt-1 font-bold tracking-wider">Favoritar</span>
+                  <span className="w-12 text-center text-[9.5px] text-gray-300 mt-1 font-semibold tracking-wide leading-tight">Favoritar</span>
                 </button>
 
                 {/* Share Button */}
@@ -620,10 +620,10 @@ export default function ProfileReels({
                   onClick={() => handleShare(profile)}
                   className="flex flex-col items-center group"
                 >
-                  <div className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all duration-300">
-                    <Share2 className="w-4.5 h-4.5" />
+                  <div className="w-9.5 h-9.5 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all duration-300">
+                    <Share2 className="w-4 h-4" />
                   </div>
-                  <span className="text-xs text-gray-200 mt-1 font-bold tracking-wider">Partilhar</span>
+                  <span className="w-12 text-center text-[9.5px] text-gray-300 mt-1 font-semibold tracking-wide leading-tight">Partilhar</span>
                 </button>
 
                 {/* Video Sound Toggle (Global) */}
@@ -632,10 +632,10 @@ export default function ProfileReels({
                     onClick={() => setIsMuted(!isMuted)}
                     className="flex flex-col items-center group"
                   >
-                    <div className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all duration-300">
-                      {isMuted ? <VolumeX className="w-4.5 h-4.5" /> : <Volume2 className="w-4.5 h-4.5" />}
+                    <div className="w-9.5 h-9.5 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all duration-300">
+                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                     </div>
-                    <span className="text-xs text-gray-200 mt-1 font-bold tracking-wider">Som</span>
+                    <span className="w-12 text-center text-[9.5px] text-gray-300 mt-1 font-semibold tracking-wide">Som</span>
                   </button>
                 )}
               </div>
