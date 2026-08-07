@@ -51,21 +51,16 @@ export default function FilterBar({
   setCurrentTab
 }: FilterBarProps) {
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 relative z-10 space-y-3">
-      {/* Luxury Badging Line */}
-      <div className="flex justify-center md:justify-start items-center gap-1.5 px-1 py-0.5 text-[10px] sm:text-xs text-gray-400 font-normal tracking-wide">
-        <span className="w-1.5 h-1.5 rounded-full bg-gold-primary shrink-0 animate-pulse" />
-        <span>Vitrine de alto padrão para acompanhantes de luxo e massoterapeutas de elite</span>
-      </div>
-
-      {/* Abas Principais: Anúncios vs Profissionais */}
-      <div className="w-full border-b border-white/5 pb-2 mb-1">
-        <div className="inline-flex bg-black/50 border border-white/5 p-1 rounded-xl gap-1">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3 relative z-10 space-y-2.5">
+      {/* Linha 1: Abas de Tipo (Anúncios vs Profissionais) + Filtros de Categoria Principais */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        {/* Alternador de Conteúdo: Anúncios vs Profissionais */}
+        <div className="inline-flex bg-black/60 border border-white/10 p-1 rounded-xl gap-1 shrink-0 self-start sm:self-auto">
           <button
             onClick={() => setCurrentTab('ads')}
-            className={`px-3.5 sm:px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'ads'
-                ? 'bg-linear-to-r from-gold-primary to-gold-dark text-dark-bg shadow-md'
+                ? 'bg-linear-to-r from-gold-primary to-gold-dark text-dark-bg shadow-sm'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -73,118 +68,69 @@ export default function FilterBar({
           </button>
           <button
             onClick={() => setCurrentTab('models')}
-            className={`px-3.5 sm:px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'models'
-                ? 'bg-linear-to-r from-gold-primary to-gold-dark text-dark-bg shadow-md'
+                ? 'bg-linear-to-r from-gold-primary to-gold-dark text-dark-bg shadow-sm'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
             <span>👤 Profissionais</span>
           </button>
         </div>
-      </div>
 
-      {/* Abas de Categoria e Filtros Rápidos (Flex-wrap) */}
-      <div className="w-full">
-        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+        {/* Chips de Categoria Principais (Limpos e Diretos) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
           <button
             onClick={() => { setCategoryFilter(''); setSpaceFilter(false); if (setAvailableFilter) setAvailableFilter(false); }}
-            className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-[10.5px] sm:text-xs font-bold tracking-wide uppercase transition-all whitespace-nowrap border ${
+            className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all whitespace-nowrap border cursor-pointer ${
               categoryFilter === '' && !spaceFilter && !availableFilter && !verifiedFilter
-                ? 'bg-linear-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md shadow-gold-primary/10'
-                : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
+                ? 'bg-gold-primary border-gold-primary text-dark-bg shadow-sm'
+                : 'bg-black/40 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
             Todos
           </button>
-          {setAvailableFilter && (
-            <button
-              onClick={() => { setAvailableFilter(!availableFilter); }}
-              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-[10.5px] sm:text-xs font-bold tracking-wide uppercase transition-all whitespace-nowrap border flex items-center gap-1.5 ${
-                availableFilter
-                  ? 'bg-emerald-500 border-emerald-400 text-dark-bg shadow-md shadow-emerald-500/20'
-                  : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full ${availableFilter ? 'bg-dark-bg' : 'bg-emerald-400 animate-pulse'}`} />
-              Online Agora
-            </button>
-          )}
           <button
             onClick={() => { setCategoryFilter('escort'); setSpaceFilter(false); }}
-            className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-[10.5px] sm:text-xs font-bold tracking-wide uppercase transition-all whitespace-nowrap border ${
+            className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all whitespace-nowrap border cursor-pointer ${
               categoryFilter === 'escort' && !spaceFilter
-                ? 'bg-linear-to-r from-wine-primary to-wine-dark border-wine-primary text-white shadow-md shadow-wine-primary/10'
-                : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
+                ? 'bg-wine-primary border-wine-primary text-white shadow-sm'
+                : 'bg-black/40 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
             🔥 Acompanhantes
           </button>
           <button
             onClick={() => { setCategoryFilter('massage'); setSpaceFilter(false); }}
-            className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-[10.5px] sm:text-xs font-bold tracking-wide uppercase transition-all whitespace-nowrap border ${
+            className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all whitespace-nowrap border cursor-pointer ${
               categoryFilter === 'massage' && !spaceFilter
-                ? 'bg-linear-to-r from-gold-primary to-gold-dark border-gold-primary text-dark-bg shadow-md shadow-gold-primary/10'
-                : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
+                ? 'bg-gold-primary border-gold-primary text-dark-bg shadow-sm'
+                : 'bg-black/40 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
             🧘 Massagens
           </button>
           <button
             onClick={() => { setSpaceFilter(!spaceFilter); }}
-            className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-[10.5px] sm:text-xs font-bold tracking-wide uppercase transition-all whitespace-nowrap border ${
+            className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all whitespace-nowrap border cursor-pointer ${
               spaceFilter
-                ? 'bg-linear-to-r from-emerald-600 to-emerald-800 border-emerald-600 text-white shadow-md shadow-emerald-600/10'
-                : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
+                ? 'bg-emerald-600 border-emerald-500 text-white shadow-sm'
+                : 'bg-black/40 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
             🏠 Com Espaço
           </button>
-          <button
-            onClick={() => { setVerifiedFilter(!verifiedFilter); }}
-            className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-[10.5px] sm:text-xs font-bold tracking-wide uppercase transition-all whitespace-nowrap border ${
-              verifiedFilter
-                ? 'bg-linear-to-r from-emerald-500 to-emerald-700 border-emerald-500 text-white shadow-md shadow-emerald-500/10'
-                : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            🛡️ Verificados
-          </button>
-          {setDistanceFilter && (
-            <div className="relative">
-              <select
-                value={distanceFilter || 0}
-                title="Filtrar por Distância"
-                onChange={(e) => setDistanceFilter(Number(e.target.value))}
-                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-[10.5px] sm:text-xs font-bold tracking-wide uppercase transition-all whitespace-nowrap border appearance-none cursor-pointer pr-7 ${
-                  distanceFilter && distanceFilter > 0
-                    ? 'bg-linear-to-r from-blue-600 to-indigo-700 border-blue-500 text-white shadow-md shadow-blue-500/10'
-                    : 'bg-white/5 border-white/5 text-gray-300 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <option value={0} className="bg-dark-bg text-gray-400">📍 Qualquer Distância</option>
-                <option value={2} className="bg-dark-bg text-white">📍 Até 2 km de mim</option>
-                <option value={5} className="bg-dark-bg text-white">📍 Até 5 km de mim</option>
-                <option value={10} className="bg-dark-bg text-white">📍 Até 10 km de mim</option>
-                <option value={25} className="bg-dark-bg text-white">📍 Até 25 km de mim</option>
-                <option value={50} className="bg-dark-bg text-white">📍 Até 50 km de mim</option>
-              </select>
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">
-                ▼
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Controles: Pesquisa, Seleção de Modo e Filtros Avançados */}
-      <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center w-full">
+      {/* Linha 2: Cidade/Bairro, Modo de Exibição e Botão de Filtros */}
+      <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full">
         {/* Seletores de Localização */}
         <div className="flex flex-col sm:flex-row gap-2 flex-1 min-w-0">
           {/* Seletor de Cidade */}
           <div className="relative flex-1 min-w-0">
             <label htmlFor="city-filter-select" className="sr-only">Filtrar por Cidade</label>
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <select 
               id="city-filter-select"
               value={cityFilter}
@@ -193,27 +139,25 @@ export default function FilterBar({
                 setCityFilter(e.target.value);
                 setNeighborhoodFilter('');
               }}
-              className="w-full bg-black/40 border border-white/5 focus:border-gold-primary/30 rounded-xl py-2.5 pl-9 pr-10 text-xs sm:text-sm text-white focus:outline-none transition-colors appearance-none cursor-pointer"
+              className="w-full bg-black/40 border border-white/10 focus:border-gold-primary/40 rounded-xl py-2 pl-9 pr-8 text-xs text-white focus:outline-none transition-colors appearance-none cursor-pointer"
             >
               <option value="" className="bg-dark-bg text-gray-400">Qualquer cidade...</option>
               {Object.keys(availableLocations).sort().map(city => (
                 <option key={city} value={city} className="bg-dark-bg text-white">{city}</option>
               ))}
             </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 z-10">
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10 pointer-events-none text-gray-400 text-[10px]">
               {onRecalculateLocation && (
                 <button
                   type="button"
                   onClick={onRecalculateLocation}
-                  className="text-gray-400 hover:text-gold-primary p-0.5 transition-colors cursor-pointer"
-                  title="Recalcular minha localização atual por GPS"
+                  className="text-gray-400 hover:text-gold-primary p-0.5 transition-colors cursor-pointer pointer-events-auto"
+                  title="Recalcular localização GPS"
                 >
                   <Navigation className="w-3.5 h-3.5" />
                 </button>
               )}
-              <svg className="w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
+              <span>▼</span>
             </div>
           </div>
 
@@ -221,37 +165,34 @@ export default function FilterBar({
           {cityFilter && availableLocations[cityFilter] && availableLocations[cityFilter].length > 0 && (
             <div className="relative flex-1 min-w-0 animate-fadeIn">
               <label htmlFor="neighborhood-filter-select" className="sr-only">Filtrar por Bairro</label>
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               <select 
                 id="neighborhood-filter-select"
                 value={neighborhoodFilter}
                 title="Filtrar por Bairro"
                 onChange={(e) => setNeighborhoodFilter(e.target.value)}
-                className="w-full bg-black/40 border border-white/5 focus:border-gold-primary/30 rounded-xl py-2.5 pl-9 pr-10 text-xs sm:text-sm text-white focus:outline-none transition-colors appearance-none cursor-pointer"
+                className="w-full bg-black/40 border border-white/10 focus:border-gold-primary/40 rounded-xl py-2 pl-9 pr-8 text-xs text-white focus:outline-none transition-colors appearance-none cursor-pointer"
               >
                 <option value="" className="bg-dark-bg text-gray-400">Qualquer bairro...</option>
                 {availableLocations[cityFilter].map(neigh => (
                   <option key={neigh} value={neigh} className="bg-dark-bg text-white">{neigh}</option>
                 ))}
               </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">
+                ▼
               </div>
             </div>
           )}
         </div>
 
-        {/* Linha secundária de controles no mobile, inline no desktop */}
+        {/* Alternador Drops/Lista & Botão Todos os Filtros */}
         <div className="flex gap-2 items-center w-full sm:w-auto">
-          {/* Selector Drops vs Grid */}
-          <div className="flex flex-1 sm:flex-initial bg-black/40 border border-white/5 rounded-xl p-1 justify-around sm:justify-start">
+          <div className="flex flex-1 sm:flex-initial bg-black/40 border border-white/10 rounded-xl p-0.5 justify-around sm:justify-start">
             <button
               onClick={() => setViewMode('reels')}
-              className={`md:hidden flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`md:hidden flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 viewMode === 'reels' 
-                  ? 'bg-gold-primary text-dark-bg font-bold shadow-sm' 
+                  ? 'bg-gold-primary text-dark-bg font-bold' 
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -260,9 +201,9 @@ export default function FilterBar({
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 viewMode === 'grid' 
-                  ? 'bg-gold-primary text-dark-bg font-bold shadow-sm' 
+                  ? 'bg-gold-primary text-dark-bg font-bold' 
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -271,13 +212,12 @@ export default function FilterBar({
             </button>
           </div>
 
-          {/* Filtros */}
           <button
             onClick={onOpenFilters}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:px-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-xs sm:text-sm font-semibold text-white transition-all cursor-pointer whitespace-nowrap shrink-0"
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-semibold text-white transition-all cursor-pointer whitespace-nowrap shrink-0"
           >
             <SlidersHorizontal className="w-3.5 h-3.5 text-gold-primary" />
-            <span className="text-xs sm:text-sm">Filtros</span>
+            <span>Filtros</span>
             {getActiveFilterCount() > 0 && (
               <span className="bg-gold-primary text-dark-bg text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shrink-0">
                 {getActiveFilterCount()}

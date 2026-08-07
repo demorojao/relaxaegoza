@@ -298,64 +298,54 @@ export default function ProfileReels({
         )}
       </AnimatePresence>
 
-      {/* Floating Category Filters for Mobile Reels */}
+      {/* Floating Category Filters for Mobile Reels — Layout Ultralimpo */}
       {setCategoryFilter && setSpaceFilter && (
-        <div className="absolute top-14 inset-x-0 z-30 pt-2 pb-6 px-4 flex items-center gap-2 md:hidden">
-          {onOpenFilters && (
-            <button
-              onClick={onOpenFilters}
-              className="p-2 rounded-xl bg-black/35 backdrop-blur-sm border border-white/5 text-gray-300 hover:text-white relative active:scale-95 transition-transform shrink-0"
-              title="Abrir Filtros"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-gold-primary" />
-              {activeFiltersCount !== undefined && activeFiltersCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gold-primary text-dark-bg text-[7px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </button>
-          )}
+        <div className="absolute top-14 inset-x-0 z-30 px-4 flex items-center justify-center gap-2 md:hidden">
+          <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md border border-white/10 p-1 rounded-full shadow-lg">
+            {onOpenFilters && (
+              <button
+                onClick={onOpenFilters}
+                className="p-1.5 rounded-full text-gray-300 hover:text-white relative active:scale-95 transition-transform shrink-0"
+                title="Abrir Filtros"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5 text-gold-primary" />
+                {activeFiltersCount !== undefined && activeFiltersCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-gold-primary text-dark-bg text-[7px] font-black w-3 h-3 rounded-full flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+            )}
 
-          <div className="flex gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-1">
             <button
               onClick={() => { setCategoryFilter(''); setSpaceFilter(false); }}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all whitespace-nowrap ${
                 categoryFilter === '' && !spaceFilter
-                  ? 'bg-linear-to-r from-gold-primary/80 to-gold-dark/80 border-gold-primary/20 text-dark-bg shadow-md'
-                  : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
+                  ? 'bg-gold-primary text-dark-bg font-bold shadow-sm'
+                  : 'text-gray-300 hover:text-white'
               }`}
             >
               Todos
             </button>
             <button
               onClick={() => { setCategoryFilter('escort'); setSpaceFilter(false); }}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all whitespace-nowrap ${
                 categoryFilter === 'escort' && !spaceFilter
-                  ? 'bg-linear-to-r from-wine-primary/80 to-wine-dark/80 border-wine-primary/20 text-white shadow-md'
-                  : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
+                  ? 'bg-wine-primary text-white font-bold shadow-sm'
+                  : 'text-gray-300 hover:text-white'
               }`}
             >
               Acompanhantes
             </button>
             <button
               onClick={() => { setCategoryFilter('massage'); setSpaceFilter(false); }}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all whitespace-nowrap ${
                 categoryFilter === 'massage' && !spaceFilter
-                  ? 'bg-linear-to-r from-gold-primary/80 to-gold-dark/80 border-gold-primary/20 text-dark-bg shadow-md'
-                  : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
+                  ? 'bg-gold-primary text-dark-bg font-bold shadow-sm'
+                  : 'text-gray-300 hover:text-white'
               }`}
             >
               Massagens
-            </button>
-            <button
-              onClick={() => { setSpaceFilter(true); }}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border ${
-                spaceFilter
-                  ? 'bg-linear-to-r from-emerald-600/80 to-emerald-800/80 border-emerald-600/20 text-white shadow-md'
-                  : 'bg-black/35 border-white/5 text-gray-400 backdrop-blur-sm'
-              }`}
-            >
-              Com Espaço
             </button>
           </div>
         </div>
