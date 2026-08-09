@@ -141,12 +141,18 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
       console.log(`Assinatura Clube Exclusivo ativada com sucesso: Cliente ${user_id} -> Profissional ${target_profile_id}`);
     }
   } else if (tier && ['pro', 'gold'].includes(tier)) {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
     await supabaseService
       .from('profiles')
-      .update({ subscription_tier: tier })
+      .update({ 
+        subscription_tier: tier,
+        subscription_expires_at: expiresAt.toISOString()
+      })
       .eq('id', targetUserId);
 
-    console.log(`Plano ${tier.toUpperCase()} ativado com sucesso para ${targetUserId}.`);
+    console.log(`Plano ${tier.toUpperCase()} ativado com sucesso para ${targetUserId}. Expira em: ${expiresAt.toISOString()}`);
   }
 
   // 5. Revalidar cache das páginas envolvidas

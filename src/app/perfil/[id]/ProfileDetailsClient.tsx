@@ -197,6 +197,7 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
             .eq('client_id', currentUser.id)
             .eq('provider_id', providerId)
             .eq('status', 'active')
+            .gt('expires_at', new Date().toISOString())
             .maybeSingle();
 
           if (subData) {

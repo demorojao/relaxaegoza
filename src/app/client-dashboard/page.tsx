@@ -60,7 +60,8 @@ export default function ClientDashboard() {
         .from('premium_subscriptions')
         .select('*')
         .eq('client_id', clientId)
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .gt('expires_at', new Date().toISOString());
 
       if (subsErr) {
         console.warn('Err fetching subs:', subsErr);

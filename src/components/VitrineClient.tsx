@@ -526,8 +526,15 @@ export default function VitrineClient({
     return [...dataWithDistance].sort((a, b) => {
       // 1. Categoria de Assinatura (Gold = 3 > Pro = 2 > Free = 1) -> GOLD É SEMPRE PRIMEIRO!
       const tierOrder: Record<string, number> = { gold: 3, pro: 2, free: 1 };
-      const tierA = tierOrder[a.subscription_tier || 'free'] || 1;
-      const tierB = tierOrder[b.subscription_tier || 'free'] || 1;
+      const getEffectiveTier = (p: Profile) => {
+        if (!p.subscription_tier || p.subscription_tier === 'free') return 'free';
+        if (p.subscription_expires_at && new Date(p.subscription_expires_at) < new Date()) {
+          return 'free';
+        }
+        return p.subscription_tier;
+      };
+      const tierA = tierOrder[getEffectiveTier(a)] || 1;
+      const tierB = tierOrder[getEffectiveTier(b)] || 1;
       if (tierA !== tierB) return tierB - tierA;
 
       // 2. Status Boost Ativo (Com boost > Sem boost dentro do mesmo plano)
