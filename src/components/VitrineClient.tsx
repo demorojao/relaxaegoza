@@ -231,6 +231,19 @@ export default function VitrineClient({
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('aura_liked_stories_v1');
+        if (stored) {
+          setLikedStories(JSON.parse(stored));
+        }
+      } catch (e) {
+        console.error('Erro ao ler stories curtidos do localStorage', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 350) {
         setShowScrollTop(true);
@@ -930,32 +943,41 @@ export default function VitrineClient({
     }
   };
 
-  // Função para curtir um story com efeito visual em tempo real
+  // Função para curtir um story (apenas 1 like por story por conta/dispositivo)
   const handleLikeStory = async (storyId?: string) => {
     if (!storyId) return;
 
-    const isLiked = likedStories[storyId];
-    setLikedStories(prev => ({ ...prev, [storyId]: !isLiked }));
+    // Impede dar mais de 1 like no mesmo story
+    if (likedStories[storyId]) return;
 
-    // Atualiza contagem local para feedback instantâneo
+    const newLikedMap = { ...likedStories, [storyId]: true };
+    setLikedStories(newLikedMap);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('aura_liked_stories_v1', JSON.stringify(newLikedMap));
+      } catch (e) {
+        console.error('Erro ao salvar stories curtidos no localStorage', e);
+      }
+    }
+
+    // Incrementar localmente exatamente 1 vez
     setActiveStoryPhotos(prev =>
       prev.map(s => {
         if (s.id === storyId) {
-          const currentLikes = s.likesCount || 0;
-          return { ...s, likesCount: isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1 };
+          return { ...s, likesCount: (s.likesCount || 0) + 1 };
         }
         return s;
       })
     );
 
-    if (!isLiked) {
-      setShowHeartAnim(true);
-      setTimeout(() => setShowHeartAnim(false), 900);
-      try {
-        await supabase.rpc('increment_story_likes', { story_id: storyId });
-      } catch (err) {
-        console.error('Erro ao curtir story:', err);
-      }
+    setShowHeartAnim(true);
+    setTimeout(() => setShowHeartAnim(false), 900);
+
+    try {
+      await supabase.rpc('increment_story_likes', { story_id: storyId });
+    } catch (err) {
+      console.error('Erro ao registrar curtida no servidor:', err);
     }
   };
 

@@ -256,8 +256,9 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
 
   if (loading) {
     return (
-      <div className="py-6 flex justify-center">
-        <div className="w-6 h-6 border-2 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
+      <div id="clube-vip-section" className="py-8 flex flex-col items-center justify-center border-t border-gold-primary/30 bg-gradient-to-b from-gold-primary/10 via-black/50 to-transparent p-5 sm:p-6 rounded-2xl border shadow-xl gap-2">
+        <div className="w-7 h-7 border-2 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
+        <span className="text-xs text-gold-light font-bold uppercase tracking-wider animate-pulse">Carregando Clube VIP...</span>
       </div>
     );
   }
@@ -484,16 +485,21 @@ export default function ProfileDetailsClient({
         window.history.replaceState({}, document.title, cleanUrl);
       }
 
-      // Rolagem automática para o Clube VIP se vier do botão 'Ver Conteúdo VIP'
-      const hash = window.location.hash;
-      if (hash === '#clube-vip-section' || hash === '#vip') {
-        setTimeout(() => {
+      // Rolagem automática reforçada para o Clube VIP se vier do botão 'Ver Conteúdo VIP'
+      const scrollToVip = () => {
+        const hash = window.location.hash;
+        if (hash === '#clube-vip-section' || hash === '#vip') {
           const el = document.getElementById('clube-vip-section');
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
-        }, 350);
-      }
+        }
+      };
+
+      scrollToVip();
+      setTimeout(scrollToVip, 150);
+      setTimeout(scrollToVip, 500);
+      setTimeout(scrollToVip, 900);
     }
   }, []);
 
