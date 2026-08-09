@@ -944,9 +944,15 @@ export default function VitrineClient({
     }
   };
 
-  // Função para curtir um story (apenas 1 like por story por conta/dispositivo)
+  // Função para curtir um story (apenas 1 like por story por conta de usuário autenticado)
   const handleLikeStory = async (storyId?: string) => {
     if (!storyId) return;
+
+    // Bloquear visitantes não logados
+    if (!user) {
+      alert('🔒 Faça login ou crie sua conta gratuita no Relaxe & Goze para curtir este Story!');
+      return;
+    }
 
     // Impede dar mais de 1 like no mesmo story
     if (likedStories[storyId]) return;
