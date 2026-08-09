@@ -229,6 +229,7 @@ export default function VitrineClient({
   const [likedStories, setLikedStories] = useState<Record<string, boolean>>({});
   const [showHeartAnim, setShowHeartAnim] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const activeProgressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1320,8 +1321,9 @@ export default function VitrineClient({
                   return (
                     <div key={idx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
                       <div 
+                        ref={idx === activeSlideIndex ? activeProgressRef : null}
                         className={`h-full bg-gold-primary rounded-full ${
-                          width === '0%' ? 'transition-none' : 'transition-all duration-[50ms] ease-linear'
+                          width === '0%' ? 'transition-none' : 'transition-all duration-75 ease-linear'
                         }`}
                         style={{ width }}
                       />
@@ -1400,10 +1402,10 @@ export default function VitrineClient({
                       src={getCDNUrl(activeStoryPhotos[activeSlideIndex].url)} 
                       autoPlay 
                       playsInline 
-                      muted={false}
+                      muted={true}
                       preload="auto"
                       controls={false}
-                      className="w-full h-full object-contain select-none pointer-events-none"
+                      className="w-full h-full object-contain select-none pointer-events-none transform-gpu translate-z-0 will-change-transform"
                       onContextMenu={(e) => e.preventDefault()}
                       controlsList="nodownload"
                       disablePictureInPicture={true}
@@ -1413,18 +1415,9 @@ export default function VitrineClient({
                         if (startTime > 0) {
                           video.currentTime = startTime;
                         }
-                        video.play().catch(() => {
-                          // Se o navegador bloquear áudio no autoPlay, toca mudo para não travar
-                          video.muted = true;
-                          video.play().catch(() => {});
-                        });
-                        setMediaReady(true);
+                        video.play().catch(() => {});
                       }}
-                      onCanPlay={(e) => {
-                        e.currentTarget.play().catch(() => {});
-                        setMediaReady(true);
-                      }}
-                      onLoadedData={() => setMediaReady(true)}
+                      onCanPlay={() => setMediaReady(true)}
                       onPlaying={() => setMediaReady(true)}
                       onTimeUpdate={(e) => {
                         const video = e.currentTarget;
@@ -1438,7 +1431,10 @@ export default function VitrineClient({
 
                         const range = Math.max(1, endTime - startTime);
                         const current = Math.max(0, video.currentTime - startTime);
-                        setStoryProgress(Math.min(100, (current / range) * 100));
+                        const pct = Math.min(100, (current / range) * 100);
+                        if (activeProgressRef.current) {
+                          activeProgressRef.current.style.width = `${pct}%`;
+                        }
                       }}
                       onEnded={handleNextSlide}
                     />
@@ -1453,17 +1449,6 @@ export default function VitrineClient({
                       onDragStart={(e) => e.preventDefault()}
                       onLoad={() => setMediaReady(true)}
                     />
-                  )}
-
-                  {/* Preloader em background para o próximo slide do Story */}
-                  {activeStoryPhotos[activeSlideIndex + 1] && (
-                    <div className="hidden">
-                      {activeStoryPhotos[activeSlideIndex + 1].type === 'video' ? (
-                        <video src={getCDNUrl(activeStoryPhotos[activeSlideIndex + 1].url)} preload="auto" muted />
-                      ) : (
-                        <img src={getCDNUrl(activeStoryPhotos[activeSlideIndex + 1].url)} alt="" />
-                      )}
-                    </div>
                   )}
 
                   {/* Styled Instagram-style Text Overlay */}
