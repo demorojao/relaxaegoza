@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types';
-import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon, ChevronLeft, ChevronRight, Trash2, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import ProfileGrid from '../components/ProfileGrid';
 import ProfileReels from '../components/ProfileReels';
@@ -228,6 +228,19 @@ export default function VitrineClient({
   const [mediaReady, setMediaReady] = useState(false);
   const [likedStories, setLikedStories] = useState<Record<string, boolean>>({});
   const [showHeartAnim, setShowHeartAnim] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 350) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     checkUser();
@@ -1737,6 +1750,19 @@ export default function VitrineClient({
           )}
         </div>
       </div>
+
+      {/* Botão Flutuante 'Voltar ao topo' (Estilo Referência) */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-20 right-4 z-40 px-4 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-2xl backdrop-blur-md transition-all animate-bounce flex items-center gap-1.5 cursor-pointer border border-red-400/30"
+          title="Voltar ao topo da página"
+        >
+          <ChevronUp className="w-4 h-4" />
+          <span>Voltar ao topo</span>
+        </button>
+      )}
 
       {userProfile && userRole === 'provider' && (
         <AdEditorModal

@@ -7,7 +7,7 @@ import { MapPin, DollarSign, Star, ShieldCheck, Building2, Sparkles, ChevronLeft
 import { Profile } from '../types';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { cn, cleanDescription } from '@/lib/utils';
+import { cn, cleanDescription, formatWhatsAppLink } from '@/lib/utils';
 
 import { getCDNUrl } from '../lib/mediaHelper';
 
@@ -93,12 +93,12 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
   const cleanDesc = cleanDescription(rawDesc);
 
   return (
-    <Link href={`/perfil/${profile.id}`} className="block w-full h-full">
+    <div className="block w-full h-full">
       <Card
         isInteractive
         variant={isGold ? 'glass-gold' : isPro ? 'glass-wine' : 'glass'}
         className={cn(
-          "flex flex-col w-full h-full rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border border-white/5 group",
+          "flex flex-col w-full h-full rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border border-white/10 group shadow-xl bg-black/40",
           isGold 
             ? 'border-2 border-gold-primary/70 gold-ring-active' 
             : isAvailable 
@@ -108,73 +108,52 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
       >
         {/* Container da Imagem com Carrossel e Deslize (Swipe) */}
         <div 
-          className="relative w-full aspect-[3/3.8] overflow-hidden shrink-0 protected-media touch-pan-y bg-gradient-to-br from-wine-primary/20 via-black to-gold-primary/20"
+          className="relative w-full aspect-[3/3.8] overflow-hidden shrink-0 protected-media touch-pan-y bg-neutral-950"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
+          <Link href={`/perfil/${profile.id}`} className="absolute inset-0 z-0">
+            <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
+            
+            <Image
+              key={`${currentPhoto}-${imgError}`}
+              src={imgError ? '/avatar-placeholder.svg' : (getCDNUrl(currentPhoto) || '/avatar-placeholder.svg')}
+              alt={displayName}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              onError={() => setImgError(true)}
+              priority={currentPhotoIndex === 0}
+            />
+          </Link>
           
-          <Image
-            key={`${currentPhoto}-${imgError}`}
-            src={imgError ? '/avatar-placeholder.svg' : (getCDNUrl(currentPhoto) || '/avatar-placeholder.svg')}
-            alt={displayName}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
-            onContextMenu={(e) => e.preventDefault()}
-            onDragStart={(e) => e.preventDefault()}
-            onError={() => setImgError(true)}
-            priority={currentPhotoIndex === 0}
-          />
-          
-          {/* Overlay Degradê escuro sutil na base da imagem */}
-          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/70 to-transparent opacity-90 pointer-events-none" />
+          {/* Overlay Degradê Escuro na Base da Foto */}
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none z-10" />
 
-          {/* Badges do Topo */}
-          <div className="absolute top-3.5 left-3.5 right-3.5 flex justify-between items-center z-10 pointer-events-none">
-            {/* Tag Disponível Agora */}
-            {isAvailable ? (
-              <Badge variant="emerald" isPulsing>
-                Disponível
-              </Badge>
-            ) : isGold ? (
-              <Badge variant="gold">
-                <Sparkles className="w-2.5 h-2.5" /> Gold
-              </Badge>
-            ) : isPro ? (
-              <Badge variant="wine">
-                Pro
-              </Badge>
-            ) : (
-              <div />
-            )}
+          {/* Badges do Topo da Foto */}
+          <div className="absolute top-2.5 left-2.5 right-2.5 flex justify-between items-center z-20 pointer-events-none">
+            {/* Tag Avaliações Liberadas / Disponível */}
+            <div className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/15 text-white text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{isAvailable ? 'Disponível agora' : 'Avaliações liberadas'}</span>
+            </div>
 
-            {/* Selos de Confiança (Dupla Verificação & Top Avaliada) */}
-            <div className="flex items-center gap-1">
-              {profile.avg_rating && Number(profile.avg_rating) >= 4.8 && (profile.reviews_count || 0) >= 1 && (
-                <div className="bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full border border-gold-primary/40 text-gold-light text-[11px] font-bold flex items-center gap-1 shadow-md" title="Top Avaliada pelos Clientes">
-                  <Star className="w-3 h-3 fill-gold-primary text-gold-primary" />
-                  <span>{Number(profile.avg_rating).toFixed(1)}</span>
-                </div>
-              )}
+            {/* Selos & Favoritar */}
+            <div className="flex items-center gap-1 pointer-events-auto">
               {profile.verification_status === 'verified' && (
-                <div className="bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-emerald-500/20 text-emerald-400" title="Perfil Verificado por Selfie">
+                <div className="bg-black/60 backdrop-blur-md p-1 rounded-lg border border-emerald-500/30 text-emerald-400" title="Perfil Verificado">
                   <ShieldCheck className="w-3.5 h-3.5" />
                 </div>
               )}
               {profile.is_video_verified && (
-                <div className="bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-purple-500/40 text-purple-300 text-[10px] font-bold flex items-center gap-0.5 shadow-md" title="Foto 100% Real Verificada em Vídeo">
+                <div className="bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-lg border border-purple-500/30 text-purple-300 text-[10px] font-bold flex items-center gap-0.5" title="Foto 100% Real Verificada em Vídeo">
                   <Video className="w-3 h-3 text-purple-400" />
-                  <span>Vídeo</span>
-                </div>
-              )}
-              {profile.is_space_verified && (
-                <div className="bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-gold-primary/20 text-gold-light" title="Espaço Auditado e Validado">
-                  <Building2 className="w-3.5 h-3.5" />
                 </div>
               )}
 
-              {/* Botão de Favoritar (Coração) */}
+              {/* Botão de Favoritar */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -183,163 +162,111 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
                   if (onToggleFavorite) onToggleFavorite(profile.id);
                 }}
                 className={cn(
-                  "p-1.5 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-lg active:scale-90 pointer-events-auto ml-1",
+                  "p-1.5 rounded-lg backdrop-blur-md transition-all cursor-pointer shadow-md active:scale-90 ml-0.5",
                   isFavorite
-                    ? "bg-red-500/20 text-red-500 border border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.4)]"
-                    : "bg-black/50 text-gray-300 border border-white/10 hover:text-red-400 hover:border-red-500/30"
+                    ? "bg-red-500/20 text-red-500 border border-red-500/40"
+                    : "bg-black/60 text-gray-300 border border-white/10 hover:text-red-400"
                 )}
                 title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
               >
-                <Heart className={cn("w-3.5 h-3.5 transition-transform", isFavorite && "fill-red-500 scale-110")} />
+                <Heart className={cn("w-3.5 h-3.5", isFavorite && "fill-red-500")} />
               </button>
             </div>
           </div>
 
-          {/* Botões de Navegação de Fotos (Setas Esquerda / Direita) */}
+          {/* Botão Flutuante Direita '>' de Próxima Foto (Igual à Referência) */}
           {photosList.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={handlePrevPhoto}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-gold-primary hover:text-dark-bg cursor-pointer"
-                title="Foto anterior"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              <button
-                type="button"
-                onClick={handleNextPhoto}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-gold-primary hover:text-dark-bg cursor-pointer"
-                title="Próxima foto"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-
-              {/* Bolinhas de Paginação e Contador de Fotos */}
-              <div className="absolute bottom-2.5 inset-x-0 flex flex-col items-center gap-1 z-20 pointer-events-none">
-                <div className="flex items-center justify-center gap-1 bg-black/50 backdrop-blur-xs px-2 py-0.5 rounded-full border border-white/10">
-                  {photosList.map((_, idx) => (
-                    <span
-                      key={idx}
-                      className={`h-1.5 rounded-full transition-all ${
-                        idx === currentPhotoIndex 
-                          ? 'bg-gold-primary w-4' 
-                          : 'bg-white/40 w-1.5'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </>
+            <button
+              type="button"
+              onClick={handleNextPhoto}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white text-black font-extrabold flex items-center justify-center shadow-2xl z-20 hover:scale-110 active:scale-95 transition-all cursor-pointer border border-black/20"
+              title="Ver próxima foto"
+            >
+              <ChevronRight className="w-5 h-5 text-black stroke-[3]" />
+            </button>
           )}
 
+          {/* Dados Sobrepostos na Base da Foto (Igual à Referência) */}
+          <Link href={`/perfil/${profile.id}`} className="absolute bottom-2.5 left-3 right-3 z-20 space-y-1 text-white block">
+            {/* Linha 1: Nome + Ícones + Valor | Hora */}
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-1 min-w-0">
+                <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight truncate drop-shadow-md">
+                  {displayName}
+                </h3>
+                {isGold && <span className="text-xs text-gold-primary shrink-0" title="Gold VIP">🦋</span>}
+              </div>
+
+              <div className="shrink-0 text-xs sm:text-sm font-extrabold text-white flex items-center gap-1 drop-shadow-md">
+                {(!displayPrice || Number(displayPrice) < 300) ? (
+                  <span className="text-[11px] font-bold text-gold-light">Consultar</span>
+                ) : (
+                  <>
+                    <span>R$ {displayPrice}</span>
+                    <span className="text-[10px] font-normal text-gray-300">| 1 hora ∨</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Linha 2: Cidade / Bairro + Tag Com Local */}
+            <div className="flex items-center justify-between text-[11px] text-gray-200">
+              <div className="flex items-center gap-1 truncate font-medium">
+                <MapPin className="w-3 h-3 text-red-400 shrink-0" />
+                <span className="truncate">{profile.neighborhood ? `${profile.neighborhood}, ${profile.city}` : profile.city}</span>
+              </div>
+
+              {(profile.is_space_verified || profile.category === 'massage' || profile.category === 'both') && (
+                <div className="bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/20 text-white text-[10px] font-bold flex items-center gap-1 shrink-0">
+                  <span>🏠 Com local</span>
+                </div>
+              )}
+            </div>
+          </Link>
         </div>
 
-        {/* Informações Abaixo da Foto (Bloco Não-Sobreposto) */}
-        <div className="p-2.5 sm:p-3 bg-black/40 flex-1 flex flex-col justify-between gap-1 sm:gap-1.5 z-10 group-hover:bg-black/60 transition-colors border-t border-white/5">
-          <div className="flex flex-col gap-1 sm:gap-1.5">
-            {/* Nome / Título do Anúncio */}
-            <div className="min-w-0">
-              <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight drop-shadow-md line-clamp-2 leading-tight flex items-center gap-1 flex-wrap">
-                <span>{displayName}</span>
-                {isGold && (
-                  <span className="text-xs text-gold-primary shrink-0 inline-block animate-bounce" title="Gold VIP">👑</span>
-                )}
-              </h3>
+        {/* Bloco Inferior de Botões de Ação (Estilo Exato da Referência) */}
+        <div className="flex flex-col w-full z-20 bg-black">
+          {/* Botão de Conteúdo VIP / FatalFans (Crimson Bar) */}
+          <Link href={`/perfil/${profile.id}`}>
+            <div className="w-full py-2 px-3 bg-gradient-to-r from-wine-primary via-wine-dark to-wine-primary hover:from-wine-light hover:to-wine-primary text-white text-xs font-extrabold uppercase tracking-wide flex items-center justify-center gap-1.5 border-t border-white/10 transition-all cursor-pointer">
+              <span className="text-sm">🦋</span>
+              <span>Ver Conteúdo VIP</span>
             </div>
-            
-            {/* Idade e Preço */}
-            <div className="flex items-center justify-between text-[11px] sm:text-xs font-semibold mt-0.5 border-b border-white/5 pb-1">
-              <span className="font-light text-white/70 text-[11px] sm:text-xs">
-                {profile.age} anos
-              </span>
-              
-              {(!displayPrice || Number(displayPrice) < 300) ? (
-                <span className="text-[10px] sm:text-xs font-bold text-gold-light uppercase tracking-wide">
-                  Consultar valor
-                </span>
-              ) : (
-                <div className="flex items-center text-gold-light">
-                  <DollarSign className="w-3 h-3 -mr-0.5 shrink-0" />
-                  <span className="text-[11px] sm:text-xs">{displayPrice}</span>
-                  <span className="text-[9px] text-white/50 font-normal ml-0.5">/h</span>
-                </div>
-              )}
-            </div>
+          </Link>
 
-            {/* Cidade e Avaliação */}
-            <div className="flex items-center text-[11px] sm:text-xs text-gray-300 justify-between">
-              <div className="flex items-center gap-0.5 sm:gap-1 truncate max-w-[75%]">
-                <MapPin className="w-3 h-3 text-wine-light/90 shrink-0" />
-                <span className="truncate">
-                  {profile.city}
-                  {(profile as any).distance !== undefined && (
-                    <span className="text-[9px] text-emerald-400 font-bold ml-1 shrink-0">
-                      ({(profile as any).distance.toFixed(1)} km)
-                    </span>
-                  )}
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-0.5 text-gold-primary shrink-0">
-                <Star className="w-3 h-3 fill-gold-primary" />
-                <span className="font-medium text-[11px] sm:text-xs">
-                  {profile.avg_rating && Number(profile.avg_rating) > 0 
-                    ? Number(profile.avg_rating).toFixed(1) 
-                    : '5.0'}
-                </span>
-                {profile.reviews_count !== undefined && profile.reviews_count > 0 && (
-                  <span className="text-[9px] sm:text-xs text-gray-400 font-light ml-0.5">
-                    ({profile.reviews_count})
-                  </span>
-                )}
-              </div>
-            </div>
+          {/* Linha Divisória de Botões 50/50: Ver Telefone (Verde) | Ver Mais (Branco) */}
+          <div className="flex items-stretch w-full border-t border-white/10">
+            {profile.whatsapp ? (
+              <a 
+                href={formatWhatsAppLink(profile.whatsapp, `Olá ${displayName}, vi seu anúncio no Relaxe & Goze! Podemos conversar?`) || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1"
+              >
+                <button className="w-full py-2.5 px-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer border-r border-black/30">
+                  <span className="text-sm">💬</span>
+                  <span>Ver telefone</span>
+                </button>
+              </a>
+            ) : (
+              <Link href={`/perfil/${profile.id}`} className="flex-1">
+                <button className="w-full py-2.5 px-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer border-r border-black/30">
+                  <span className="text-sm">💬</span>
+                  <span>Ver telefone</span>
+                </button>
+              </Link>
+            )}
 
-            {/* Categoria e Especialidades (Tags Limpas) */}
-            <div className="flex flex-col gap-1 border-t border-white/5 pt-1.5 mt-0.5">
-              <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-300 font-medium font-sans">
-                <span className="truncate font-semibold">
-                  {profile.category === 'massage' 
-                    ? '🧘 Massagens' 
-                    : profile.category === 'escort' 
-                      ? '🔥 Acompanhante' 
-                      : '✨ Ambos'}
-                </span>
-                {profile.target_audience && profile.target_audience.length > 0 && (
-                  <span className="text-[9px] sm:text-[10px] bg-wine-primary/20 border border-wine-primary/30 text-wine-light px-1 py-0.2 rounded shrink-0 font-medium">
-                    👥 {profile.target_audience.join(', ')}
-                  </span>
-                )}
-              </div>
-
-              {/* Tags de Especialidades em destaque no Card */}
-              {specialtyNames.length > 0 && (
-                <div className="flex flex-wrap gap-1 pt-0.5">
-                  {specialtyNames.slice(0, 2).map((spec) => (
-                    <span key={spec} className="text-[9.5px] sm:text-[10.5px] bg-gold-primary/10 border border-gold-primary/20 text-gold-light px-1.5 py-0.5 rounded-md font-medium truncate max-w-[120px]">
-                      ✨ {spec}
-                    </span>
-                  ))}
-                  {specialtyNames.length > 2 && (
-                    <span className="text-[9px] text-gray-400 font-medium self-center">
-                      +{specialtyNames.length - 2}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+            <Link href={`/perfil/${profile.id}`} className="flex-1">
+              <button className="w-full py-2.5 px-2 bg-white hover:bg-gray-100 text-dark-bg text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                <span className="text-sm text-wine-primary">🎯</span>
+                <span>Ver mais</span>
+              </button>
+            </Link>
           </div>
-
-          {/* Descrição / Biografia do Anúncio */}
-          {cleanDesc && (
-            <p className="text-[10.5px] sm:text-xs text-gray-400 line-clamp-2 leading-relaxed pt-1.5 border-t border-white/5 font-light">
-              {cleanDesc}
-            </p>
-          )}
         </div>
       </Card>
-    </Link>
+    </div>
   );
 }
