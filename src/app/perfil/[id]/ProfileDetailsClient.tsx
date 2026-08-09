@@ -483,6 +483,17 @@ export default function ProfileDetailsClient({
         const cleanUrl = window.location.pathname;
         window.history.replaceState({}, document.title, cleanUrl);
       }
+
+      // Rolagem automática para o Clube VIP se vier do botão 'Ver Conteúdo VIP'
+      const hash = window.location.hash;
+      if (hash === '#clube-vip-section' || hash === '#vip') {
+        setTimeout(() => {
+          const el = document.getElementById('clube-vip-section');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 350);
+      }
     }
   }, []);
 
