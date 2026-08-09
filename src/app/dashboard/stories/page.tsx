@@ -166,110 +166,130 @@ export default function StoriesManager() {
    */
   const compressVideo = async (file: File): Promise<File> => {
     return new Promise((resolve) => {
-      const video = document.createElement('video');
-      video.muted = true;
-      video.playsInline = true;
-      const sourceUrl = URL.createObjectURL(file);
-      video.src = sourceUrl;
-
-      video.onloadedmetadata = () => {
-        // Target: 720x1280 vertical, mantendo aspect ratio
-        const scale = Math.min(1, 720 / Math.min(video.videoWidth, video.videoHeight));
-        const width = Math.round(video.videoWidth * scale);
-        const height = Math.round(video.videoHeight * scale);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) { resolve(file); return; }
-
-        // Tentar bitrate econômico: ~1.5Mbps para vídeo curto
-        const targetBitsPerSecond = 1_500_000;
-        let stream: MediaStream;
-        try {
-          stream = canvas.captureStream(30);
-        } catch {
-          URL.revokeObjectURL(sourceUrl);
-          resolve(file);
-          return;
-        }
-
-        // Adicionar áudio se existir
-        try {
-          const audioCtx = new AudioContext();
-          const source = audioCtx.createMediaElementSource(video);
-          const dest = audioCtx.createMediaStreamDestination();
-          source.connect(dest);
-          source.connect(audioCtx.destination);
-          dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
-        } catch {
-          // Sem áudio disponível ou não suportado — continua sem
-        }
-
-        let recorder: MediaRecorder;
-        const supportedMimeTypes = [
-          'video/webm;codecs=vp9',
-          'video/webm;codecs=vp8',
-          'video/webm',
-          'video/mp4',
-        ];
-        const mimeType = supportedMimeTypes.find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
-
-        try {
-          recorder = new MediaRecorder(stream, {
-            mimeType,
-            videoBitsPerSecond: targetBitsPerSecond,
-          });
-        } catch {
-          URL.revokeObjectURL(sourceUrl);
-          resolve(file);
-          return;
-        }
-
-        const chunks: Blob[] = [];
-        recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-
-        recorder.onstop = () => {
-          URL.revokeObjectURL(sourceUrl);
-          const blob = new Blob(chunks, { type: mimeType });
-          const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
-          const compressedFile = new File([blob], `story_compressed.${ext}`, { type: mimeType, lastModified: Date.now() });
-          resolve(compressedFile);
-        };
-
-        recorder.onerror = () => {
-          URL.revokeObjectURL(sourceUrl);
-          resolve(file);
-        };
-
-        // Desenhar cada frame no canvas enquanto o vídeo reproduz
-        const drawFrame = () => {
-          if (video.paused || video.ended) return;
-          ctx.drawImage(video, 0, 0, width, height);
-          requestAnimationFrame(drawFrame);
-        };
-
-        video.onplay = () => {
-          drawFrame();
-          recorder.start(100); // Chunks de 100ms
-        };
-
-        video.onended = () => {
-          recorder.stop();
-          stream.getTracks().forEach(t => t.stop());
-        };
-
-        video.play().catch(() => {
-          URL.revokeObjectURL(sourceUrl);
-          resolve(file);
-        });
-      };
-
-      video.onerror = () => {
-        URL.revokeObjectURL(sourceUrl);
+      // Timeout de segurança de 5 segundos: se travar ou demorar no mobile, retorna o arquivo original
+      const timer = setTimeout(() => {
+        console.warn('Compressão de vídeo excedeu o tempo limite. Mantendo arquivo original.');
         resolve(file);
+      }, 5000);
+
+      const cleanupAndResolve = (result: File) => {
+        clearTimeout(timer);
+        resolve(result);
       };
+
+      try {
+        const video = document.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('muted', 'true');
+        const sourceUrl = URL.createObjectURL(file);
+        video.src = sourceUrl;
+
+        video.onloadedmetadata = () => {
+          try {
+            // Target: 720x1280 vertical, mantendo aspect ratio
+            const scale = Math.min(1, 720 / Math.min(video.videoWidth || 720, video.videoHeight || 1280));
+            const width = Math.round((video.videoWidth || 720) * scale);
+            const height = Math.round((video.videoHeight || 1280) * scale);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) { URL.revokeObjectURL(sourceUrl); cleanupAndResolve(file); return; }
+
+            // Tentar bitrate econômico: ~1.5Mbps para vídeo curto
+            const targetBitsPerSecond = 1_500_000;
+            let stream: MediaStream;
+            try {
+              if (typeof canvas.captureStream !== 'function') {
+                URL.revokeObjectURL(sourceUrl);
+                cleanupAndResolve(file);
+                return;
+              }
+              stream = canvas.captureStream(30);
+            } catch {
+              URL.revokeObjectURL(sourceUrl);
+              cleanupAndResolve(file);
+              return;
+            }
+
+            let recorder: MediaRecorder;
+            const supportedMimeTypes = [
+              'video/webm;codecs=vp9',
+              'video/webm;codecs=vp8',
+              'video/webm',
+              'video/mp4',
+            ];
+            const mimeType = supportedMimeTypes.find(m => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m)) || '';
+
+            if (!mimeType) {
+              URL.revokeObjectURL(sourceUrl);
+              cleanupAndResolve(file);
+              return;
+            }
+
+            try {
+              recorder = new MediaRecorder(stream, {
+                mimeType,
+                videoBitsPerSecond: targetBitsPerSecond,
+              });
+            } catch {
+              URL.revokeObjectURL(sourceUrl);
+              cleanupAndResolve(file);
+              return;
+            }
+
+            const chunks: Blob[] = [];
+            recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+            recorder.onstop = () => {
+              URL.revokeObjectURL(sourceUrl);
+              const blob = new Blob(chunks, { type: mimeType });
+              const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+              const compressedFile = new File([blob], `story_compressed.${ext}`, { type: mimeType, lastModified: Date.now() });
+              cleanupAndResolve(compressedFile);
+            };
+
+            recorder.onerror = () => {
+              URL.revokeObjectURL(sourceUrl);
+              cleanupAndResolve(file);
+            };
+
+            const drawFrame = () => {
+              if (video.paused || video.ended) return;
+              ctx.drawImage(video, 0, 0, width, height);
+              requestAnimationFrame(drawFrame);
+            };
+
+            video.onplay = () => {
+              drawFrame();
+              recorder.start(100);
+            };
+
+            video.onended = () => {
+              try { recorder.stop(); } catch {}
+              try { stream.getTracks().forEach(t => t.stop()); } catch {}
+            };
+
+            video.play().catch(() => {
+              URL.revokeObjectURL(sourceUrl);
+              cleanupAndResolve(file);
+            });
+          } catch (e) {
+            URL.revokeObjectURL(sourceUrl);
+            cleanupAndResolve(file);
+          }
+        };
+
+        video.onerror = () => {
+          URL.revokeObjectURL(sourceUrl);
+          cleanupAndResolve(file);
+        };
+      } catch (err) {
+        cleanupAndResolve(file);
+      }
     });
   };
 
@@ -288,24 +308,23 @@ export default function StoriesManager() {
     setTextColor('white');
     setTextBg('black-blur');
 
-    // Validação de Tamanho do Arquivo (Evitar crash de memória e erro de cota do Supabase)
-    const isVideoFile = file.type.startsWith('video/');
+    const isVideoFile = file.type.startsWith('video/') || file.name.endsWith('.mov') || file.name.endsWith('.mp4');
     const isImageFile = file.type.startsWith('image/');
-    
+
     if (isVideoFile) {
-      // Aceitar até 50MB no client (será comprimido antes de enviar)
-      const maxVideoSize = 50 * 1024 * 1024;
+      // Aceitar até 100MB no client (enviado via R2 presigned URL sem travar o servidor)
+      const maxVideoSize = 100 * 1024 * 1024;
       if (file.size > maxVideoSize) {
-        alert('O arquivo de vídeo é muito grande. O tamanho máximo permitido é de 50MB. Por favor, escolha um vídeo menor ou reduza a qualidade da gravação.');
+        alert('O arquivo de vídeo é muito grande. O tamanho máximo permitido é de 100MB. Por favor, escolha um vídeo menor.');
         setSelectedFile(null);
         setFilePreview(null);
         e.target.value = '';
         return;
       }
     } else if (isImageFile) {
-      const maxPhotoSize = 10 * 1024 * 1024; // 10MB
+      const maxPhotoSize = 15 * 1024 * 1024; // 15MB
       if (file.size > maxPhotoSize) {
-        alert('A imagem é muito grande. O tamanho máximo permitido é de 10MB. Por favor, escolha uma imagem menor.');
+        alert('A imagem é muito grande. O tamanho máximo permitido é de 15MB. Por favor, escolha uma imagem menor.');
         setSelectedFile(null);
         setFilePreview(null);
         e.target.value = '';
@@ -317,33 +336,53 @@ export default function StoriesManager() {
     if (isVideoFile) {
       setMediaType('video');
       
-      // Validar duração ANTES de aceitar o arquivo (evita race condition)
+      const objectUrl = URL.createObjectURL(file);
       const videoElement = document.createElement('video');
       videoElement.preload = 'metadata';
-      const tempUrl = URL.createObjectURL(file);
-      videoElement.onloadedmetadata = () => {
-        URL.revokeObjectURL(tempUrl);
-        if (videoElement.duration > 16) {
+      videoElement.muted = true;
+      videoElement.playsInline = true;
+      videoElement.setAttribute('playsinline', 'true');
+      videoElement.setAttribute('muted', 'true');
+
+      let resolved = false;
+
+      // Timeout de segurança de 3s: aceita o arquivo mesmo se o navegador móvel demorar a disparar onloadedmetadata
+      const acceptVideoFallback = () => {
+        if (!resolved) {
+          resolved = true;
+          setSelectedFile(file);
+          setFilePreview(objectUrl);
+        }
+      };
+
+      const fallbackTimer = setTimeout(acceptVideoFallback, 3000);
+
+      const checkMetadata = () => {
+        if (resolved) return;
+        clearTimeout(fallbackTimer);
+        resolved = true;
+
+        if (videoElement.duration && videoElement.duration > 16) {
+          URL.revokeObjectURL(objectUrl);
           alert('O vídeo de story deve ter no máximo 15 segundos. Seu vídeo tem ' + Math.round(videoElement.duration) + ' segundos.');
           setSelectedFile(null);
           setFilePreview(null);
           e.target.value = '';
           return;
         }
-        // Duração OK — agora sim aceitar o arquivo e gerar preview
-        setSelectedFile(file);
-        setFilePreview(URL.createObjectURL(file));
-      };
-      videoElement.onerror = () => {
-        URL.revokeObjectURL(tempUrl);
-        alert('Não foi possível ler o vídeo selecionado. Tente outro formato (MP4 é recomendado).');
-        setSelectedFile(null);
-        setFilePreview(null);
-        e.target.value = '';
-      };
-      videoElement.src = tempUrl;
 
-      // Retorna sem setar selectedFile — o callback acima faz isso após validar
+        setSelectedFile(file);
+        setFilePreview(objectUrl);
+      };
+
+      videoElement.onloadedmetadata = checkMetadata;
+      videoElement.onloadeddata = checkMetadata;
+      videoElement.onerror = () => {
+        // Se der erro no player nativo (ex: codecs raros no iOS), tenta aceitar mesmo assim
+        acceptVideoFallback();
+      };
+
+      videoElement.src = objectUrl;
       return;
     } else if (isImageFile) {
       setMediaType('photo');
@@ -424,28 +463,17 @@ export default function StoriesManager() {
       let fileToUpload: File = selectedFile;
       
       if (mediaType === 'video') {
-        // Comprimir o vídeo client-side para caber no limite do bucket (15MB)
         setCompressing(true);
         try {
           const compressed = await compressVideo(selectedFile);
-          // Só usar o comprimido se realmente ficou menor
           if (compressed.size < selectedFile.size) {
             fileToUpload = compressed;
             console.log(`Vídeo comprimido: ${(selectedFile.size / 1024 / 1024).toFixed(1)}MB → ${(compressed.size / 1024 / 1024).toFixed(1)}MB`);
           }
         } catch (compressErr) {
           console.error('Erro na compressão de vídeo:', compressErr);
-          // Continua com o original se a compressão falhar
         }
         setCompressing(false);
-        
-        // Verificar se o arquivo cabe no limite do bucket após compressão
-        const bucketLimit = 25 * 1024 * 1024; // 25MB (limite do Supabase bucket)
-        if (fileToUpload.size > bucketLimit) {
-          alert(`O vídeo tem ${(fileToUpload.size / 1024 / 1024).toFixed(1)}MB mesmo após compressão. O limite do servidor é 25MB. Tente gravar um vídeo mais curto ou com resolução menor.`);
-          setSubmitting(false);
-          return;
-        }
       } else if (mediaType === 'photo') {
         try {
           const watermarkText = `Relaxe & Goze - ${profile?.name || ''}`;
@@ -462,10 +490,10 @@ export default function StoriesManager() {
         }
       }
 
-      // 2. Upload do Arquivo para o Cloudflare R2
+      // 2. Upload do Arquivo para o Cloudflare R2 (suporta presigned URLs para grandes arquivos)
       const publicUrl = await uploadToR2(fileToUpload);
 
-      // 2. Inserir registro na tabela `stories`
+      // 3. Inserir registro na tabela `stories`
       const { data: storyRow, error: insertError } = await supabase
         .from('stories')
         .insert({
@@ -483,25 +511,6 @@ export default function StoriesManager() {
       }
 
       if (storyRow) {
-        // Se for vídeo, dispara a transcodificação de forma assíncrona
-        if (mediaType === 'video') {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            fetch('/api/media/transcode', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`
-              },
-              body: JSON.stringify({
-                videoUrl: publicUrl,
-                photoId: storyRow.id,
-                tableType: 'stories'
-              })
-            }).catch(e => console.error('Erro ao disparar transcodificação:', e));
-          }
-        }
-
         setStories(prev => [storyRow, ...prev]);
         setStoriesInLast24h(prev => prev + 1);
         if (filePreview && filePreview.startsWith('blob:')) {
@@ -515,6 +524,7 @@ export default function StoriesManager() {
       alert('Erro ao publicar story: ' + (err.message || err));
     } finally {
       setSubmitting(false);
+      setCompressing(false);
     }
   };
 

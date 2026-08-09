@@ -158,26 +158,13 @@ export async function POST(req: NextRequest) {
       const response = await mediaConvert.send(command);
       console.log('MediaConvert job created successfully:', response.Job?.Id);
 
-      // 6. Atualizar a URL no banco de dados para a URL otimizada
-      const supabaseService = getSupabaseServiceClient();
-      
-      if (tableType === 'stories' && photoId) {
-        await supabaseService
-          .from('stories')
-          .update({ media_url: transcodedUrl })
-          .eq('id', photoId);
-      } else if (photoId) {
-        await supabaseService
-          .from('profile_photos')
-          .update({ photo_url: transcodedUrl })
-          .eq('id', photoId);
-      }
-
+      // Nota: Não substituímos a URL do R2/Supabase no DB imediatamente porque o Job da AWS é assíncrono
+      // e os arquivos do portal são servidos prioritariamente pelo Cloudflare R2.
       return NextResponse.json({
         success: true,
         transcoded: true,
         jobId: response.Job?.Id,
-        url: transcodedUrl
+        url: videoUrl
       });
 
     } catch (jobErr: any) {
