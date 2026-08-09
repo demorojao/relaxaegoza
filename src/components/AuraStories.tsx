@@ -41,7 +41,7 @@ export default function AuraStories({ storiesProfiles, handleOpenStory, overlay 
           <span className="text-xs sm:text-sm text-gray-400 font-light italic">Nenhum story ativo no momento.</span>
         </div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x">
+        <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x -webkit-overflow-scrolling-touch transform-gpu">
           {storiesProfiles.map((profile) => {
             const isPremium = profile.subscription_tier === 'gold';
             const isPro = profile.subscription_tier === 'pro';
@@ -52,23 +52,23 @@ export default function AuraStories({ storiesProfiles, handleOpenStory, overlay 
                 onClick={() => handleOpenStory(profile)}
                 className="flex flex-col items-center gap-1 focus:outline-none cursor-pointer snap-start group shrink-0"
               >
-                <div className={`relative p-[2px] rounded-full transition-all duration-300 group-hover:scale-105 ${
+                <div className={`relative p-[2.5px] rounded-full transition-all duration-300 group-hover:scale-105 ${
                   isPremium 
-                    ? 'bg-gradient-to-tr from-gold-primary via-wine-primary to-gold-light shadow-lg shadow-gold-primary/20 ring-1 ring-gold-primary/30' 
+                    ? 'bg-gradient-to-tr from-gold-primary via-wine-primary to-gold-light shadow-lg shadow-gold-primary/30 ring-2 ring-gold-primary/40' 
                     : isPro 
-                      ? 'bg-wine-primary shadow-md' 
-                      : 'bg-white/20'
+                      ? 'bg-gradient-to-tr from-wine-primary to-wine-light shadow-md' 
+                      : 'bg-gradient-to-tr from-gray-400 to-gray-600'
                 }`}>
-                  <div className={`${avatarSize} rounded-full border-2 border-dark-bg overflow-hidden relative`}>
+                  <div className={`${avatarSize} rounded-full border-2 border-dark-bg overflow-hidden relative bg-black/40`}>
                     <Image 
                       src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'} 
-                      alt={profile.name}
+                      alt={profile.name || 'Story'}
                       fill
                       sizes="(max-width: 640px) 48px, 56px"
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   </div>
-                  <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-dark-bg rounded-full animate-pulse" />
+                  <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-dark-bg rounded-full animate-pulse z-10" />
                 </div>
                 <span className="text-[10px] sm:text-xs font-medium text-gray-200 group-hover:text-gold-light transition-colors max-w-[70px] truncate drop-shadow-md">
                   {profile.name}

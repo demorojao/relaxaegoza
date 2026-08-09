@@ -592,47 +592,58 @@ export default function VitrineClient({
   };
 
   const fetchStories = async () => {
-    let query = supabase.from('stories')
-      .select(`
-        profile_id,
-        profiles:profiles(
-          id, name, avatar_url, subscription_tier, is_available_now, whatsapp, category, city,
-          ads:ads(is_active)
-        )
-      `)
-      .gt('expires_at', new Date().toISOString());
-      
-    const { data } = await query;
-    if (data) {
+    try {
+      const { data, error } = await supabase.from('stories')
+        .select(`
+          profile_id,
+          profiles:profiles(
+            id, name, avatar_url, subscription_tier, is_available_now, whatsapp, category, city
+          )
+        `)
+        .gt('expires_at', new Date().toISOString());
+        
+      if (error || !data) return;
+
       const profileMap = new Map<string, Profile>();
       data.forEach((item: any) => {
         if (item.profiles) {
           const p = item.profiles as Profile;
           if (!p.avatar_url) return; // ignora se não tiver foto de capa
 
-          const ads = (p as any).ads;
-          const isActive = Array.isArray(ads)
-            ? ads.some((a: any) => a.is_active)
-            : ads?.is_active;
-
-          if (!isActive) return; // ignora se não tiver anúncio ativo
-
+          // Filtro por categoria (se selecionado)
           if (categoryFilter) {
             const cat = p.category;
             if (categoryFilter === 'massage' && cat !== 'massage' && cat !== 'both') return;
             if (categoryFilter === 'escort' && cat !== 'escort' && cat !== 'both') return;
           }
-          if (cityFilter) {
-            if (!p.city || toTitleCase(p.city) !== toTitleCase(cityFilter)) return;
-          }
+
           profileMap.set(p.id, p);
         }
       });
-      const sorted = Array.from(profileMap.values()).sort((a, b) => {
+
+      const allProfiles = Array.from(profileMap.values());
+
+      // Se houver filtro de cidade ativo, tenta filtrar os stories dessa cidade
+      let finalStories = allProfiles;
+      if (cityFilter) {
+        const cityMatches = allProfiles.filter(
+          p => p.city && toTitleCase(p.city) === toTitleCase(cityFilter)
+        );
+        // Se houver stories na cidade selecionada, exibe eles. Caso contrário, exibe os ativos globais da plataforma!
+        if (cityMatches.length > 0) {
+          finalStories = cityMatches;
+        }
+      }
+
+      // Ordena por prioridade de plano (Gold > Pro > Bronze)
+      const sorted = finalStories.sort((a, b) => {
         const getScore = (p: Profile) => (p.subscription_tier === 'gold' ? 2 : p.subscription_tier === 'pro' ? 1 : 0);
         return getScore(b) - getScore(a);
       });
+
       setStoriesProfiles(sorted);
+    } catch (err) {
+      console.error('Erro ao buscar stories:', err);
     }
   };
 
