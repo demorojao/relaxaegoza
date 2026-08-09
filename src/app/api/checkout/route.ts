@@ -17,14 +17,20 @@ export async function POST(req: NextRequest) {
       const token = authHeader.replace('Bearer ', '');
       const { data: { user: authUser } } = await supabase.auth.getUser(token);
       user = authUser;
-      if (user) {
-        const { data: userProfile } = await supabase
-          .from('profiles')
-          .select('role, created_at, subscription_tier, name')
-          .eq('id', user.id)
-          .single();
-        profile = userProfile;
-      }
+    }
+
+    if (!user) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      user = authUser;
+    }
+
+    if (user) {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('role, created_at, subscription_tier, name')
+        .eq('id', user.id)
+        .single();
+      profile = userProfile;
     }
 
     if (!isGift) {
