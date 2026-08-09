@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
-import { Camera, Video, Trash2, Clock, Sparkles, Upload, ShieldCheck, AlertCircle, X, RefreshCw, Scissors } from 'lucide-react';
+import { Camera, Video, Trash2, Clock, Sparkles, Upload, ShieldCheck, AlertCircle, X, RefreshCw, Scissors, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { getCDNUrl } from '../../../lib/mediaHelper';
 import { applyWatermark } from '@/lib/watermark';
@@ -1031,9 +1031,12 @@ export default function StoriesManager() {
               return (
                 <div key={s.id} className="relative aspect-[3/4] rounded-xl overflow-hidden border border-dark-border group bg-black/40 flex flex-col justify-between p-3.5">
                   
-                  {/* Header do card com o tempo */}
-                  <div className="flex justify-between items-start z-10">
+                  {/* Header do card com o tempo e visualizações */}
+                  <div className="flex justify-between items-center z-10 w-full">
                     <TimeRemaining expiresAt={s.expires_at} />
+                    <span className="text-[9px] bg-black/60 backdrop-blur-md text-gold-light border border-gold-primary/30 px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold" title="Visualizações reais">
+                      <Eye className="w-3 h-3 text-gold-primary" /> {s.views_count || 0}
+                    </span>
                   </div>
 
                   {isVideo ? (

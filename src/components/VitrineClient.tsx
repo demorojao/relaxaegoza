@@ -900,6 +900,16 @@ export default function VitrineClient({
     }
   };
 
+  // Incrementar o contador de visualizações reais do story ao visualizar cada slide
+  useEffect(() => {
+    if (activeStoryPhotos[activeSlideIndex]?.id) {
+      const currentStoryId = activeStoryPhotos[activeSlideIndex].id;
+      supabase.rpc('increment_story_views', { story_id: currentStoryId }).then(({ error }) => {
+        if (error) console.error('Erro ao registrar visualização do story:', error);
+      });
+    }
+  }, [activeSlideIndex, activeStoryPhotos]);
+
   const handleNextSlide = () => {
     if (!activeStoryProfile) return;
 

@@ -120,6 +120,19 @@ export default function FilterBar({
           >
             🏠 Com Espaço
           </button>
+          {setAvailableFilter && (
+            <button
+              onClick={() => setAvailableFilter(!availableFilter)}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all whitespace-nowrap border cursor-pointer flex items-center gap-1.5 ${
+                availableFilter
+                  ? 'bg-emerald-500 border-emerald-400 text-dark-bg font-extrabold shadow-sm'
+                  : 'bg-black/40 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              ⚡ Disponível Agora
+            </button>
+          )}
         </div>
       </div>
 
