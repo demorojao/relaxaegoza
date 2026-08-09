@@ -320,7 +320,30 @@ export default function VitrineClient({
     return clean;
   };
 
-  // Carrega cidades e bairros dos profissionais cadastrados no banco
+  // Cidades padrão pré-carregadas para busca rápida + autodescoberta dinâmica de qualquer cidade cadastrada pelas profissionais
+  const DEFAULT_CITIES = [
+    'São Paulo',
+    'Rio de Janeiro',
+    'Belo Horizonte',
+    'Brasília',
+    'Curitiba',
+    'Salvador',
+    'Florianópolis',
+    'Porto Alegre',
+    'Goiânia',
+    'Campinas',
+    'Santos',
+    'Fortaleza',
+    'Recife',
+    'Niterói',
+    'Vitória',
+    'Ribeirão Preto',
+    'São José dos Campos',
+    'Sorocaba',
+    'Barueri / Alphaville'
+  ];
+
+  // Carrega cidades e bairros dos profissionais cadastrados no banco + lista padrão
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -329,8 +352,14 @@ export default function VitrineClient({
           .select('city, neighborhood')
           .eq('role', 'provider');
         
+        const locs: Record<string, Set<string>> = {};
+
+        // Inicializar com as cidades padrão do Brasil
+        DEFAULT_CITIES.forEach(c => {
+          locs[c] = new Set<string>();
+        });
+
         if (data) {
-          const locs: Record<string, Set<string>> = {};
           data.forEach(p => {
             if (p.city) {
               // Normaliza capitalização para evitar duplicatas ("São Paulo" vs "São paulo")
@@ -343,13 +372,13 @@ export default function VitrineClient({
               }
             }
           });
-          
-          const finalLocs: Record<string, string[]> = {};
-          Object.keys(locs).forEach(city => {
-            finalLocs[city] = Array.from(locs[city]).sort();
-          });
-          setAvailableLocations(finalLocs);
         }
+
+        const finalLocs: Record<string, string[]> = {};
+        Object.keys(locs).forEach(city => {
+          finalLocs[city] = Array.from(locs[city]).sort();
+        });
+        setAvailableLocations(finalLocs);
       } catch (err) {
         console.error('Erro ao buscar localizações cadastradas:', err);
       }
