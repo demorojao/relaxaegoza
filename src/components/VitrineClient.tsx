@@ -1359,14 +1359,27 @@ export default function VitrineClient({
             {/* Media Content Body (Photos/Videos) */}
             <div className="absolute inset-0 w-full h-full z-0 bg-neutral-950 flex items-center justify-center">
               {isStoryLoading ? (
-                <div className="w-10 h-10 border-4 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-10 h-10 border-4 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
+                  <span className="text-[11px] font-semibold text-gold-light uppercase tracking-wider animate-pulse">Carregando Story...</span>
+                </div>
               ) : activeStoryPhotos[activeSlideIndex] ? (
                 <div className="relative w-full h-full">
+                  {!mediaReady && (
+                    <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xs gap-3">
+                      <div className="w-10 h-10 border-4 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
+                      <span className="text-[11px] font-bold text-gold-light uppercase tracking-wider animate-pulse">Iniciando Vídeo...</span>
+                    </div>
+                  )}
+
                   {activeStoryPhotos[activeSlideIndex].type === 'video' ? (
                     <video 
+                      key={activeStoryPhotos[activeSlideIndex].id || activeSlideIndex}
                       src={getCDNUrl(activeStoryPhotos[activeSlideIndex].url)} 
                       autoPlay 
                       playsInline 
+                      muted={false}
+                      preload="auto"
                       controls={false}
                       className="w-full h-full object-contain select-none pointer-events-none"
                       onContextMenu={(e) => e.preventDefault()}
@@ -1378,10 +1391,20 @@ export default function VitrineClient({
                         if (startTime > 0) {
                           video.currentTime = startTime;
                         }
+                        video.play().catch(() => {
+                          // Se o navegador bloquear áudio no autoPlay, toca mudo para não travar
+                          video.muted = true;
+                          video.play().catch(() => {});
+                        });
                         setMediaReady(true);
                       }}
+                      onCanPlay={(e) => {
+                        e.currentTarget.play().catch(() => {});
+                        setMediaReady(true);
+                      }}
+                      onLoadedData={() => setMediaReady(true)}
+                      onPlaying={() => setMediaReady(true)}
                       onTimeUpdate={(e) => {
-                        if (!mediaReady) return;
                         const video = e.currentTarget;
                         const startTime = activeStoryPhotos[activeSlideIndex]?.textStyle?.startTime || 0;
                         const endTime = activeStoryPhotos[activeSlideIndex]?.textStyle?.endTime || (video.duration || 15);
@@ -1408,6 +1431,17 @@ export default function VitrineClient({
                       onDragStart={(e) => e.preventDefault()}
                       onLoad={() => setMediaReady(true)}
                     />
+                  )}
+
+                  {/* Preloader em background para o próximo slide do Story */}
+                  {activeStoryPhotos[activeSlideIndex + 1] && (
+                    <div className="hidden">
+                      {activeStoryPhotos[activeSlideIndex + 1].type === 'video' ? (
+                        <video src={getCDNUrl(activeStoryPhotos[activeSlideIndex + 1].url)} preload="auto" muted />
+                      ) : (
+                        <img src={getCDNUrl(activeStoryPhotos[activeSlideIndex + 1].url)} alt="" />
+                      )}
+                    </div>
                   )}
 
                   {/* Styled Instagram-style Text Overlay */}
