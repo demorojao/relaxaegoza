@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
-import { Camera, Video, Trash2, Clock, Sparkles, Upload, ShieldCheck, AlertCircle, X, RefreshCw, Scissors, Eye } from 'lucide-react';
+import { Camera, Video, Trash2, Clock, Sparkles, Upload, ShieldCheck, AlertCircle, X, RefreshCw, Scissors, Eye, Heart } from 'lucide-react';
 import Image from 'next/image';
 import { getCDNUrl } from '../../../lib/mediaHelper';
 import { applyWatermark } from '@/lib/watermark';
@@ -1058,12 +1058,17 @@ export default function StoriesManager() {
               return (
                 <div key={s.id} className="relative aspect-[3/4] rounded-xl overflow-hidden border border-dark-border group bg-black/40 flex flex-col justify-between p-3.5">
                   
-                  {/* Header do card com o tempo e visualizações */}
-                  <div className="flex justify-between items-center z-10 w-full">
+                  {/* Header do card com tempo, visualizações e curtidas */}
+                  <div className="flex justify-between items-center z-10 w-full gap-1">
                     <TimeRemaining expiresAt={s.expires_at} />
-                    <span className="text-[9px] bg-black/60 backdrop-blur-md text-gold-light border border-gold-primary/30 px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold" title="Visualizações reais">
-                      <Eye className="w-3 h-3 text-gold-primary" /> {s.views_count || 0}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[9px] bg-black/60 backdrop-blur-md text-gold-light border border-gold-primary/30 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 font-semibold" title="Visualizações reais">
+                        <Eye className="w-2.5 h-2.5 text-gold-primary" /> {s.views_count || 0}
+                      </span>
+                      <span className="text-[9px] bg-black/60 backdrop-blur-md text-red-300 border border-red-500/30 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 font-semibold" title="Curtidas recebidas">
+                        <Heart className="w-2.5 h-2.5 text-red-500 fill-red-500" /> {s.likes_count || 0}
+                      </span>
+                    </div>
                   </div>
 
                   {isVideo ? (

@@ -220,11 +220,14 @@ export default function VitrineClient({
     type: 'photo' | 'video'; 
     textContent?: string | null; 
     textStyle?: any; 
+    likesCount?: number;
   }[]>([]);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [storyProgress, setStoryProgress] = useState(0);
   const [isStoryLoading, setIsStoryLoading] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
+  const [likedStories, setLikedStories] = useState<Record<string, boolean>>({});
+  const [showHeartAnim, setShowHeartAnim] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -865,7 +868,7 @@ export default function VitrineClient({
     try {
       const { data, error } = await supabase
         .from('stories')
-        .select('id, media_url, media_type, text_content, text_style')
+        .select('id, media_url, media_type, text_content, text_style, likes_count')
         .eq('profile_id', profile.id)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: true });
@@ -876,7 +879,8 @@ export default function VitrineClient({
           url: s.media_url,
           type: (s.media_type || 'photo') as 'photo' | 'video',
           textContent: s.text_content,
-          textStyle: s.text_style
+          textStyle: s.text_style,
+          likesCount: s.likes_count || 0
         }));
         setActiveStoryPhotos(slides);
       } else {
@@ -884,7 +888,8 @@ export default function VitrineClient({
           url: profile.avatar_url || '/avatar-placeholder.svg',
           type: 'photo',
           textContent: null,
-          textStyle: null
+          textStyle: null,
+          likesCount: 0
         }]);
       }
     } catch (err) {
@@ -893,10 +898,40 @@ export default function VitrineClient({
         url: profile.avatar_url || '/avatar-placeholder.svg',
         type: 'photo',
         textContent: null,
-        textStyle: null
+        textStyle: null,
+        likesCount: 0
       }]);
     } finally {
       setIsStoryLoading(false);
+    }
+  };
+
+  // Função para curtir um story com efeito visual em tempo real
+  const handleLikeStory = async (storyId?: string) => {
+    if (!storyId) return;
+
+    const isLiked = likedStories[storyId];
+    setLikedStories(prev => ({ ...prev, [storyId]: !isLiked }));
+
+    // Atualiza contagem local para feedback instantâneo
+    setActiveStoryPhotos(prev =>
+      prev.map(s => {
+        if (s.id === storyId) {
+          const currentLikes = s.likesCount || 0;
+          return { ...s, likesCount: isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1 };
+        }
+        return s;
+      })
+    );
+
+    if (!isLiked) {
+      setShowHeartAnim(true);
+      setTimeout(() => setShowHeartAnim(false), 900);
+      try {
+        await supabase.rpc('increment_story_likes', { story_id: storyId });
+      } catch (err) {
+        console.error('Erro ao curtir story:', err);
+      }
     }
   };
 
@@ -1388,6 +1423,13 @@ export default function VitrineClient({
                     </div>
                   )}
 
+                  {/* Floating Heart Animation on Like */}
+                  {showHeartAnim && (
+                    <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none animate-ping">
+                      <Heart className="w-24 h-24 text-red-500 fill-red-500 drop-shadow-[0_0_25px_rgba(239,68,68,0.9)]" />
+                    </div>
+                  )}
+
                   {/* Subtle navigation overlays inside the slide (visible on all devices) */}
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none opacity-40">
                     <ChevronLeft className="w-5 h-5 text-white drop-shadow-md" />
@@ -1415,19 +1457,35 @@ export default function VitrineClient({
               />
             </div>
 
-            {/* Bottom Call to Actions */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/95 via-black/80 to-transparent z-20 flex gap-3">
+            {/* Bottom Call to Actions & Like Button */}
+            <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/95 via-black/80 to-transparent z-30 flex items-center gap-2">
               <Link 
                 href={`/perfil/${activeStoryProfile.id}`}
                 onClick={handleCloseStory}
                 className="flex-1"
               >
-                <button className="w-full py-3.5 px-4 rounded-xl border border-white/10 hover:border-gold-primary bg-white/10 hover:bg-gold-primary/20 text-xs font-bold uppercase tracking-wider text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer backdrop-blur-md">
+                <button className="w-full py-3.5 px-3 rounded-xl border border-white/10 hover:border-gold-primary bg-white/10 hover:bg-gold-primary/20 text-xs font-bold uppercase tracking-wider text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer backdrop-blur-md">
                   <User className="w-4 h-4 text-gold-primary" />
-                  Ver Perfil
+                  Perfil
                 </button>
               </Link>
               
+              {/* Botão de Curtir Story (Instagram Heart) */}
+              {activeStoryPhotos[activeSlideIndex]?.id && (
+                <button 
+                  onClick={() => handleLikeStory(activeStoryPhotos[activeSlideIndex].id)}
+                  title="Curtir este Story"
+                  className={`py-3.5 px-3 rounded-xl border transition-all flex items-center justify-center gap-1.5 cursor-pointer backdrop-blur-md ${
+                    likedStories[activeStoryPhotos[activeSlideIndex].id!]
+                      ? 'bg-red-500/20 border-red-500/50 text-red-400 font-bold scale-105'
+                      : 'bg-white/10 border-white/10 hover:bg-white/20 text-white/90 hover:text-white'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 ${likedStories[activeStoryPhotos[activeSlideIndex].id!] ? 'fill-red-500 text-red-500 animate-bounce' : 'text-red-400'}`} />
+                  <span className="text-xs font-bold">{activeStoryPhotos[activeSlideIndex].likesCount || 0}</span>
+                </button>
+              )}
+
               {activeStoryProfile.whatsapp && (
                 <a 
                   href={formatWhatsAppLink(activeStoryProfile.whatsapp, `Olá ${activeStoryProfile.name}, vi seu Stories disponível agora no Relaxe & Goze! Tudo bem?`) || '#'}
@@ -1435,7 +1493,7 @@ export default function VitrineClient({
                   rel="noopener noreferrer"
                   className="flex-1"
                 >
-                  <button className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold uppercase tracking-wider text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-600/20">
+                  <button className="w-full py-3.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold uppercase tracking-wider text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-600/20">
                     <span className="text-sm font-sans">💬</span>
                     WhatsApp
                   </button>
