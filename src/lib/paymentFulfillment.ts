@@ -134,7 +134,7 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
           amount_cents: payment.amount_cents || 4990,
           net_amount_cents: Math.round((payment.amount_cents || 4990) * 0.9),
           purchase_type: 'subscription',
-          status: 'paid',
+          status: 'completed',
           created_at: new Date().toISOString()
         });
 

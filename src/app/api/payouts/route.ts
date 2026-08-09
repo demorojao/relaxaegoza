@@ -55,10 +55,10 @@ export async function POST(req: NextRequest) {
     // 2. Buscar compras pendentes de repasse (sem payout_id e concluídas)
     const { data: purchases, error: purchasesError } = await supabaseService
       .from('content_purchases')
-      .select('id, amount, net_amount, status')
+      .select('id, amount, net_amount, amount_cents, net_amount_cents, status')
       .eq('provider_id', user.id)
       .is('payout_id', null)
-      .eq('status', 'completed');
+      .in('status', ['completed', 'paid']);
 
     if (purchasesError) {
       console.error('Erro ao consultar saldo para repasse:', purchasesError);
@@ -74,8 +74,8 @@ export async function POST(req: NextRequest) {
     let totalNetReais = 0;
 
     purchases.forEach((p: any) => {
-      const gross = Number(p.amount) || 0;
-      const net = Number(p.net_amount) || (gross * 0.9); // Taxa padrão 10% da plataforma
+      const gross = p.amount_cents ? p.amount_cents / 100 : (Number(p.amount) || 0);
+      const net = p.net_amount_cents ? p.net_amount_cents / 100 : (Number(p.net_amount) || (gross * 0.9));
       totalGrossReais += gross;
       totalNetReais += net;
     });
