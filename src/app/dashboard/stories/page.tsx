@@ -28,6 +28,7 @@ export default function StoriesManager() {
   const [textX, setTextX] = useState(50); // porcentagem 0-100 na tela
   const [textY, setTextY] = useState(50); // porcentagem 0-100 na tela
   const containerRef = useRef<HTMLDivElement>(null);
+  const textOverlayRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
 
   // Video Trim States (Corte estilo Instagram)
@@ -50,27 +51,28 @@ export default function StoriesManager() {
     fetchStoriesData();
   }, []);
 
-  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    isDraggingRef.current = true;
-  };
-
+  // Suporte a Arraste de Texto Sem Rolagem da Tela no Celular
   useEffect(() => {
-    const handleDragMove = (e: MouseEvent | TouchEvent) => {
-      if (!isDraggingRef.current || !containerRef.current) return;
+    const el = textOverlayRef.current;
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      isDraggingRef.current = true;
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+    };
 
-      if ('touches' in e && e.cancelable) {
-        e.preventDefault();
-      }
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDraggingRef.current || !containerRef.current) return;
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
 
       const rect = containerRef.current.getBoundingClientRect();
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const clientX = e.touches[0].clientX;
+      const clientY = e.touches[0].clientY;
 
-      // Calcular posição em porcentagem no contêiner
       let x = ((clientX - rect.left) / rect.width) * 100;
       let y = ((clientY - rect.top) / rect.height) * 100;
 
-      // Limitar margens (5% a 95%) para o texto não sumir da tela
       x = Math.max(8, Math.min(92, x));
       y = Math.max(5, Math.min(95, y));
 
@@ -78,22 +80,47 @@ export default function StoriesManager() {
       setTextY(y);
     };
 
-    const handleDragEnd = () => {
+    const handleTouchEnd = (e: TouchEvent) => {
       isDraggingRef.current = false;
     };
 
-    window.addEventListener('mousemove', handleDragMove);
-    window.addEventListener('mouseup', handleDragEnd);
-    window.addEventListener('touchmove', handleDragMove, { passive: false });
-    window.addEventListener('touchend', handleDragEnd);
+    if (el) {
+      el.addEventListener('touchstart', handleTouchStart, { passive: false });
+      el.addEventListener('touchmove', handleTouchMove, { passive: false });
+      el.addEventListener('touchend', handleTouchEnd, { passive: false });
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current || !containerRef.current) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      let x = ((e.clientX - rect.left) / rect.width) * 100;
+      let y = ((e.clientY - rect.top) / rect.height) * 100;
+
+      x = Math.max(8, Math.min(92, x));
+      y = Math.max(5, Math.min(95, y));
+
+      setTextX(x);
+      setTextY(y);
+    };
+
+    const handleMouseUp = () => {
+      isDraggingRef.current = false;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
-      window.removeEventListener('mousemove', handleDragMove);
-      window.removeEventListener('mouseup', handleDragEnd);
-      window.removeEventListener('touchmove', handleDragMove);
-      window.removeEventListener('touchend', handleDragEnd);
+      if (el) {
+        el.removeEventListener('touchstart', handleTouchStart);
+        el.removeEventListener('touchmove', handleTouchMove);
+        el.removeEventListener('touchend', handleTouchEnd);
+      }
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, []);
+  }, [textContent, filePreview]);
 
   useEffect(() => {
     if (profile && !autoOpenedRef.current) {
@@ -744,8 +771,8 @@ export default function StoriesManager() {
                       {/* Live Instagram Text Preview Overlay */}
                       {textContent && (
                         <div 
-                          onMouseDown={handleDragStart}
-                          onTouchStart={(e) => {
+                          ref={textOverlayRef}
+                          onMouseDown={() => {
                             isDraggingRef.current = true;
                           }}
                           style={{
