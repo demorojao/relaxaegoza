@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
-import { Camera, Video, Trash2, Clock, Sparkles, Upload, ShieldCheck, AlertCircle, X, RefreshCw } from 'lucide-react';
+import { Camera, Video, Trash2, Clock, Sparkles, Upload, ShieldCheck, AlertCircle, X, RefreshCw, Scissors } from 'lucide-react';
 import Image from 'next/image';
 import { getCDNUrl } from '../../../lib/mediaHelper';
 import { applyWatermark } from '@/lib/watermark';
@@ -21,15 +21,20 @@ export default function StoriesManager() {
   const [submitting, setSubmitting] = useState(false);
   const [compressing, setCompressing] = useState(false);
   
-  // Text Overlay States
+  // Text Overlay States (Livre arraste estilo Instagram)
   const [textContent, setTextContent] = useState('');
-  const [textPosition, setTextPosition] = useState<'top' | 'center' | 'bottom'>('center');
   const [textColor, setTextColor] = useState<'white' | 'gold' | 'wine'>('white');
   const [textBg, setTextBg] = useState<'black-blur' | 'wine-solid' | 'none'>('black-blur');
-  const [textX, setTextX] = useState(50); // percentage 0-100
-  const [textY, setTextY] = useState(50); // percentage 0-100
+  const [textX, setTextX] = useState(50); // porcentagem 0-100 na tela
+  const [textY, setTextY] = useState(50); // porcentagem 0-100 na tela
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+
+  // Video Trim States (Corte estilo Instagram)
+  const [videoDuration, setVideoDuration] = useState<number>(15);
+  const [trimStart, setTrimStart] = useState<number>(0);
+  const [trimEnd, setTrimEnd] = useState<number>(15);
+  const videoPreviewRef = useRef<HTMLVideoElement>(null);
   
   // Camera Refs
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -53,11 +58,15 @@ export default function StoriesManager() {
     const handleDragMove = (e: MouseEvent | TouchEvent) => {
       if (!isDraggingRef.current || !containerRef.current) return;
 
+      if ('touches' in e && e.cancelable) {
+        e.preventDefault();
+      }
+
       const rect = containerRef.current.getBoundingClientRect();
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
-      // Calcular posição em porcentagem
+      // Calcular posição em porcentagem no contêiner
       let x = ((clientX - rect.left) / rect.width) * 100;
       let y = ((clientY - rect.top) / rect.height) * 100;
 
@@ -304,7 +313,6 @@ export default function StoriesManager() {
 
     // Reset text overlay when selecting a new file
     setTextContent('');
-    setTextPosition('center');
     setTextColor('white');
     setTextBg('black-blur');
 
@@ -350,6 +358,9 @@ export default function StoriesManager() {
       const acceptVideoFallback = () => {
         if (!resolved) {
           resolved = true;
+          setVideoDuration(15);
+          setTrimStart(0);
+          setTrimEnd(15);
           setSelectedFile(file);
           setFilePreview(objectUrl);
         }
@@ -362,14 +373,10 @@ export default function StoriesManager() {
         clearTimeout(fallbackTimer);
         resolved = true;
 
-        if (videoElement.duration && videoElement.duration > 16) {
-          URL.revokeObjectURL(objectUrl);
-          alert('O vídeo de story deve ter no máximo 15 segundos. Seu vídeo tem ' + Math.round(videoElement.duration) + ' segundos.');
-          setSelectedFile(null);
-          setFilePreview(null);
-          e.target.value = '';
-          return;
-        }
+        const dur = Math.max(1, Math.round(videoElement.duration || 15));
+        setVideoDuration(dur);
+        setTrimStart(0);
+        setTrimEnd(Math.min(15, dur));
 
         setSelectedFile(file);
         setFilePreview(objectUrl);
@@ -500,8 +507,15 @@ export default function StoriesManager() {
           profile_id: user.id,
           media_url: publicUrl,
           media_type: mediaType,
-          text_content: mediaType === 'video' && textContent ? textContent.trim() : null,
-          text_style: mediaType === 'video' && textContent ? { x: textX, y: textY, color: textColor, bg: textBg } : null
+          text_content: textContent ? textContent.trim() : null,
+          text_style: { 
+            x: textX, 
+            y: textY, 
+            color: textColor, 
+            bg: textBg,
+            startTime: mediaType === 'video' ? trimStart : 0,
+            endTime: mediaType === 'video' ? trimEnd : 15
+          }
         })
         .select()
         .single();
@@ -709,6 +723,7 @@ export default function StoriesManager() {
                         <img src={filePreview} alt="Story Preview" className="w-full h-full object-cover animate-fadeIn select-none pointer-events-none" />
                       ) : (
                         <video 
+                          ref={videoPreviewRef}
                           src={filePreview} 
                           autoPlay 
                           loop 
@@ -717,6 +732,12 @@ export default function StoriesManager() {
                           className="w-full h-full object-cover animate-fadeIn select-none pointer-events-none" 
                           disablePictureInPicture={true}
                           onContextMenu={(e) => e.preventDefault()}
+                          onTimeUpdate={(e) => {
+                            const v = e.currentTarget;
+                            if (v.currentTime >= trimEnd || v.currentTime < trimStart) {
+                              v.currentTime = trimStart;
+                            }
+                          }}
                         />
                       )}
                       
@@ -724,13 +745,16 @@ export default function StoriesManager() {
                       {textContent && (
                         <div 
                           onMouseDown={handleDragStart}
-                          onTouchStart={handleDragStart}
+                          onTouchStart={(e) => {
+                            isDraggingRef.current = true;
+                          }}
                           style={{
                             left: `${textX}%`,
                             top: `${textY}%`,
                             transform: 'translate(-50%, -50%)',
+                            touchAction: 'none',
                           }}
-                          className={`absolute max-w-[85%] text-center text-xs sm:text-sm font-semibold z-20 select-none cursor-grab active:cursor-grabbing break-words px-3.5 py-2 rounded-2xl transition-shadow shadow-lg ${
+                          className={`absolute max-w-[85%] text-center text-xs sm:text-sm font-semibold z-30 select-none cursor-grab active:cursor-grabbing break-words px-3.5 py-2 rounded-2xl transition-shadow shadow-lg touch-none ${
                             textColor === 'white' ? 'text-white' : textColor === 'gold' ? 'text-gold-light' : 'text-red-400'
                           } ${
                             textBg === 'black-blur' ? 'bg-black/65 backdrop-blur-md border border-white/10 shadow-xl' :
@@ -763,6 +787,68 @@ export default function StoriesManager() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Controles de Corte de Vídeo (Video Trimmer Estilo Instagram) */}
+                    {mediaType === 'video' && videoDuration > 0 && (
+                      <div className="bg-black/40 p-3.5 rounded-xl border border-gold-primary/20 space-y-2 max-w-sm mx-auto">
+                        <div className="flex justify-between items-center text-[11px] font-bold text-white uppercase tracking-wider">
+                          <span className="flex items-center gap-1.5 text-gold-light font-sans">
+                            <Scissors className="w-3.5 h-3.5 text-gold-primary" /> Cortar Trecho do Vídeo
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-mono">
+                            Duração: {Math.max(1, trimEnd - trimStart)}s (máx 15s)
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 pt-1">
+                          <div className="flex justify-between text-[9px] text-gray-400">
+                            <span>Início: 00:{trimStart < 10 ? `0${trimStart}` : trimStart}</span>
+                            <span>Término: 00:{trimEnd < 10 ? `0${trimEnd}` : trimEnd}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-[8px] text-gray-400 block mb-0.5">Início (segundos)</label>
+                              <input 
+                                type="range" 
+                                min={0} 
+                                max={Math.max(0, videoDuration - 1)} 
+                                value={trimStart}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value);
+                                  const newStart = Math.min(val, trimEnd - 1);
+                                  setTrimStart(newStart);
+                                  if (trimEnd - newStart > 15) {
+                                    setTrimEnd(newStart + 15);
+                                  }
+                                  if (videoPreviewRef.current) {
+                                    videoPreviewRef.current.currentTime = newStart;
+                                  }
+                                }}
+                                className="w-full accent-gold-primary cursor-pointer"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-gray-400 block mb-0.5">Término (segundos)</label>
+                              <input 
+                                type="range" 
+                                min={Math.min(videoDuration, trimStart + 1)} 
+                                max={Math.min(videoDuration, trimStart + 15)} 
+                                value={trimEnd}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value);
+                                  const newEnd = Math.max(val, trimStart + 1);
+                                  setTrimEnd(newEnd);
+                                  if (videoPreviewRef.current) {
+                                    videoPreviewRef.current.currentTime = trimStart;
+                                  }
+                                }}
+                                className="w-full accent-gold-primary cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Controles de Customização do Texto (Instagram Style) */}
                     <div className="bg-black/35 p-4 rounded-xl border border-white/5 space-y-3 max-w-sm mx-auto">

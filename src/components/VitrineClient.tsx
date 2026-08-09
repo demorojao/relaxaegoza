@@ -1274,13 +1274,28 @@ export default function VitrineClient({
                       onContextMenu={(e) => e.preventDefault()}
                       controlsList="nodownload"
                       disablePictureInPicture={true}
-                      onCanPlay={() => setMediaReady(true)}
+                      onLoadedMetadata={(e) => {
+                        const video = e.currentTarget;
+                        const startTime = activeStoryPhotos[activeSlideIndex]?.textStyle?.startTime || 0;
+                        if (startTime > 0) {
+                          video.currentTime = startTime;
+                        }
+                        setMediaReady(true);
+                      }}
                       onTimeUpdate={(e) => {
                         if (!mediaReady) return;
                         const video = e.currentTarget;
-                        if (video.duration) {
-                          setStoryProgress((video.currentTime / video.duration) * 100);
+                        const startTime = activeStoryPhotos[activeSlideIndex]?.textStyle?.startTime || 0;
+                        const endTime = activeStoryPhotos[activeSlideIndex]?.textStyle?.endTime || (video.duration || 15);
+                        
+                        if (video.currentTime >= endTime) {
+                          handleNextSlide();
+                          return;
                         }
+
+                        const range = Math.max(1, endTime - startTime);
+                        const current = Math.max(0, video.currentTime - startTime);
+                        setStoryProgress(Math.min(100, (current / range) * 100));
                       }}
                       onEnded={handleNextSlide}
                     />
