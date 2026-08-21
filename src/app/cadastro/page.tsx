@@ -117,11 +117,13 @@ export default function RegisterPage() {
         }, 1500);
       }
     } catch (err: any) {
-      let friendlyMessage = err.message;
+      let friendlyMessage = err.message || '';
       if (err.message === 'User already registered') {
         friendlyMessage = 'Este e-mail já está cadastrado no portal. Tente fazer login.';
       } else if (err.message === 'Password should be at least 6 characters') {
         friendlyMessage = 'A senha deve conter pelo menos 6 caracteres.';
+      } else if (friendlyMessage.includes('pattern') || friendlyMessage.includes('Unexpected')) {
+        friendlyMessage = 'Erro na comunicação com o servidor de cadastro. Por favor, tente novamente.';
       }
       setErrorMessage(friendlyMessage || 'Ocorreu um erro ao realizar seu cadastro.');
     } finally {
