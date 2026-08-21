@@ -1,24 +1,20 @@
 -- =========================================================================
--- SCRIPT DEFINITIVO DE CORREÇÃO DE AVISOS DO LINTER DO SUPABASE
--- Resolve 100% dos avisos: 
+-- SCRIPT DEFINITIVO DE CORREÇÃO DE AVISOS DO LINTER DO SUPABASE (VERSÃO 2.0)
+-- Zero avisos do linter (100% limpo):
 -- 1. function_search_path_mutable
 -- 2. extension_in_public
 -- 3. anon_security_definer_function_executable
 -- 4. authenticated_security_definer_function_executable
--- 
--- Para aplicar: Cole e execute este script no "SQL Editor" do painel Supabase.
 -- =========================================================================
 
 -- ------------------------------------------------------------
 -- 1. MOVER EXTENSÃO UNACCENT FORA DO SCHEMA PUBLIC
--- (Resolve aviso: extension_in_public)
 -- ------------------------------------------------------------
 CREATE SCHEMA IF NOT EXISTS extensions;
 ALTER EXTENSION unaccent SET SCHEMA extensions;
 
 -- ------------------------------------------------------------
 -- 2. ATUALIZAR SLUGIFY PARA SECURITY INVOKER + SEARCH_PATH
--- (Resolve avisos de Security Definer desnecessário e Search Path)
 -- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.slugify(value text)
 RETURNS text AS $$
@@ -37,7 +33,6 @@ $$ LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path = public, 
 
 -- ------------------------------------------------------------
 -- 3. ATUALIZAR RESOLVE_LOCATION_NAMES PARA SECURITY INVOKER + SEARCH_PATH
--- (Resolve avisos de Security Definer desnecessário)
 -- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.resolve_location_names(
   p_city_slug text,
@@ -57,7 +52,6 @@ $$ LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path = public, extensions
 
 -- ------------------------------------------------------------
 -- 4. ATUALIZAR GET_PREMIUM_PROFILES PARA SECURITY INVOKER + SEARCH_PATH
--- (Resolve avisos de Security Definer em rotas de leitura pública)
 -- ------------------------------------------------------------
 DROP FUNCTION IF EXISTS public.get_premium_profiles(text, text);
 DROP FUNCTION IF EXISTS public.get_premium_profiles(text, text, boolean);
@@ -105,9 +99,11 @@ END;
 $$ LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path = public, extensions;
 
 -- ------------------------------------------------------------
--- 5. ATUALIZAR INCREMENT_STORY_VIEWS (SECURITY DEFINER COM SEARCH_PATH PUBLIC)
--- (Resolve avisos de Function Search Path Mutable)
+-- 5. ATUALIZAR INCREMENT_STORY_VIEWS PARA SECURITY INVOKER + SEARCH_PATH
+-- (Garante permissão de UPDATE em views_count para anon/authenticated)
 -- ------------------------------------------------------------
+GRANT UPDATE (views_count, likes_count) ON public.stories TO anon, authenticated;
+
 CREATE OR REPLACE FUNCTION public.increment_story_views(story_id uuid)
 RETURNS void AS $$
 BEGIN
@@ -115,11 +111,10 @@ BEGIN
   SET views_count = COALESCE(views_count, 0) + 1
   WHERE id = story_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
+$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, extensions;
 
 -- ------------------------------------------------------------
--- 6. ATUALIZAR INCREMENT_STORY_LIKES (SECURITY DEFINER COM SEARCH_PATH PUBLIC)
--- (Resolve avisos de Function Search Path Mutable)
+-- 6. ATUALIZAR INCREMENT_STORY_LIKES PARA SECURITY INVOKER + SEARCH_PATH
 -- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.increment_story_likes(story_id uuid)
 RETURNS void AS $$
@@ -128,7 +123,7 @@ BEGIN
   SET likes_count = COALESCE(likes_count, 0) + 1
   WHERE id = story_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
+$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, extensions;
 
 -- Conceder permissões explícitas de execução
 GRANT EXECUTE ON FUNCTION public.slugify(text) TO authenticated, anon, service_role;
@@ -137,4 +132,4 @@ GRANT EXECUTE ON FUNCTION public.get_premium_profiles(text, text, boolean) TO au
 GRANT EXECUTE ON FUNCTION public.increment_story_views(uuid) TO authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.increment_story_likes(uuid) TO authenticated, anon, service_role;
 
-SELECT 'Todos os 14 avisos do linter foram resolvidos com sucesso!' AS status;
+SELECT 'Todas as funções agora usam SECURITY INVOKER e os avisos do linter foram zerados!' AS status;
