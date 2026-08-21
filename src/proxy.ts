@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+const ipBanCache = new Map<string, { isBanned: boolean; timestamp: number }>();
+const BAN_CACHE_TTL_MS = 30000;
+
 export default async function proxy(request: NextRequest) {
   const { pathname, origin } = request.nextUrl;
   const acceptHeader = request.headers.get('accept') || '';
@@ -348,30 +351,46 @@ Authorization: Bearer <seu_token_aqui>
     auth: { persistSession: false }
   });
 
-  try {
-    // 3. Verificar na tabela `ip_bans` se o IP está bloqueado
-    const { data, error } = await supabase
-      .from('ip_bans')
-      .select('id')
-      .eq('ip_address', normalizedIp)
-      .maybeSingle();
+  // 3. Verificar no cache em memória (TTL: 30 segundos) para evitar latency em todas as requisições
+  const now = Date.now();
+  const cached = ipBanCache.get(normalizedIp);
+  let isBanned = false;
 
-    if (data) {
-      // Se for uma chamada de API, retorna JSON 403
-      if (pathname.startsWith('/api/')) {
-        return new NextResponse(
-          JSON.stringify({ error: 'Acesso Proibido. Seu endereço IP foi banido por violação dos termos de uso.' }),
-          { status: 403, headers: { 'content-type': 'application/json' } }
-        );
-      }
+  if (cached && (now - cached.timestamp < BAN_CACHE_TTL_MS)) {
+    isBanned = cached.isBanned;
+  } else {
+    try {
+      // Timeout de segurança de 1.5s para não travar a navegação caso o banco esteja lento
+      const queryPromise = supabase
+        .from('ip_bans')
+        .select('id')
+        .eq('ip_address', normalizedIp)
+        .maybeSingle();
+
+      const timeoutPromise = new Promise<{ data: null }>((resolve) => setTimeout(() => resolve({ data: null }), 1500));
       
-      // Caso contrário, redireciona para a página /banned
-      const url = request.nextUrl.clone();
-      url.pathname = '/banned';
-      return NextResponse.redirect(url);
+      const { data } = await Promise.race([queryPromise, timeoutPromise]) as any;
+
+      isBanned = !!data;
+      ipBanCache.set(normalizedIp, { isBanned, timestamp: now });
+    } catch (err) {
+      console.error('Erro no proxy ao validar IP banido:', err);
     }
-  } catch (err) {
-    console.error('Erro no proxy ao validar IP banido:', err);
+  }
+
+  if (isBanned) {
+    // Se for uma chamada de API, retorna JSON 403
+    if (pathname.startsWith('/api/')) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Acesso Proibido. Seu endereço IP foi banido por violação dos termos de uso.' }),
+        { status: 403, headers: { 'content-type': 'application/json' } }
+      );
+    }
+    
+    // Caso contrário, redireciona para a página /banned
+    const url = request.nextUrl.clone();
+    url.pathname = '/banned';
+    return NextResponse.redirect(url);
   }
 
   if (pathname === '/') {
