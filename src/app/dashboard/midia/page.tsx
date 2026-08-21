@@ -190,8 +190,12 @@ export default function MediaManager() {
       return;
     }
 
-    // Enforcamento de Limites de Mídia baseados no Plano
-    const tier = profile.subscription_tier || 'free';
+    // Enforcamento de Limites de Mídia baseados no Plano (com checagem de expiração)
+    const effectiveTier = profile.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
+      ? 'free'
+      : (profile.subscription_tier || 'free');
+
+    const tier = effectiveTier;
     const photosList = media.filter(m => m.media_type === 'photo' || !m.media_type);
     const videosList = media.filter(m => m.media_type === 'video');
 
@@ -288,7 +292,9 @@ export default function MediaManager() {
     );
   }
 
-  const tier = profile?.subscription_tier || 'free';
+  const tier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
+    ? 'free'
+    : (profile?.subscription_tier || 'free');
   const photos = media.filter(m => m.media_type === 'photo' || !m.media_type);
   const videos = media.filter(m => m.media_type === 'video');
 

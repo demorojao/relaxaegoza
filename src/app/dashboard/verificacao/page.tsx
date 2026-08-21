@@ -324,7 +324,13 @@ export default function VerificationPanel() {
 
         {/* Lado Direito: Selo de Ambiente Validado (Espaço Físico) */}
         <div className="glass-effect rounded-2xl border border-dark-border/60 p-6 flex flex-col justify-between space-y-6 relative overflow-hidden">
-          {profile?.subscription_tier !== 'gold' && (
+          {(() => {
+            const effectiveTier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
+              ? 'free'
+              : (profile?.subscription_tier || 'free');
+            const isGold = effectiveTier === 'gold';
+            return !isGold;
+          })() && (
             <div className="absolute inset-0 bg-black/80 backdrop-blur-[5px] z-30 flex flex-col items-center justify-center p-6 text-center border border-white/5">
               <div className="p-3 bg-gold-primary/10 rounded-full text-gold-primary mb-3">
                 <Lock className="w-5 h-5 animate-pulse" />
