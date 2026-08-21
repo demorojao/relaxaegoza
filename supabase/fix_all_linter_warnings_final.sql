@@ -1,10 +1,11 @@
 -- =========================================================================
--- SCRIPT DEFINITIVO DE CORREÇÃO DE AVISOS DO LINTER DO SUPABASE (VERSÃO 2.0)
+-- SCRIPT DEFINITIVO DE CORREÇÃO DE AVISOS DO LINTER DO SUPABASE (VERSÃO 3.0)
 -- Zero avisos do linter (100% limpo):
 -- 1. function_search_path_mutable
 -- 2. extension_in_public
 -- 3. anon_security_definer_function_executable
 -- 4. authenticated_security_definer_function_executable
+-- 5. rls_enabled_no_policy (ip_bans e stripe_webhook_events)
 -- =========================================================================
 
 -- ------------------------------------------------------------
@@ -100,7 +101,6 @@ $$ LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path = public, extensions
 
 -- ------------------------------------------------------------
 -- 5. ATUALIZAR INCREMENT_STORY_VIEWS PARA SECURITY INVOKER + SEARCH_PATH
--- (Garante permissão de UPDATE em views_count para anon/authenticated)
 -- ------------------------------------------------------------
 GRANT UPDATE (views_count, likes_count) ON public.stories TO anon, authenticated;
 
@@ -125,6 +125,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, extensions;
 
+-- ------------------------------------------------------------
+-- 7. DEFINIR POLÍTICAS DE RLS PARA IP_BANS E STRIPE_WEBHOOK_EVENTS
+-- (Resolve avisos rls_enabled_no_policy)
+-- ------------------------------------------------------------
+ALTER TABLE public.ip_bans ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Apenas service_role gerencia ip_bans" ON public.ip_bans;
+CREATE POLICY "Apenas service_role gerencia ip_bans" ON public.ip_bans 
+  FOR ALL 
+  TO service_role 
+  USING (true) 
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Consulta de IP banido pelo middleware" ON public.ip_bans;
+CREATE POLICY "Consulta de IP banido pelo middleware" ON public.ip_bans 
+  FOR SELECT 
+  TO anon, authenticated 
+  USING (true);
+
+ALTER TABLE public.stripe_webhook_events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Apenas service_role gerencia stripe_webhook_events" ON public.stripe_webhook_events;
+CREATE POLICY "Apenas service_role gerencia stripe_webhook_events" ON public.stripe_webhook_events 
+  FOR ALL 
+  TO service_role 
+  USING (true) 
+  WITH CHECK (true);
+
 -- Conceder permissões explícitas de execução
 GRANT EXECUTE ON FUNCTION public.slugify(text) TO authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.resolve_location_names(text, text) TO authenticated, anon, service_role;
@@ -132,4 +160,4 @@ GRANT EXECUTE ON FUNCTION public.get_premium_profiles(text, text, boolean) TO au
 GRANT EXECUTE ON FUNCTION public.increment_story_views(uuid) TO authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.increment_story_likes(uuid) TO authenticated, anon, service_role;
 
-SELECT 'Todas as funções agora usam SECURITY INVOKER e os avisos do linter foram zerados!' AS status;
+SELECT 'Todas as políticas RLS e avisos do Linter foram resolvidos com sucesso!' AS status;
