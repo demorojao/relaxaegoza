@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
         provider_id: user.id,
         amount_cents: totalGrossCents,
         net_amount_cents: totalNetCents,
-        pix_key: profile.pix_key.trim(),
+        pix_key: cleanPixKey,
         status: 'processing',
       })
       .select()
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     try {
       const pushinpayRes = await requestPushinPayPixCashOut({
         value: totalNetCents,
-        pix_key: profile.pix_key.trim(),
+        pix_key: cleanPixKey,
       });
 
       // Atualizar payout para completed

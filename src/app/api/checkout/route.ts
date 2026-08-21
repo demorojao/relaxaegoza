@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     if (user) {
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('role, created_at, subscription_tier, name')
+        .select('role, created_at, subscription_tier, subscription_expires_at, name')
         .eq('id', user.id)
         .single();
       profile = userProfile;
@@ -93,7 +93,11 @@ export async function POST(req: NextRequest) {
     }
     // 2. Caso: Boost comum (2, 6 ou 12 Horas)
     else if (isBoost) {
-      if (!profile.subscription_tier || !['pro', 'gold'].includes(profile.subscription_tier)) {
+      const effectiveTier = profile.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
+        ? 'free'
+        : (profile.subscription_tier || 'free');
+
+      if (!['pro', 'gold'].includes(effectiveTier)) {
         return NextResponse.json({ error: 'Você precisa ter uma assinatura ativa (Pro ou Gold) para comprar um Boost.' }, { status: 400 });
       }
 
