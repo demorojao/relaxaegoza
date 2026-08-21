@@ -21,17 +21,18 @@ export async function POST(req: NextRequest) {
       return new Response('OK', { status: 200 });
     }
 
-    const { id, status } = body;
+    const transactionId = body.id || body.txid || body.transaction_id || body.reference;
+    const status = body.status || body.payment_status;
 
-    if (!id) {
+    if (!transactionId) {
       return new Response('OK', { status: 200 });
     }
 
-    console.log(`PushinPay Webhook recebido: ID=${id}, Status=${status}`);
+    console.log(`PushinPay Webhook recebido: ID=${transactionId}, Status=${status}`);
 
     // 3. Se a cobrança PIX foi confirmada como paga ('paid'), realizar o cumprimento do pedido
-    if (status === 'paid') {
-      await fulfillPayment(id);
+    if (status === 'paid' || status === 'approved' || status === 'COMPLETED') {
+      await fulfillPayment(transactionId);
     }
 
     return new Response('OK', { status: 200 });

@@ -32,16 +32,21 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
   let payment: any = null;
 
   if (typeof paymentRecordOrTxid === 'string') {
-    // Buscar o registro pelo txid ou id
-    const { data: byId } = await supabaseService
-      .from('payments')
-      .select('*')
-      .eq('id', paymentRecordOrTxid)
-      .maybeSingle();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(paymentRecordOrTxid);
 
-    if (byId) {
-      payment = byId;
-    } else {
+    if (isUuid) {
+      const { data: byId } = await supabaseService
+        .from('payments')
+        .select('*')
+        .eq('id', paymentRecordOrTxid)
+        .maybeSingle();
+
+      if (byId) {
+        payment = byId;
+      }
+    }
+
+    if (!payment) {
       const { data: byTxId } = await supabaseService
         .from('payments')
         .select('*')

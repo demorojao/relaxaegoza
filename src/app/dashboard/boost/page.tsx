@@ -52,8 +52,8 @@ export default function BoostPage() {
 
   const handleBoost = async (hours: number) => {
     if (!profile) return;
-    if ((profile.subscription_tier || 'free') === 'free') {
-      setErrorMsg('Boost disponível apenas para planos Pro e Gold. Faça upgrade.');
+    if (effectiveTier === 'free') {
+      setErrorMsg('Boost disponível apenas para planos Pro e Gold ativos. Faça upgrade ou renovação do plano.');
       return;
     }
     setBoosting(true); setSuccessMsg(''); setErrorMsg('');
@@ -83,8 +83,12 @@ export default function BoostPage() {
     }
   };
 
+  const effectiveTier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
+    ? 'free'
+    : (profile?.subscription_tier || 'free');
+
   const lastFreeBoost = profile?.last_free_boost_at;
-  const isGold = (profile?.subscription_tier || 'free') === 'gold';
+  const isGold = effectiveTier === 'gold';
   const isFreeBoostAvailable = isGold && (!lastFreeBoost || new Date(lastFreeBoost).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const handleClaimFreeBoost = async () => {
@@ -118,7 +122,7 @@ export default function BoostPage() {
     </div>
   );
 
-  const tier = profile?.subscription_tier || 'free';
+  const tier = effectiveTier;
   const isFree = tier === 'free';
   const isBoostActive = profile?.boost_expires_at && new Date(profile.boost_expires_at) > new Date();
 
