@@ -35,15 +35,14 @@ export default function LoginPage() {
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema)
-  });
-
-  // Limpar sessão antiga ao carregar a página (com bypass se for redefinição de senha)
+  });  // Limpar sessão antiga ao carregar a página (com bypass se for redefinição de senha)
   useEffect(() => {
     const isRecovery = window.location.hash.includes('type=recovery') || 
                        window.location.search.includes('type=recovery') ||
                        window.location.hash.includes('access_token=') ||
-                       window.location.search.includes('access_token=');
-                       
+                       window.location.search.includes('access_token=') ||
+                       window.location.search.includes('code=');
+                        
     if (!isRecovery) {
       supabase.auth.signOut().catch((err) => console.error('Erro ao deslogar no carregamento:', err));
     } else {
@@ -81,9 +80,11 @@ export default function LoginPage() {
       setSuccessMessage('E-mail de recuperação enviado com sucesso! Verifique sua caixa de entrada.');
       setRecoveryEmail('');
     } catch (err: any) {
-      let friendlyMessage = err.message;
+      let friendlyMessage = err.message || '';
       if (err.message === 'Error sending recovery email' || err.message?.includes('sending recovery email')) {
         friendlyMessage = 'O servidor de e-mail atingiu o limite ou falhou. Por favor, aguarde alguns minutos ou configure o SMTP no painel do Supabase.';
+      } else if (friendlyMessage.includes('pattern') || friendlyMessage.includes('Unexpected')) {
+        friendlyMessage = 'Erro na comunicação. Por favor, tente novamente em alguns instantes.';
       }
       setErrorMessage(friendlyMessage || 'Erro ao enviar e-mail de recuperação.');
     } finally {
@@ -117,7 +118,11 @@ export default function LoginPage() {
         setConfirmPassword('');
       }, 3000);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Erro ao redefinir a senha.');
+      let msg = err.message || '';
+      if (msg.includes('pattern') || msg.includes('Unexpected') || msg.includes('fetch')) {
+        msg = 'Sua sessão de redefinição expirou ou o link é inválido. Por favor, solicite um novo link de recuperação.';
+      }
+      setErrorMessage(msg || 'Erro ao redefinir a senha.');
     } finally {
       setLoading(false);
     }
@@ -197,13 +202,15 @@ export default function LoginPage() {
         }
       }
     } catch (err: any) {
-      let friendlyMessage = err.message;
+      let friendlyMessage = err.message || '';
       if (err.message === 'Invalid login credentials') {
         friendlyMessage = 'E-mail ou senha incorretos. Por favor, verifique suas credenciais.';
       } else if (err.message === 'Email not confirmed') {
         friendlyMessage = 'Por favor, confirme seu e-mail de cadastro para continuar.';
       } else if (err.message === 'User not found') {
         friendlyMessage = 'Usuário não encontrado. Verifique seu e-mail.';
+      } else if (friendlyMessage.includes('pattern') || friendlyMessage.includes('Unexpected')) {
+        friendlyMessage = 'Falha na comunicação com o servidor de autenticação. Por favor, tente novamente.';
       }
       setErrorMessage(friendlyMessage || 'Erro ao realizar login.');
     } finally {
