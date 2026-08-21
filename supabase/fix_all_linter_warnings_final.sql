@@ -1,11 +1,12 @@
 -- =========================================================================
--- SCRIPT DEFINITIVO DE CORREÇÃO DE AVISOS DO LINTER DO SUPABASE (VERSÃO 3.0)
--- Zero avisos do linter (100% limpo):
--- 1. function_search_path_mutable
--- 2. extension_in_public
--- 3. anon_security_definer_function_executable
--- 4. authenticated_security_definer_function_executable
--- 5. rls_enabled_no_policy (ip_bans e stripe_webhook_events)
+-- SCRIPT DEFINITIVO DE CORREÇÃO DE AVISOS E LÓGICA DO SUPABASE (VERSÃO 4.0)
+-- 1. Expiração automática de planos (Downgrade instantâneo em get_premium_profiles)
+-- 2. Zero avisos do linter (100% limpo):
+--    - function_search_path_mutable
+--    - extension_in_public
+--    - anon_security_definer_function_executable
+--    - authenticated_security_definer_function_executable
+--    - rls_enabled_no_policy (ip_bans e stripe_webhook_events)
 -- =========================================================================
 
 -- ------------------------------------------------------------
@@ -52,7 +53,8 @@ END;
 $$ LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path = public, extensions;
 
 -- ------------------------------------------------------------
--- 4. ATUALIZAR GET_PREMIUM_PROFILES PARA SECURITY INVOKER + SEARCH_PATH
+-- 4. ATUALIZAR GET_PREMIUM_PROFILES COM CHECAGEM RIGOROSA DE EXPIRAÇÃO DE ASSINATURA
+-- (Rebaixa automaticamente planos expirados para 'free' na ordenação e retorno)
 -- ------------------------------------------------------------
 DROP FUNCTION IF EXISTS public.get_premium_profiles(text, text);
 DROP FUNCTION IF EXISTS public.get_premium_profiles(text, text, boolean);
@@ -68,7 +70,11 @@ DECLARE
 BEGIN
   WITH filtered_profiles AS (
     SELECT 
-      p.id, p.name, p.age, p.city, p.price_per_hour, p.avatar_url, p.subscription_tier,
+      p.id, p.name, p.age, p.city, p.price_per_hour, p.avatar_url,
+      CASE 
+        WHEN p.subscription_expires_at IS NOT NULL AND p.subscription_expires_at < now() THEN 'free'
+        ELSE COALESCE(p.subscription_tier, 'free')
+      END AS subscription_tier,
       p.is_available_now, p.available_until, p.created_at, p.is_space_verified,
       p.verification_status, p.neighborhood, p.latitude, p.longitude, p.category,
       p.amenities, p.gender, p.whatsapp, p.whatsapp_custom_message, p.boost_expires_at,
@@ -88,7 +94,11 @@ BEGIN
       AND (p_neighborhood_slug IS NULL OR public.slugify(p.neighborhood) = p_neighborhood_slug)
       AND (NOT p_only_ads OR EXISTS (SELECT 1 FROM public.ads a WHERE a.profile_id = p.id AND a.is_active = true))
     ORDER BY 
-      CASE p.subscription_tier WHEN 'gold' THEN 3 WHEN 'pro' THEN 2 ELSE 1 END DESC,
+      CASE 
+        WHEN (p.subscription_expires_at IS NULL OR p.subscription_expires_at >= now()) AND p.subscription_tier = 'gold' THEN 3
+        WHEN (p.subscription_expires_at IS NULL OR p.subscription_expires_at >= now()) AND p.subscription_tier = 'pro' THEN 2
+        ELSE 1
+      END DESC,
       CASE WHEN p.boost_expires_at > now() THEN 1 ELSE 0 END DESC,
       CASE WHEN p.boost_expires_at > now() THEN p.boost_expires_at ELSE NULL END DESC NULLS LAST,
       CASE WHEN p.is_available_now AND (p.available_until IS NULL OR p.available_until > now()) THEN 1 ELSE 0 END DESC,
@@ -100,7 +110,7 @@ END;
 $$ LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path = public, extensions;
 
 -- ------------------------------------------------------------
--- 5. ATUALIZAR INCREMENT_STORY_VIEWS PARA SECURITY INVOKER + SEARCH_PATH
+-- 5. ATUALIZAR INCREMENT_STORY_VIEWS E LIKES PARA SECURITY INVOKER
 -- ------------------------------------------------------------
 GRANT UPDATE (views_count, likes_count) ON public.stories TO anon, authenticated;
 
@@ -113,9 +123,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, extensions;
 
--- ------------------------------------------------------------
--- 6. ATUALIZAR INCREMENT_STORY_LIKES PARA SECURITY INVOKER + SEARCH_PATH
--- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.increment_story_likes(story_id uuid)
 RETURNS void AS $$
 BEGIN
@@ -126,8 +133,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, extensions;
 
 -- ------------------------------------------------------------
--- 7. DEFINIR POLÍTICAS DE RLS PARA IP_BANS E STRIPE_WEBHOOK_EVENTS
--- (Resolve avisos rls_enabled_no_policy)
+-- 6. DEFINIR POLÍTICAS DE RLS PARA IP_BANS E STRIPE_WEBHOOK_EVENTS
 -- ------------------------------------------------------------
 ALTER TABLE public.ip_bans ENABLE ROW LEVEL SECURITY;
 
@@ -160,4 +166,4 @@ GRANT EXECUTE ON FUNCTION public.get_premium_profiles(text, text, boolean) TO au
 GRANT EXECUTE ON FUNCTION public.increment_story_views(uuid) TO authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.increment_story_likes(uuid) TO authenticated, anon, service_role;
 
-SELECT 'Todas as políticas RLS e avisos do Linter foram resolvidos com sucesso!' AS status;
+SELECT 'Lógica de expiração de planos e segurança aplicadas com sucesso!' AS status;
