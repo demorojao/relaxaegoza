@@ -1,13 +1,15 @@
 -- =========================================================================
--- SCRIPT DEFINITIVO DE CORREÇÃO DE AVISOS E LÓGICA DO SUPABASE (VERSÃO 4.0)
--- 1. Expiração automática de planos (Downgrade instantâneo em get_premium_profiles)
--- 2. Zero avisos do linter (100% limpo):
---    - function_search_path_mutable
---    - extension_in_public
---    - anon_security_definer_function_executable
---    - authenticated_security_definer_function_executable
---    - rls_enabled_no_policy (ip_bans e stripe_webhook_events)
+-- SCRIPT DEFINITIVO DE CORREÇÃO DE AVISOS E LÓGICA DO SUPABASE (VERSÃO 5.0)
+-- 1. Garantir existência da coluna subscription_expires_at na tabela profiles
+-- 2. Expiração automática de planos (Downgrade instantâneo em get_premium_profiles)
+-- 3. Zero avisos do linter (100% limpo)
 -- =========================================================================
+
+-- ------------------------------------------------------------
+-- 0. ASSEGURAR EXISTÊNCIA DE COLUNAS EM PROFILES
+-- ------------------------------------------------------------
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS subscription_expires_at timestamptz;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS boost_expires_at timestamptz;
 
 -- ------------------------------------------------------------
 -- 1. MOVER EXTENSÃO UNACCENT FORA DO SCHEMA PUBLIC
@@ -78,6 +80,7 @@ BEGIN
       p.is_available_now, p.available_until, p.created_at, p.is_space_verified,
       p.verification_status, p.neighborhood, p.latitude, p.longitude, p.category,
       p.amenities, p.gender, p.whatsapp, p.whatsapp_custom_message, p.boost_expires_at,
+      p.subscription_expires_at,
       COALESCE(
         (
           SELECT json_agg(json_build_object('specialties', json_build_object('name', s.name)))
@@ -166,4 +169,4 @@ GRANT EXECUTE ON FUNCTION public.get_premium_profiles(text, text, boolean) TO au
 GRANT EXECUTE ON FUNCTION public.increment_story_views(uuid) TO authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.increment_story_likes(uuid) TO authenticated, anon, service_role;
 
-SELECT 'Lógica de expiração de planos e segurança aplicadas com sucesso!' AS status;
+SELECT 'Tabela profiles atualizada com coluna subscription_expires_at e RPC recompilada com sucesso!' AS status;

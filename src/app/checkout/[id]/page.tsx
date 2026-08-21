@@ -157,15 +157,25 @@ function CheckoutContent() {
           {/* QR Code Container (High contrast background for easy scanner reading) */}
           <div className="flex flex-col items-center gap-3">
             <div className="bg-white p-4.5 rounded-2xl border border-gold-primary/20 shadow-lg flex items-center justify-center w-52 h-52">
-              {payment.pixQrCode ? (
-                <img 
-                  src={payment.pixQrCode} 
-                  alt="QR Code Pix" 
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <div className="w-8 h-8 border-2 border-gray-300 border-t-gold-primary rounded-full animate-spin" />
-              )}
+              {(() => {
+                const qrSrc = payment.pixQrCode
+                  ? (payment.pixQrCode.startsWith('data:') || payment.pixQrCode.startsWith('http')
+                      ? payment.pixQrCode
+                      : `data:image/png;base64,${payment.pixQrCode}`)
+                  : payment.pixCopiaECola
+                    ? `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payment.pixCopiaECola)}`
+                    : null;
+
+                return qrSrc ? (
+                  <img 
+                    src={qrSrc} 
+                    alt="QR Code Pix" 
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="w-8 h-8 border-2 border-gray-300 border-t-gold-primary rounded-full animate-spin" />
+                );
+              })()}
             </div>
             
             <div className="flex items-center gap-2 mt-1">
