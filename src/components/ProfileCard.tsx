@@ -28,6 +28,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
   const [isAvailable, setIsAvailable] = React.useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
   React.useEffect(() => {
     const available = !!(profile.is_available_now && (!profile.available_until || new Date(profile.available_until) > new Date()));
@@ -70,14 +71,17 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
+    setTouchStartY(e.touches[0].clientY);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX === null) return;
     const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
     const diffX = touchStartX - touchEndX;
+    const diffY = touchStartY !== null ? touchStartY - touchEndY : 0;
 
-    if (Math.abs(diffX) > 30) {
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 20 && photosList.length > 1) {
       setImgError(false);
       if (diffX > 0) {
         // Swipe Esquerda -> Próxima foto
@@ -88,6 +92,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
       }
     }
     setTouchStartX(null);
+    setTouchStartY(null);
   };
 
   const rawDesc = showAdInfo ? (profile.ad_description || profile.bio) : (profile.bio || profile.ad_description);
@@ -113,6 +118,23 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
+          {/* Indicadores de Mídias (Estilo Stories) */}
+          {photosList.length > 1 && (
+            <div className={cn(
+              "absolute left-3 right-3 z-30 flex gap-1 pointer-events-none",
+              isGold ? "top-4" : "top-1.5"
+            )}>
+              {photosList.map((_, idx) => (
+                <div key={idx} className="flex-1 h-0.5 bg-black/40 rounded-full overflow-hidden backdrop-blur-xs">
+                  <div className={cn(
+                    "h-full bg-gold-primary transition-all duration-200 rounded-full",
+                    idx === currentPhotoIndex ? "w-full" : idx < currentPhotoIndex ? "w-full bg-white/70" : "w-0"
+                  )} />
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Tarja Superior de Destaque Gold VIP */}
           {isGold && (
             <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-black py-0.5 px-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-between z-30 shadow-md">
@@ -140,6 +162,32 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
               priority={currentPhotoIndex === 0}
             />
           </Link>
+
+          {/* Zonas de Toque Mobile (Esquerda 33% = Foto Anterior | Direita 33% = Próxima Foto) */}
+          {photosList.length > 1 && (
+            <div className="absolute inset-x-0 top-10 bottom-14 z-20 flex justify-between pointer-events-auto">
+              <div 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setImgError(false);
+                  setCurrentPhotoIndex((prev) => (prev - 1 + photosList.length) % photosList.length);
+                }}
+                className="w-1/3 h-full cursor-pointer"
+                title="Foto anterior"
+              />
+              <div 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setImgError(false);
+                  setCurrentPhotoIndex((prev) => (prev + 1) % photosList.length);
+                }}
+                className="w-1/3 h-full cursor-pointer"
+                title="Próxima foto"
+              />
+            </div>
+          )}
           
           {/* Overlay Degradê Escuro na Base da Foto */}
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none z-10" />
