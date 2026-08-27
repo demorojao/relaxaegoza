@@ -120,9 +120,10 @@ export async function POST(req: NextRequest) {
       tierValue = `boost_${hours}h`;
       description = `Servicos de Publicidade Digital - ID ${user.id}`;
     }
-    // 3. Caso: Assinatura de Planos (Pro/Gold)
+    // 3. Caso: Assinatura de Planos (Gold 7d / 15d / 30d / Pro)
     else {
-      if (!tier || !['pro', 'gold'].includes(tier)) {
+      const validTiers = ['pro', 'gold', 'gold_7d', 'gold_15d', 'gold_30d'];
+      if (!tier || !validTiers.includes(tier)) {
         return NextResponse.json({ error: 'Plano inválido.' }, { status: 400 });
       }
 
@@ -155,10 +156,15 @@ export async function POST(req: NextRequest) {
 
         const isPromoEligible = !providerRankError && providerRank !== null && providerRank <= 100;
 
-        const baseAmount = {
+        const baseAmounts: Record<string, number> = {
           pro: 29900,
-          gold: 45000
-        }[tier as 'pro' | 'gold'];
+          gold: 80000,
+          gold_7d: 25000,
+          gold_15d: 45000,
+          gold_30d: 80000
+        };
+
+        const baseAmount = baseAmounts[tier as string] || 80000;
 
         // Aplicar 30% de desconto para as 100 primeiras
         amountCents = isPromoEligible ? Math.round(baseAmount * 0.7) : baseAmount;

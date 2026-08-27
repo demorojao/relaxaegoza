@@ -148,22 +148,29 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
 
       console.log(`Assinatura Clube Exclusivo ativada com sucesso: Cliente ${user_id} -> Profissional ${target_profile_id}`);
     }
-  } else if (tier && ['pro', 'gold'].includes(tier)) {
+  } else if (tier && (['pro', 'gold'].includes(tier) || tier.startsWith('gold_'))) {
+    let days = 30;
+    if (tier === 'gold_7d') days = 7;
+    else if (tier === 'gold_15d') days = 15;
+    else if (tier === 'gold_30d' || tier === 'gold') days = 30;
+
     const currentSubExpires = targetProfile?.subscription_expires_at
       ? new Date(targetProfile.subscription_expires_at)
       : new Date();
     const baseSubDate = currentSubExpires > new Date() ? currentSubExpires : new Date();
-    const expiresAt = new Date(baseSubDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(baseSubDate.getTime() + days * 24 * 60 * 60 * 1000);
+
+    const actualTier = tier === 'pro' ? 'pro' : 'gold';
 
     await supabaseService
       .from('profiles')
       .update({ 
-        subscription_tier: tier,
+        subscription_tier: actualTier,
         subscription_expires_at: expiresAt.toISOString()
       })
       .eq('id', targetUserId);
 
-    console.log(`Plano ${tier.toUpperCase()} ativado com sucesso para ${targetUserId}. Expira em: ${expiresAt.toISOString()}`);
+    console.log(`Plano ${actualTier.toUpperCase()} (${days} dias) ativado com sucesso para ${targetUserId}. Expira em: ${expiresAt.toISOString()}`);
   }
 
   // 5. Revalidar cache das páginas envolvidas

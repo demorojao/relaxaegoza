@@ -68,68 +68,71 @@ export default function PricingPage() {
   };
 
   const showDiscount = !loadingCount && providerCount < 100;
-  const proPrice = showDiscount ? 'R$ 209,30' : 'R$ 299,00';
-  const goldPrice = showDiscount ? 'R$ 315,00' : 'R$ 450,00';
+  const gold7dPrice = showDiscount ? 'R$ 175,00' : 'R$ 250,00';
+  const gold15dPrice = showDiscount ? 'R$ 315,00' : 'R$ 450,00';
+  const gold30dPrice = showDiscount ? 'R$ 560,00' : 'R$ 800,00';
 
   const plans = [
     {
-      name: 'Basic (Bronze)',
-      price: 'Grátis',
-      tierKey: 'free',
-      description: 'Ideal para iniciar na plataforma e experimentar a interface.',
+      name: 'Gold (7 Dias)',
+      price: gold7dPrice,
+      tierKey: 'gold_7d',
+      period: '/ 7 dias',
+      description: 'Ideal para um impulso rápido de 1 semana no topo da vitrine com destaque máximo.',
       features: [
-        'Até 3 fotos no perfil',
-        'Exibição na busca padrão',
-        'Contato via WhatsApp',
-        'Perfil padrão (sem customização)',
-        'Suporte por e-mail'
-      ],
-      highlight: false,
-      buttonText: 'Cadastrar Anúncio Grátis',
-      accentColor: 'border-gray-800 bg-dark-card hover:border-gray-700',
-      badge: null
-    },
-    {
-      name: 'Pro (Silver)',
-      price: proPrice,
-      tierKey: 'pro',
-      period: '/mês',
-      description: 'Perfeito para profissionais estabelecidos que buscam destaque comercial.',
-      features: [
-        'Até 10 fotos de alta resolução',
-        'Selo de Perfil Verificado (por selfie)',
-        'Prioridade média nas buscas do bairro',
-        'Sem anúncios externos no seu perfil',
-        'Suporte prioritário via WhatsApp',
-        'Filtro exclusivo de comodidades'
-      ],
-      highlight: false,
-      buttonText: 'Contratar Plano Pro',
-      accentColor: 'border-wine-primary/45 bg-wine-primary/[0.02] shadow-[0_15px_40px_-15px_rgba(155,44,44,0.15)] hover:border-wine-primary/70',
-      badge: showDiscount ? '30% DE DESCONTO ATIVO' : 'Recomendado para Destaque'
-    },
-    {
-      name: 'Gold Premium',
-      price: goldPrice,
-      tierKey: 'gold',
-      period: '/mês',
-      description: 'O nível máximo de visibilidade, segurança e retenção de clientes do portal.',
-      features: [
-        '1 Boost de 6h grátis por semana (Não Acumulativo) 🚀',
-        'Galeria de Fotos Ilimitada & Exclusividade de Vídeos',
+        'Destaque Máximo Gold na busca e vitrine da cidade',
+        '1 Boost de 6h grátis incluso para horário de pico 🚀',
+        'Abas de Fotos e Vídeos em alta definição (Estilo Fatal Model)',
+        'Selo Gold VIP com anel neon em destaque',
         'Exclusividade de Vídeo nos Stories Efêmeros 🎥',
-        'Prioridade máxima nas buscas da cidade',
+        'Botão "Disponível Agora" com indicador de status',
+        'Atendimento prioritário via WhatsApp'
+      ],
+      highlight: false,
+      buttonText: 'Assinar Gold (7 Dias)',
+      accentColor: 'border-gold-primary/40 bg-gold-primary/[0.02] hover:border-gold-primary/70',
+      badge: showDiscount ? '30% DE DESCONTO' : 'Ideal para Testar'
+    },
+    {
+      name: 'Gold (15 Dias)',
+      price: gold15dPrice,
+      tierKey: 'gold_15d',
+      period: '/ 15 dias',
+      description: 'O plano perfeito para quinzenas de alto fluxo de agendamentos e contatos no WhatsApp.',
+      features: [
+        'Destaque Máximo Gold na busca e vitrine da cidade',
+        '2 Boosts de 6h grátis inclusos no período 🚀',
+        'Galeria Ilimitada de Fotos & Vídeos HD',
+        'Exclusividade de Vídeo nos Stories Efêmeros 🎥',
+        'Calculadora de Metas Financeiras & Progresso 📊',
         'Botão "Disponível Agora" ativo (Borda Neon)',
         'Selo de Espaço Validado via Vídeo (Online)',
-        'Estatísticas avançadas de tráfego (Cliques / Views)',
-        'Calculadora de Metas Financeiras & Progresso 📊',
-        'Selo de Destaque Premium no mapa interativo',
-        'Atendimento e assessoria de marketing dedicados'
+        'Suporte dedicado'
       ],
       highlight: true,
-      buttonText: 'Obter Visibilidade Máxima',
-      accentColor: 'border-gold-primary/60 bg-gold-primary/[0.02] shadow-[0_15px_40px_-15px_rgba(197,168,128,0.2)]',
-      badge: showDiscount ? '30% DE DESCONTO ATIVO' : 'Retorno Máximo Garantido'
+      buttonText: 'Assinar Gold (15 Dias)',
+      accentColor: 'border-gold-primary/80 bg-gold-primary/[0.04] shadow-[0_15px_40px_-15px_rgba(197,168,128,0.25)]',
+      badge: showDiscount ? '30% DE DESCONTO' : 'Mais Vendido ⭐'
+    },
+    {
+      name: 'Gold (30 Dias)',
+      price: gold30dPrice,
+      tierKey: 'gold_30d',
+      period: '/ 30 dias (1 mês)',
+      description: 'Presença digital contínua pelo mês inteiro com o menor custo diário.',
+      features: [
+        'Destaque Máximo Gold durante 1 mês inteiro',
+        '4 Boosts de 6h grátis (1 por semana) inclusos 🚀',
+        'Galeria Ilimitada & Conteúdo Exclusivo VIP',
+        'Estatísticas avançadas de tráfego e visualizações 📊',
+        'Selo de Destaque Premium no mapa interativo',
+        'Economia máxima em relação ao plano semanal',
+        'Atendimento e assessoria de marketing dedicados'
+      ],
+      highlight: false,
+      buttonText: 'Assinar Gold (30 Dias)',
+      accentColor: 'border-amber-500/60 bg-amber-500/[0.03] hover:border-amber-400',
+      badge: showDiscount ? '30% DE DESCONTO' : 'Melhor Custo-Benefício'
     }
   ];
 
