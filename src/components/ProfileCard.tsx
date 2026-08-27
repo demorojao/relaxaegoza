@@ -232,8 +232,11 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
     setTouchStartY(null);
   };
 
-  const rawDesc = showAdInfo ? (profile.ad_description || profile.bio) : (profile.bio || profile.ad_description);
+  const rawDesc = showAdInfo 
+    ? (profile.ad_description || (profile as any).description || profile.bio) 
+    : (profile.bio || profile.ad_description || (profile as any).description);
   const cleanDesc = cleanDescription(rawDesc);
+  const hasVipShow = profile.has_vip_content || isGold;
 
   return (
     <div className="block w-full h-full">
@@ -440,8 +443,8 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
             </Link>
           )}
 
-          {/* Botão de Conteúdo VIP / FatalFans (Exibido Apenas se a profissional possuir mídias VIP cadastradas) */}
-          {profile.has_vip_content && (
+          {/* Botão de Conteúdo VIP / FatalFans (Exibido para Gold VIP ou perfis com mídias VIP ativas) */}
+          {hasVipShow && (
             <Link href={`/perfil/${profile.id}#clube-vip-section`}>
               <div className="w-full py-2 px-3 bg-gradient-to-r from-wine-primary via-wine-dark to-wine-primary hover:from-wine-light hover:to-wine-primary text-white text-xs font-extrabold uppercase tracking-wide flex items-center justify-center gap-1.5 border-t border-white/10 transition-all cursor-pointer">
                 <span className="text-sm">🦋</span>
