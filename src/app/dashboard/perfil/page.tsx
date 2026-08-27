@@ -867,7 +867,7 @@ export default function ProfileEditor() {
             Estruturador de <span className="font-semibold text-gold-primary">Perfil & Anúncio</span>
           </h1>
           <p className="text-xs md:text-sm text-gray-400 font-light mt-1.5">
-            Configure seu perfil de profissional e gerencie seu anúncio ativo na vitrine do portal.
+            Configure seu perfil profissional e gerencie seu anúncio ativo na vitrine do portal.
           </p>
         </div>
 
@@ -876,6 +876,19 @@ export default function ProfileEditor() {
             <Check className="w-4 h-4 text-emerald-400" /> Salvo com sucesso!
           </div>
         )}
+      </div>
+
+      {/* Banner de Dica e Autonomia */}
+      <div className="bg-gradient-to-r from-gold-primary/10 via-gold-primary/5 to-transparent border border-gold-primary/30 rounded-2xl p-4 flex items-center gap-3.5 shadow-lg">
+        <div className="p-2.5 rounded-xl bg-gold-primary/20 text-gold-primary shrink-0">
+          <Sparkles className="w-5 h-5" />
+        </div>
+        <div className="space-y-0.5">
+          <h4 className="text-xs font-bold text-gold-primary uppercase tracking-wider">💡 Total Autonomia & Atualização Instantânea</h4>
+          <p className="text-xs text-gray-300 font-light leading-relaxed">
+            Qualquer alteração feita no seu perfil (como fotos, vídeos, texto da bio, preços ou telefone) é **atualizada imediatamente na vitrine pública** e você tem total liberdade para alterar ou excluir o que quiser a qualquer momento durante seu plano.
+          </p>
+        </div>
       </div>
 
       {/* Tabs */}

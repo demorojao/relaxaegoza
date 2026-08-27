@@ -131,11 +131,26 @@ export default function BoostPage() {
       <div className="border-b border-dark-border/20 pb-5">
         <h1 className="text-2xl md:text-3xl font-light text-white tracking-tight flex items-center gap-2">
           <Zap className="w-7 h-7 text-gold-primary animate-pulse" />
-          Impulsionar <span className="font-semibold text-gold-primary ml-1">Anúncio</span>
+          Impulsionar <span className="font-semibold text-gold-primary ml-1">Anúncio (Boost)</span>
         </h1>
         <p className="text-xs md:text-sm text-gray-400 font-light mt-1.5">
-          Suba para o topo da vitrine e seja vista antes das outras profissionais.
+          Suba para o topo da vitrine da sua cidade e seja vista antes de todas as outras profissionais nos horários de pico.
         </p>
+      </div>
+
+      {/* Caixa Explicativa dos Boosts */}
+      <div className="bg-black/50 border border-gold-primary/30 rounded-2xl p-5 space-y-2 shadow-xl relative overflow-hidden">
+        <div className="flex items-center gap-2 text-gold-primary text-xs font-bold uppercase tracking-wider">
+          <Sparkles className="w-4 h-4" /> Como funciona o Boost?
+        </div>
+        <p className="text-xs text-gray-300 font-light leading-relaxed">
+          O **Boost** é uma turbinada temporária de 2h, 6h ou 12h que coloca o seu anúncio no **topo absoluto das buscas** na sua região. 
+        </p>
+        <ul className="text-xs text-gray-400 font-light space-y-1 pt-1 list-disc list-inside">
+          <li><strong>Anunciantes Gold VIP</strong> ganham 1 Boost de 6h totalmente grátis por semana!</li>
+          <li>Você pode comprar Boosts extras a qualquer momento para garantir a 1ª posição no final de semana ou à noite.</li>
+          <li>A ativação é instantânea e o tempo começa a contar no momento da confirmação.</li>
+        </ul>
       </div>
 
       {/* Status Boost */}
