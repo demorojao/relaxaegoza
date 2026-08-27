@@ -20,6 +20,7 @@ export default function StoriesManager() {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [compressing, setCompressing] = useState(false);
+  const [addToProfileAlbum, setAddToProfileAlbum] = useState(true);
   
   // Text Overlay States (Livre arraste estilo Instagram)
   const [textContent, setTextContent] = useState('');
@@ -556,6 +557,21 @@ export default function StoriesManager() {
       }
 
       if (storyRow) {
+        // Se a opção de adicionar ao álbum do perfil estiver marcada e for foto
+        if (addToProfileAlbum && mediaType === 'photo') {
+          try {
+            await supabase
+              .from('profile_photos')
+              .insert({
+                profile_id: user.id,
+                url: publicUrl,
+                media_type: 'photo'
+              });
+          } catch (albumErr) {
+            console.error('Erro ao adicionar foto ao álbum do perfil:', albumErr);
+          }
+        }
+
         setStories(prev => [storyRow, ...prev]);
         setStoriesInLast24h(prev => prev + 1);
         if (filePreview && filePreview.startsWith('blob:')) {
@@ -943,6 +959,21 @@ export default function StoriesManager() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Opção de enviar foto também para o álbum público do perfil (Estilo Fatal Model) */}
+                    {mediaType === 'photo' && (
+                      <label className="flex items-center gap-2.5 p-3 bg-black/60 border border-gold-primary/30 rounded-xl cursor-pointer select-none max-w-sm mx-auto text-xs text-gold-light hover:text-white transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={addToProfileAlbum}
+                          onChange={(e) => setAddToProfileAlbum(e.target.checked)}
+                          className="w-4 h-4 rounded border-white/20 text-gold-primary focus:ring-0 bg-black/40 accent-gold-primary cursor-pointer shrink-0"
+                        />
+                        <span className="font-semibold text-[11px] leading-tight">
+                          Salvar foto também no meu **Álbum de Fotos do Perfil**
+                        </span>
+                      </label>
+                    )}
 
                     {/* Bottom overlay: Instagram Style Send bar */}
                     <div className="bg-black/65 backdrop-blur-md border border-white/10 p-3 rounded-xl flex items-center justify-between max-w-sm mx-auto">

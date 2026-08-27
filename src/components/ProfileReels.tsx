@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Profile } from '../types';
 import { 
   Heart, 
@@ -18,6 +18,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  Video,
   X,
   Grid,
   Map,
@@ -272,6 +273,13 @@ export default function ProfileReels({
     }
   };
 
+  const videoProfiles = useMemo(() => {
+    return profiles.filter(p => {
+      const list = photos[p.id] || [];
+      return list.some(item => item.type === 'video');
+    });
+  }, [profiles, photos]);
+
   if (loading) {
     return (
       <div className="w-full h-[65vh] flex items-center justify-center bg-black/10 backdrop-blur-md rounded-3xl">
@@ -280,10 +288,14 @@ export default function ProfileReels({
     );
   }
 
-  if (profiles.length === 0) {
+  if (videoProfiles.length === 0) {
     return (
-      <div className="w-full text-center py-20 text-gray-500">
-        Nenhum perfil disponível no momento para exibição em Reels.
+      <div className="w-full text-center py-20 text-gray-400 space-y-3 px-6 glass-effect rounded-3xl max-w-md mx-auto my-12 border border-white/10">
+        <Video className="w-12 h-12 text-gold-primary mx-auto animate-pulse" />
+        <p className="text-base font-bold text-white">Drops 100% Vídeos</p>
+        <p className="text-xs text-gray-400 leading-relaxed">
+          O Drops exibe exclusivamente vídeos curtos de apresentação. Anunciantes Pro e Gold podem publicar vídeos no painel para aparecer aqui no topo!
+        </p>
       </div>
     );
   }
@@ -364,7 +376,7 @@ export default function ProfileReels({
         onScroll={handleScroll}
         className="w-full max-w-md h-full md:max-h-[75vh] md:aspect-9/16 bg-black md:rounded-3xl md:border md:border-white/10 shadow-2xl relative overflow-y-scroll snap-y snap-mandatory scrollbar-none"
       >
-        {profiles.map((profile, index) => {
+        {videoProfiles.map((profile: Profile, index: number) => {
           const profileMedia = photos[profile.id] || [];
           // Garante que se não houver fotos na galeria, pelo menos o avatar seja exibido
           const mediaList = profileMedia.length > 0 

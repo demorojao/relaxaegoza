@@ -185,16 +185,8 @@ export default function VitrineClient({
           photosMap[p.id] = [];
           const addedUrls = new Set<string>();
 
-          // 1. Fotos e Vídeos do Anúncio Principal
-          const adPhotos = (p as any).ad_photos || [];
+          // 1. Apenas Vídeos do Anúncio Principal (Drops é 100% Vídeos)
           const adVideos = (p as any).ad_videos || [];
-
-          adPhotos.forEach((url: string) => {
-            if (url && !addedUrls.has(url)) {
-              addedUrls.add(url);
-              photosMap[p.id].push({ url, type: 'photo' });
-            }
-          });
 
           adVideos.forEach((url: string) => {
             if (url && !addedUrls.has(url)) {
@@ -203,20 +195,14 @@ export default function VitrineClient({
             }
           });
 
-          // 2. Fotos da Galeria do Perfil
+          // 2. Apenas Vídeos da Galeria de Fotos/Vídeos do Perfil
           const gMedia = galleryMap[p.id] || [];
           gMedia.forEach(item => {
-            if (item.url && !addedUrls.has(item.url)) {
+            if (item.type === 'video' && item.url && !addedUrls.has(item.url)) {
               addedUrls.add(item.url);
               photosMap[p.id].push(item);
             }
           });
-
-          // 3. Fallback Foto de Perfil / Avatar
-          if (p.avatar_url && !addedUrls.has(p.avatar_url)) {
-            addedUrls.add(p.avatar_url);
-            photosMap[p.id].push({ url: p.avatar_url, type: 'photo' });
-          }
         });
 
         setReelsPhotos(photosMap);
