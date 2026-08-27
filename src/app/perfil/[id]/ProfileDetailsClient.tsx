@@ -878,6 +878,15 @@ export default function ProfileDetailsClient({
       });
     }
 
+    if (ad && Array.isArray(ad.videos)) {
+      ad.videos.forEach((url: string) => {
+        if (url && !addedUrls.has(url)) {
+          addedUrls.add(url);
+          list.push({ url, type: 'video', is_verified: true });
+        }
+      });
+    }
+
     if (photos && photos.length > 0) {
       photos.forEach(p => {
         if (p.photo_url && !addedUrls.has(p.photo_url)) {
