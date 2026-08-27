@@ -52,20 +52,22 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
 
       if (mediaData) setMedias(mediaData);
 
-      // 2. Contagem de Assinantes ativos
+      // 2. Contagem de Assinantes ativos (status active E validade nao expirada)
       const { count: subCount } = await supabase
         .from('premium_subscriptions')
         .select('id', { count: 'exact', head: true })
         .eq('provider_id', profile.id)
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .gte('expires_at', new Date().toISOString());
 
       setSubscriberCount(subCount || 0);
 
-      // 3. Receita total líquida
+      // 3. Receita total líquida (apenas compras concluídas/pagas)
       const { data: purchases } = await supabase
         .from('content_purchases')
         .select('net_amount_cents')
-        .eq('provider_id', profile.id);
+        .eq('provider_id', profile.id)
+        .in('status', ['completed', 'paid']);
 
       if (purchases) {
         const total = purchases.reduce((acc, p) => acc + (p.net_amount_cents || 0), 0);

@@ -37,7 +37,7 @@ export default function HostBookingsPage() {
       // Buscar perfil para verificar permissões e assinatura ativa
       const { data: profData } = await supabase
         .from('profiles')
-        .select('role, subscription_tier, created_at')
+        .select('role, subscription_tier, subscription_expires_at, created_at')
         .eq('id', user.id)
         .single();
 
@@ -56,7 +56,10 @@ export default function HostBookingsPage() {
 
         const isFreeLaunch = !countError && hostRank !== null && hostRank <= 100;
 
-        if (profData.subscription_tier === 'free' && !isFreeLaunch) {
+        const isSubscriptionActive = !profData.subscription_expires_at || new Date(profData.subscription_expires_at) >= new Date();
+        const effectiveTier = isSubscriptionActive ? (profData.subscription_tier || 'free') : 'free';
+
+        if (effectiveTier === 'free' && !isFreeLaunch) {
           router.push('/dashboard');
           return;
         }

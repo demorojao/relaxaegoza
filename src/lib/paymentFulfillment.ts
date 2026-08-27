@@ -68,15 +68,18 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
     return true;
   }
 
-  // 1. Atualizar o status da transação na tabela 'payments' para 'paid'
-  const { error: updateError } = await supabaseService
+  // 1. Atualizar o status da transação na tabela 'payments' para 'paid' de forma atômica para evitar execuções concorrentes
+  const { data: updatedPayments, error: updateError } = await supabaseService
     .from('payments')
     .update({ status: 'paid' })
-    .eq('id', payment.id);
+    .eq('id', payment.id)
+    .neq('status', 'paid')
+    .neq('status', 'completed')
+    .select('id');
 
-  if (updateError) {
-    console.error('Erro ao atualizar status do pagamento para paid:', updateError);
-    return false;
+  if (updateError || !updatedPayments || updatedPayments.length === 0) {
+    console.log(`Payment ${payment.id} já foi processado ou está em processamento concorrente.`);
+    return true;
   }
 
   // 2. Identificar o usuário de destino (caso de presente ou próprio perfil)
@@ -88,10 +91,10 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
     return true;
   }
 
-  // 3. Buscar dados de localização para revalidação do cache
+  // 3. Buscar dados de localização e expiração atual para revalidação do cache e cálculo estendido
   const { data: targetProfile } = await supabaseService
     .from('profiles')
-    .select('city, neighborhood, boost_expires_at')
+    .select('city, neighborhood, boost_expires_at, subscription_expires_at')
     .eq('id', targetUserId)
     .single();
 
@@ -146,8 +149,11 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
       console.log(`Assinatura Clube Exclusivo ativada com sucesso: Cliente ${user_id} -> Profissional ${target_profile_id}`);
     }
   } else if (tier && ['pro', 'gold'].includes(tier)) {
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    const currentSubExpires = targetProfile?.subscription_expires_at
+      ? new Date(targetProfile.subscription_expires_at)
+      : new Date();
+    const baseSubDate = currentSubExpires > new Date() ? currentSubExpires : new Date();
+    const expiresAt = new Date(baseSubDate.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     await supabaseService
       .from('profiles')

@@ -730,7 +730,8 @@ export default function ProfileEditor() {
     setSuccess(false);
 
     try {
-      const tier = profile?.subscription_tier || 'free';
+      const isSubscriptionActive = !profile?.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
+      const tier = isSubscriptionActive ? (profile?.subscription_tier || 'free') : 'free';
       const limitPhotos = tier === 'free' ? 3 : tier === 'pro' ? 10 : 20;
       const limitVideos = tier === 'free' ? 0 : tier === 'pro' ? 10 : 15;
 
@@ -809,7 +810,8 @@ export default function ProfileEditor() {
 
 
   const toggleAdPhoto = (photoUrl: string) => {
-    const tier = profile?.subscription_tier || 'free';
+    const isSubscriptionActive = !profile?.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
+    const tier = isSubscriptionActive ? (profile?.subscription_tier || 'free') : 'free';
     const limitPhotos = tier === 'free' ? 3 : tier === 'pro' ? 10 : 20;
 
     if (adPhotos.includes(photoUrl)) {
@@ -824,7 +826,8 @@ export default function ProfileEditor() {
   };
 
   const toggleAdVideo = (videoUrl: string) => {
-    const tier = profile?.subscription_tier || 'free';
+    const isSubscriptionActive = !profile?.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
+    const tier = isSubscriptionActive ? (profile?.subscription_tier || 'free') : 'free';
     const limitVideos = tier === 'free' ? 0 : tier === 'pro' ? 10 : 15;
 
     if (limitVideos === 0) {
@@ -850,6 +853,9 @@ export default function ProfileEditor() {
       </div>
     );
   }
+
+  const isSubActive = !profile?.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
+  const effectiveSubTier = isSubActive ? (profile?.subscription_tier || 'free') : 'free';
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 relative z-20 pb-16 selection:bg-gold-primary selection:text-dark-bg">
@@ -1864,11 +1870,11 @@ export default function ProfileEditor() {
             <div>
               <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Seu Plano de Divulgação</span>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant={profile?.subscription_tier === 'gold' ? 'gold' : profile?.subscription_tier === 'pro' ? 'wine' : 'outline'}>
-                  {profile?.subscription_tier?.toUpperCase() || 'BRONZE'}
+                <Badge variant={effectiveSubTier === 'gold' ? 'gold' : effectiveSubTier === 'pro' ? 'wine' : 'outline'}>
+                  {effectiveSubTier.toUpperCase()}
                 </Badge>
                 <span className="text-xs text-gray-400">
-                  Mídias permitidas: {profile?.subscription_tier === 'gold' ? '25 Fotos & 15 Vídeos' : profile?.subscription_tier === 'pro' ? '10 Fotos & 10 Vídeos' : '3 Fotos & 0 Vídeos'}
+                  Mídias permitidas: {effectiveSubTier === 'gold' ? '25 Fotos & 15 Vídeos' : effectiveSubTier === 'pro' ? '10 Fotos & 10 Vídeos' : '3 Fotos & 0 Vídeos'}
                 </span>
               </div>
             </div>
@@ -2101,7 +2107,7 @@ export default function ProfileEditor() {
               <div className="flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                 <span>Fotos Selecionadas para o Anúncio ({adPhotos.length})</span>
                 <span className="text-[10px] text-gray-500 font-normal normal-case">
-                  Limite: {profile?.subscription_tier === 'gold' ? '20' : profile?.subscription_tier === 'pro' ? '10' : '3'} fotos
+                  Limite: {effectiveSubTier === 'gold' ? '20' : effectiveSubTier === 'pro' ? '10' : '3'} fotos
                 </span>
               </div>
 
@@ -2181,11 +2187,11 @@ export default function ProfileEditor() {
               <div className="flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                 <span>Vídeos Selecionados para o Anúncio ({adVideos.length})</span>
                 <span className="text-[10px] text-gray-500 font-normal normal-case">
-                  Limite: {profile?.subscription_tier === 'gold' ? '15' : profile?.subscription_tier === 'pro' ? '10' : '0'} vídeos
+                  Limite: {effectiveSubTier === 'gold' ? '15' : effectiveSubTier === 'pro' ? '10' : '0'} vídeos
                 </span>
               </div>
 
-              {profile?.subscription_tier === 'free' || !profile?.subscription_tier ? (
+              {effectiveSubTier === 'free' ? (
                 <div className="text-center py-6 text-xs text-gray-500 font-light border border-dashed border-dark-border/40 rounded-xl bg-black/20">
                   Seu plano Bronze não permite vídeos. Faça upgrade para <span className="text-wine-light font-bold">PRO</span> ou <span className="text-gold-primary font-bold">GOLD</span> para postar vídeos.
                 </div>

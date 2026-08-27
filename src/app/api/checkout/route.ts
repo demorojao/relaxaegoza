@@ -33,7 +33,11 @@ export async function POST(req: NextRequest) {
       profile = userProfile;
     }
 
-    if (!isGift) {
+    if (isExclusiveContent) {
+      if (!user || !profile) {
+        return NextResponse.json({ error: 'Você precisa estar logado com sua conta para assinar o Clube VIP Exclusivo.' }, { status: 401 });
+      }
+    } else if (!isGift) {
       if (!user || !profile) {
         return NextResponse.json({ error: 'Não autorizado. Faça login novamente.' }, { status: 401 });
       }
@@ -93,9 +97,9 @@ export async function POST(req: NextRequest) {
     }
     // 2. Caso: Boost comum (2, 6 ou 12 Horas)
     else if (isBoost) {
-      const effectiveTier = profile.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
+      const effectiveTier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
         ? 'free'
-        : (profile.subscription_tier || 'free');
+        : (profile?.subscription_tier || 'free');
 
       if (!['pro', 'gold'].includes(effectiveTier)) {
         return NextResponse.json({ error: 'Você precisa ter uma assinatura ativa (Pro ou Gold) para comprar um Boost.' }, { status: 400 });

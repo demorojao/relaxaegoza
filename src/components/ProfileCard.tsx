@@ -21,8 +21,9 @@ interface ProfileCardProps {
 export default function ProfileCard({ profile, showAdInfo = true, isFavorite = false, onToggleFavorite }: ProfileCardProps) {
   const specialtyNames = profile.specialties?.map(s => s.specialties?.name).filter(Boolean) || [];
 
-  const isGold = profile.subscription_tier === 'gold';
-  const isPro = profile.subscription_tier === 'pro';
+  const isSubscriptionActive = !profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
+  const isGold = profile.subscription_tier === 'gold' && isSubscriptionActive;
+  const isPro = profile.subscription_tier === 'pro' && isSubscriptionActive;
   
   const [isAvailable, setIsAvailable] = React.useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -135,7 +136,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
           {/* Badges do Topo da Foto */}
           <div className="absolute top-2.5 left-2.5 right-2.5 flex justify-between items-center z-20 pointer-events-none">
             {/* Tag Avaliações Liberadas / Disponível */}
-            <div className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/15 text-white text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-md">
+            <div className="bg-black/85 px-2.5 py-1 rounded-lg border border-white/15 text-white text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-md">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>{isAvailable ? 'Disponível agora' : 'Avaliações liberadas'}</span>
             </div>
@@ -143,12 +144,12 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
             {/* Selos & Favoritar */}
             <div className="flex items-center gap-1 pointer-events-auto">
               {profile.verification_status === 'verified' && (
-                <div className="bg-black/60 backdrop-blur-md p-1 rounded-lg border border-emerald-500/30 text-emerald-400" title="Perfil Verificado">
+                <div className="bg-black/85 p-1 rounded-lg border border-emerald-500/30 text-emerald-400" title="Perfil Verificado">
                   <ShieldCheck className="w-3.5 h-3.5" />
                 </div>
               )}
               {profile.is_video_verified && (
-                <div className="bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-lg border border-purple-500/30 text-purple-300 text-[10px] font-bold flex items-center gap-0.5" title="Foto 100% Real Verificada em Vídeo">
+                <div className="bg-black/85 px-1.5 py-0.5 rounded-lg border border-purple-500/30 text-purple-300 text-[10px] font-bold flex items-center gap-0.5" title="Foto 100% Real Verificada em Vídeo">
                   <Video className="w-3 h-3 text-purple-400" />
                 </div>
               )}
@@ -162,10 +163,10 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
                   if (onToggleFavorite) onToggleFavorite(profile.id);
                 }}
                 className={cn(
-                  "p-1.5 rounded-lg backdrop-blur-md transition-all cursor-pointer shadow-md active:scale-90 ml-0.5",
+                  "p-1.5 rounded-lg transition-all cursor-pointer shadow-md active:scale-90 ml-0.5",
                   isFavorite
                     ? "bg-red-500/20 text-red-500 border border-red-500/40"
-                    : "bg-black/60 text-gray-300 border border-white/10 hover:text-red-400"
+                    : "bg-black/85 text-gray-300 border border-white/10 hover:text-red-400"
                 )}
                 title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
               >
@@ -217,7 +218,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
               </div>
 
               {(profile.is_space_verified || profile.category === 'massage' || profile.category === 'both') && (
-                <div className="bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/20 text-white text-[10px] font-bold flex items-center gap-1 shrink-0">
+                <div className="bg-black/85 px-2 py-0.5 rounded-lg border border-white/20 text-white text-[10px] font-bold flex items-center gap-1 shrink-0">
                   <span>🏠 Com local</span>
                 </div>
               )}

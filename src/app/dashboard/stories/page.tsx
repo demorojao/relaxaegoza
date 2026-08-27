@@ -124,7 +124,9 @@ export default function StoriesManager() {
 
   useEffect(() => {
     if (profile && !autoOpenedRef.current) {
-      const tier = profile.subscription_tier || 'free';
+      const tier = profile.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
+        ? 'free'
+        : (profile.subscription_tier || 'free');
       if (tier === 'pro' || tier === 'gold') {
         autoOpenedRef.current = true;
         // Pequeno delay para garantir que o contêiner esteja renderizado
@@ -471,7 +473,9 @@ export default function StoriesManager() {
       return;
     }
 
-    const tier = profile.subscription_tier || 'free';
+    const tier = profile.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
+      ? 'free'
+      : (profile.subscription_tier || 'free');
 
     // Enforced Bronze check
     if (tier === 'free') {

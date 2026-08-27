@@ -10,22 +10,24 @@ CREATE POLICY "Usuários atualizam o próprio perfil"
   USING (auth.uid() = id) 
   WITH CHECK (auth.uid() = id);
 
--- 2. CORREÇÃO DE COLUMN TAMPERING (Auto-Promoção de Assinatura e Verificação)
+-- 2. CORREÇÃO DE COLUMN TAMPERING (Auto-Promoção de Assinatura, Role e Verificação)
 -- Trigger para bloquear edição de campos sensíveis de Profiles por usuários finais
 CREATE OR REPLACE FUNCTION public.protect_sensitive_profile_fields()
 RETURNS trigger AS $$
 BEGIN
   -- Se a requisição vier via Data API (authenticated ou anon)
   IF current_user IN ('authenticated', 'anon') THEN
-    -- Força as colunas sensíveis a manterem o valor antigo, ignorando a tentativa de update
+    -- Força as colunas sensíveis a manterem o valor antigo, impedindo privilege escalation
+    NEW.role = OLD.role;
     NEW.subscription_tier = OLD.subscription_tier;
+    NEW.subscription_expires_at = OLD.subscription_expires_at;
     NEW.verification_status = OLD.verification_status;
     NEW.is_space_verified = OLD.is_space_verified;
     NEW.boost_expires_at = OLD.boost_expires_at;
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 DROP TRIGGER IF EXISTS tr_protect_sensitive_profile_fields ON public.profiles;
 CREATE TRIGGER tr_protect_sensitive_profile_fields
@@ -41,7 +43,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 DROP TRIGGER IF EXISTS tr_protect_sensitive_photo_fields ON public.profile_photos;
 CREATE TRIGGER tr_protect_sensitive_photo_fields
@@ -57,7 +59,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 DROP TRIGGER IF EXISTS tr_protect_sensitive_review_fields ON public.reviews;
 CREATE TRIGGER tr_protect_sensitive_review_fields

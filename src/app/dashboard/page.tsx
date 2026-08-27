@@ -269,7 +269,8 @@ export default function DashboardMetrics() {
     if (!profile) return;
 
     // Apenas assinantes Pro ou Gold podem usar o "Disponível Agora"
-    const tier = profile.subscription_tier || 'free';
+    const isSubscriptionActive = !profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
+    const tier = isSubscriptionActive ? (profile.subscription_tier || 'free') : 'free';
     if (tier === 'free') {
       setShowUpgradePrompt(true);
       return;
@@ -328,7 +329,10 @@ export default function DashboardMetrics() {
     }
   };
 
-  const displayTrafficData = !profile || profile.subscription_tier === 'free'
+  const isSubActive = profile && (!profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date());
+  const effectiveTier = isSubActive ? (profile.subscription_tier || 'free') : 'free';
+
+  const displayTrafficData = !profile || effectiveTier === 'free'
     ? [
         { day: 'Seg', views: 120, clicks: 35 },
         { day: 'Ter', views: 145, clicks: 42 },
@@ -449,7 +453,8 @@ export default function DashboardMetrics() {
   }
 
   const name = profile?.name || 'Profissional';
-  const tier = profile?.subscription_tier || 'free';
+  const isDashboardSubActive = profile && (!profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date());
+  const tier = isDashboardSubActive ? (profile?.subscription_tier || 'free') : 'free';
   const profileIdShort = profile?.id ? `#${profile.id.slice(0, 6)}` : '#---';
 
   const planText = tier === 'free' ? 'Bronze (Grátis)' : tier === 'pro' ? 'Silver Pro' : 'Gold Premium';

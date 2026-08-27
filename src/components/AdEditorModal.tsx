@@ -90,7 +90,11 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
     }
   };
 
-  const tier = profile?.subscription_tier || 'free';
+  const effectiveTier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
+    ? 'free'
+    : (profile?.subscription_tier || 'free');
+
+  const tier = effectiveTier;
   const tierName = tier === 'free' ? 'Bronze (Grátis)' : tier === 'pro' ? 'Pro (Silver)' : 'Gold (Premium)';
 
   // Calculate limits based on tier

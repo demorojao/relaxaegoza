@@ -91,20 +91,27 @@ export default function ProfileReels({
     }
   }, []);
 
-  // Monitorar scroll para atualizar o perfil ativo
+  const isScrollingRef = useRef(false);
+
+  // Monitorar scroll para atualizar o perfil ativo com throttling por rAF
   const handleScroll = () => {
-    if (!containerRef.current) return;
-    const container = containerRef.current;
-    const scrollTop = container.scrollTop;
-    const clientHeight = container.clientHeight;
-    
-    // Calcula o índice do item centralizado
-    const index = Math.round(scrollTop / clientHeight);
-    if (index !== activeIndex && index >= 0 && index < profiles.length) {
-      setActiveIndex(index);
-      setIsPlaying(true); // Auto play ao rolar
-      setShowReviewsDrawer(false); // Fecha a gaveta de comentários ao rolar
-    }
+    if (!containerRef.current || isScrollingRef.current) return;
+    isScrollingRef.current = true;
+    requestAnimationFrame(() => {
+      if (containerRef.current) {
+        const container = containerRef.current;
+        const scrollTop = container.scrollTop;
+        const clientHeight = container.clientHeight;
+        
+        const index = Math.round(scrollTop / (clientHeight || 1));
+        if (index !== activeIndex && index >= 0 && index < profiles.length) {
+          setActiveIndex(index);
+          setIsPlaying(true);
+          setShowReviewsDrawer(false);
+        }
+      }
+      isScrollingRef.current = false;
+    });
   };
 
   const fetchActiveReviews = async (profileId: string) => {
@@ -369,8 +376,9 @@ export default function ProfileReels({
           const isActive = index === activeIndex;
           const isFavorited = favorites.includes(profile.id);
 
-          const isGold = profile.subscription_tier === 'gold';
-          const isPro = profile.subscription_tier === 'pro';
+          const isSubscriptionActive = !profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
+          const isGold = profile.subscription_tier === 'gold' && isSubscriptionActive;
+          const isPro = profile.subscription_tier === 'pro' && isSubscriptionActive;
 
           return (
             <div 
@@ -381,7 +389,7 @@ export default function ProfileReels({
               <div className="absolute inset-0 w-full h-full z-0 flex items-center justify-center select-none protected-media">
                 <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
                 {currentMedia ? (
-                  currentMedia.type === 'video' ? (
+                  (currentMedia.type === 'video' && Math.abs(index - activeIndex) <= 1) ? (
                     <video
                       ref={el => { videoRefs.current[profile.id] = el; }}
                       src={getCDNUrl(currentMedia.url)}
@@ -393,7 +401,7 @@ export default function ProfileReels({
                       onContextMenu={(e) => e.preventDefault()}
                       controlsList="nodownload nofullscreen noremoteplayback"
                       disablePictureInPicture={true}
-                      preload={isActive || Math.abs(index - activeIndex) <= 1 ? "auto" : "none"}
+                      preload={isActive ? "auto" : "metadata"}
                       onClick={() => setIsPlaying(!isPlaying)}
                     />
                   ) : (

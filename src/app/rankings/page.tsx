@@ -37,7 +37,7 @@ export default function RankingsPage() {
       // 1. Buscar todos os provedores
       const { data: providersData } = await supabase
         .from('profiles')
-        .select('id, name, city, neighborhood, avatar_url, price_per_hour, age, subscription_tier')
+        .select('id, name, city, neighborhood, avatar_url, price_per_hour, age, subscription_tier, subscription_expires_at')
         .eq('role', 'provider');
 
       // 2. Buscar todas as avaliações
@@ -81,7 +81,7 @@ export default function RankingsPage() {
             avgEnvironment,
             avgOverall,
             reviewCount: count || 3, // default mock review count for aesthetics if 0
-            subscription_tier: p.subscription_tier || 'free'
+            subscription_tier: (!p.subscription_expires_at || new Date(p.subscription_expires_at) >= new Date()) ? (p.subscription_tier || 'free') : 'free'
           };
         });
 

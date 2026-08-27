@@ -83,7 +83,10 @@ export default function HostRoomsPage() {
 
         const isFreeLaunch = !countError && hostRank !== null && hostRank <= 100;
 
-        if (profData.subscription_tier === 'free' && !isFreeLaunch) {
+        const isSubscriptionActive = !profData.subscription_expires_at || new Date(profData.subscription_expires_at) >= new Date();
+        const effectiveTier = isSubscriptionActive ? (profData.subscription_tier || 'free') : 'free';
+
+        if (effectiveTier === 'free' && !isFreeLaunch) {
           router.push('/dashboard');
           return;
         }

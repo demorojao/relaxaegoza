@@ -258,7 +258,7 @@ export default function TermsOfUsePage() {
                 <div className="space-y-2 text-xs text-gray-300 font-light">
                   <p>Para enviar um pedido formal de remoção de anúncio ou foto, envie um e-mail para:</p>
                   <div className="bg-black/60 border border-white/10 p-3 rounded-xl font-mono text-gold-light font-bold text-sm flex items-center justify-between">
-                    <span>contato@relaxegoze.com</span>
+                    <span>contato@relaxeegoze.com.br</span>
                     <span className="text-[10px] text-gray-500 font-sans font-normal">Resposta em até 24h</span>
                   </div>
                 </div>

@@ -43,8 +43,9 @@ export default function AuraStories({ storiesProfiles, handleOpenStory, overlay 
       ) : (
         <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x -webkit-overflow-scrolling-touch transform-gpu">
           {storiesProfiles.map((profile) => {
-            const isPremium = profile.subscription_tier === 'gold';
-            const isPro = profile.subscription_tier === 'pro';
+            const isSubscriptionActive = !profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
+            const isPremium = profile.subscription_tier === 'gold' && isSubscriptionActive;
+            const isPro = profile.subscription_tier === 'pro' && isSubscriptionActive;
             const avatarSize = overlay ? 'w-12 h-12 sm:w-14 sm:h-14' : 'w-14 h-14 sm:w-16 sm:h-16';
             return (
               <button

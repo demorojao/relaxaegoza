@@ -254,7 +254,10 @@ export default function PremiumPage() {
     </div>
   );
 
-  const tier = profile?.subscription_tier || 'free';
+  const effectiveTier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
+    ? 'free'
+    : (profile?.subscription_tier || 'free');
+  const tier = effectiveTier;
   const isGold = tier === 'gold';
 
   // Financial calculations

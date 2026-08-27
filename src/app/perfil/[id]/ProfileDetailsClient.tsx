@@ -42,9 +42,11 @@ import {
 import { formatWhatsAppLink, cleanDescription } from '@/lib/utils';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { getCDNUrl } from '@/lib/mediaHelper';
-import ReportModal from '@/components/ReportModal';
+import dynamic from 'next/dynamic';
 import Watermark from '@/components/Watermark';
-import ImageLightboxModal from '@/components/ImageLightboxModal';
+
+const ReportModal = dynamic(() => import('@/components/ReportModal'), { ssr: false });
+const ImageLightboxModal = dynamic(() => import('@/components/ImageLightboxModal'), { ssr: false });
 
 const AVAILABLE_TAGS = ['Educada', 'Simpática', 'Ambiente Cheiroso', 'Excelente Massagem', 'Fiel às Fotos', 'Higiene Nota 10', 'Ótimo Atendimento'];
 
@@ -649,7 +651,9 @@ export default function ProfileDetailsClient({
         id, rating_massage, rating_service, rating_environment, comment, is_verified_interaction, created_at, tags,
         client:profiles!reviews_client_id_fkey(name, verification_status)
       `)
-      .eq('provider_id', id);
+      .eq('provider_id', id)
+      .order('created_at', { ascending: false })
+      .limit(20);
     if (!error && pReviews) {
       setReviews(pReviews);
     }

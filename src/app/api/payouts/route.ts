@@ -69,19 +69,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Você não possui saldo disponível para saque no momento.' }, { status: 400 });
     }
 
-    // Calcular valores acumulados
-    let totalGrossReais = 0;
-    let totalNetReais = 0;
+    // Calcular valores acumulados em centavos (evitando erros de ponto flutuante)
+    let totalGrossCents = 0;
+    let totalNetCents = 0;
 
     purchases.forEach((p: any) => {
-      const gross = p.amount_cents ? p.amount_cents / 100 : (Number(p.amount) || 0);
-      const net = p.net_amount_cents ? p.net_amount_cents / 100 : (Number(p.net_amount) || (gross * 0.9));
-      totalGrossReais += gross;
-      totalNetReais += net;
+      const grossCents = p.amount_cents ?? Math.round((Number(p.amount) || 0) * 100);
+      const netCents = p.net_amount_cents ?? Math.round((Number(p.net_amount) || ((grossCents / 100) * 0.9)) * 100);
+      totalGrossCents += grossCents;
+      totalNetCents += netCents;
     });
-
-    const totalGrossCents = Math.round(totalGrossReais * 100);
-    const totalNetCents = Math.round(totalNetReais * 100);
 
     if (totalNetCents < MIN_PAYOUT_CENTS) {
       return NextResponse.json({
@@ -107,12 +104,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Erro ao iniciar o processo de saque no banco de dados.' }, { status: 500 });
     }
 
-    // Vincular as compras ao payout
+    // Vincular as compras ao payout de forma atômica (apenas se payout_id ainda for null)
     const purchaseIds = purchases.map((p: any) => p.id);
-    await supabaseService
+    const { data: updatedPurchases, error: lockError } = await supabaseService
       .from('content_purchases')
       .update({ payout_id: payoutRecord.id })
-      .in('id', purchaseIds);
+      .in('id', purchaseIds)
+      .is('payout_id', null)
+      .select('id');
+
+    if (lockError || !updatedPurchases || updatedPurchases.length === 0) {
+      await supabaseService
+        .from('payouts')
+        .update({ status: 'failed', error_message: 'Concorrência detectada. Saque duplicado impedido.' })
+        .eq('id', payoutRecord.id);
+
+      return NextResponse.json({ error: 'Já existe uma solicitação de saque em processamento para estas vendas.' }, { status: 400 });
+    }
 
     // 4. Executar transferência PIX via PushinPay
     try {

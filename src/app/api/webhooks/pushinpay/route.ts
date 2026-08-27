@@ -3,13 +3,17 @@ import { fulfillPayment } from '@/lib/paymentFulfillment';
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Validar o token de segurança no header x-pushinpay-token se configurado
-    const expectedToken = process.env.PUSHINPAY_WEBHOOK_SECRET;
+    const expectedToken = process.env.PUSHINPAY_WEBHOOK_SECRET || process.env.PUSHINPAY_TOKEN;
     const receivedToken = req.headers.get('x-pushinpay-token');
 
-    if (expectedToken && receivedToken !== expectedToken) {
-      console.warn('Webhook PushinPay: token de validação inválido ou ausente.');
-      return new Response('Unauthorized', { status: 401 });
+    if (expectedToken) {
+      if (!receivedToken || receivedToken !== expectedToken) {
+        console.warn('Webhook PushinPay: token de validação inválido ou ausente.');
+        return new Response('Unauthorized', { status: 401 });
+      }
+    } else if (process.env.NODE_ENV === 'production') {
+      console.error('CRÍTICO: Nem PUSHINPAY_WEBHOOK_SECRET nem PUSHINPAY_TOKEN estão configurados no ambiente de produção.');
+      return new Response('Webhook secret not configured', { status: 500 });
     }
 
     // 2. Extrair dados do corpo do Webhook

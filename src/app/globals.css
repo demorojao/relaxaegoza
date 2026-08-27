@@ -58,28 +58,37 @@ body {
   background: #C5A880;
 }
 
-/* Premium glassmorphism effects */
+/* Premium glassmorphism effects com alta performance */
 .glass-effect {
-  background: rgba(17, 19, 25, 0.55);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  background: rgba(17, 19, 25, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .glass-effect-gold {
-  background: rgba(17, 19, 25, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(197, 168, 128, 0.35); /* Borda dourada mais brilhante e perceptível */
-  box-shadow: 0 0 30px rgba(197, 168, 128, 0.12); /* Brilho dourado premium no card Gold */
+  background: rgba(17, 19, 25, 0.90);
+  border: 1px solid rgba(197, 168, 128, 0.35);
+  box-shadow: 0 4px 20px rgba(197, 168, 128, 0.12);
 }
 
 .glass-effect-wine {
-  background: rgba(17, 19, 25, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(197, 48, 48, 0.35); /* Borda vinho mais brilhante e perceptível */
-  box-shadow: 0 0 25px rgba(155, 44, 44, 0.08); /* Brilho vinho sutil no card Pro */
+  background: rgba(17, 19, 25, 0.90);
+  border: 1px solid rgba(197, 48, 48, 0.35);
+  box-shadow: 0 4px 18px rgba(155, 44, 44, 0.08);
+}
+
+@media (min-width: 769px) {
+  .glass-effect {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .glass-effect-gold {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .glass-effect-wine {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
 }
 
 /* Floating Glow Blobs Keyframes */
@@ -99,36 +108,38 @@ body {
 .animate-float-2 { animation: float2 28s infinite ease-in-out; }
 .animate-float-3 { animation: float3 32s infinite ease-in-out; }
 
-/* Glowing Animations for Live Availability */
+/* Glowing Animations for Live Availability (GPU Accelerated via Opacity) */
 @keyframes neonPulse {
   0%, 100% {
-    box-shadow: 0 0 4px #10B981, inset 0 0 2px #10B981;
-    border-color: #10B981;
+    opacity: 0.65;
   }
   50% {
-    box-shadow: 0 0 12px #10B981, 0 0 4px #10B981, inset 0 0 4px #10B981;
-    border-color: #34D399;
+    opacity: 1;
   }
 }
 
 .neon-ring-active {
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  border-color: #10B981;
   animation: neonPulse 2s infinite ease-in-out;
+  will-change: opacity;
 }
 
-/* Glowing Gold Animations for Premium Gold Tier */
+/* Glowing Gold Animations for Premium Gold Tier (GPU Accelerated via Opacity) */
 @keyframes goldNeonPulse {
   0%, 100% {
-    box-shadow: 0 0 6px rgba(197, 168, 128, 0.35), inset 0 0 2px rgba(197, 168, 128, 0.2);
-    border-color: rgba(197, 168, 128, 0.35);
+    opacity: 0.7;
   }
   50% {
-    box-shadow: 0 0 18px rgba(197, 168, 128, 0.65), 0 0 6px rgba(197, 168, 128, 0.3), inset 0 0 4px rgba(197, 168, 128, 0.3);
-    border-color: rgba(197, 168, 128, 0.65);
+    opacity: 1;
   }
 }
 
 .gold-ring-active {
+  box-shadow: 0 0 12px rgba(197, 168, 128, 0.4);
+  border-color: rgba(197, 168, 128, 0.7);
   animation: goldNeonPulse 2.5s infinite ease-in-out;
+  will-change: opacity;
 }
 
 /* Card image zoom effect */
