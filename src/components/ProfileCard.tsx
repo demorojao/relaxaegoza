@@ -427,18 +427,19 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
                 </div>
               )}
             </div>
-
-            {/* Linha 3: Texto Promocional / Chamada do Anúncio */}
-            {cleanDesc && (
-              <p className="text-[11px] text-amber-200/95 font-medium line-clamp-2 pt-0.5 leading-tight drop-shadow-md bg-black/40 px-2 py-1 rounded-lg border border-amber-500/20 backdrop-blur-xs mt-1">
-                "{cleanDesc}"
-              </p>
-            )}
           </Link>
         </div>
 
-        {/* Bloco Inferior de Botões de Ação (Estilo Exato da Referência) */}
+        {/* Bloco Inferior de Botões de Ação */}
         <div className="flex flex-col w-full z-20 bg-black">
+          {/* Faixa Promocional / Descrição do Anúncio (📢 Ex: "Promoção até as 15hr") */}
+          {cleanDesc && (
+            <Link href={`/perfil/${profile.id}`} className="w-full bg-gradient-to-r from-amber-500/15 via-black to-amber-500/15 border-t border-b border-amber-500/30 px-3 py-2 text-[11px] text-amber-200 font-medium line-clamp-2 leading-snug flex items-start gap-1.5 hover:text-amber-100 transition-colors">
+              <span className="text-amber-400 text-xs shrink-0 mt-0.5">📢</span>
+              <span className="line-clamp-2">{cleanDesc}</span>
+            </Link>
+          )}
+
           {/* Botão de Conteúdo VIP / FatalFans (Exibido Apenas se a profissional possuir mídias VIP cadastradas) */}
           {profile.has_vip_content && (
             <Link href={`/perfil/${profile.id}#clube-vip-section`}>
