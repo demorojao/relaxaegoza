@@ -313,9 +313,24 @@ export default function MediaManager() {
           Gerenciador de <span className="font-semibold text-gold-primary">Fotos & Vídeos</span>
         </h1>
         <p className="text-xs md:text-sm text-gray-400 font-light mt-1.5">
-          Faça upload de seu material de vitrine. O limite de fotos e vídeos depende do seu plano contratado.
+          Faça upload do seu material de vitrine. Altere fotos, vídeos e descrição a qualquer momento durante a validade do seu plano.
         </p>
       </div>
+
+      {/* Dica do Drops */}
+      {tier === 'gold' && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-2xl p-4 flex items-center gap-3.5 shadow-lg">
+          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 shrink-0">
+            <Video className="w-5 h-5" />
+          </div>
+          <div className="space-y-0.5">
+            <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider">🚀 Publicação Automática no Drops</h4>
+            <p className="text-xs text-gray-300 font-light leading-relaxed">
+              Todos os vídeos de até 15 segundos enviados nesta seção aparecem **automaticamente no Feed de Drops** (estilo Reels) e na aba Vídeos do seu perfil público.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Box de Info de Limites */}
       <div className="glass-effect rounded-2xl border border-dark-border/60 p-5 grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
@@ -332,7 +347,7 @@ export default function MediaManager() {
         </div>
 
         <div className="bg-black/30 p-3.5 rounded-xl border border-white/5 text-center">
-          <span className="text-[10px] text-gray-500 uppercase block">Vídeos Publicados</span>
+          <span className="text-[10px] text-gray-500 uppercase block">Vídeos do Drops</span>
           <span className="text-sm font-bold text-white mt-1 block">
             {videos.length} <span className="text-xs text-gray-500">/ {videoLimitText}</span>
           </span>
