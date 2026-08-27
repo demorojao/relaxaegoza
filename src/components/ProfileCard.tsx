@@ -275,16 +275,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
             </div>
           )}
 
-          {/* Tarja Superior de Destaque Gold VIP */}
-          {isGold && (
-            <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-black py-0.5 px-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-between z-30 shadow-md">
-              <span className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-black fill-black animate-spin" /> 
-                CLUBE VIP GOLD
-              </span>
-              <span className="font-extrabold text-[9px] text-black/80">DESTAQUE MÁXIMO</span>
-            </div>
-          )}
+          {/* Removida tarja pesada amarela do topo da foto para deixar a foto da profissional 100% limpa */}
 
           <Link href={`/perfil/${profile.id}`} className="absolute inset-0 z-0">
             <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
@@ -329,30 +320,29 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
             </div>
           )}
           
-          {/* Overlay Degradê Escuro na Base da Foto */}
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none z-10" />
+          {/* Overlay Degradê Escuro Suave na Base da Foto */}
+          <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-10" />
 
-          {/* Badges do Topo da Foto */}
-          <div className={cn(
-            "absolute left-2.5 right-2.5 flex justify-between items-center z-20 pointer-events-none",
-            isGold ? "top-6" : "top-2.5"
-          )}>
-            {/* Tag Avaliações Liberadas / Disponível */}
-            <div className="bg-black/85 px-2.5 py-1 rounded-lg border border-white/15 text-white text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-md">
+          {/* Badges Minimalistas no Topo da Foto (100% Limpo e Despoluído) */}
+          <div className="absolute top-2.5 left-2.5 right-2.5 flex justify-between items-center z-20 pointer-events-none">
+            {/* Tag Disponibilidade / Status */}
+            <div className="bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-white text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-lg">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{isAvailable ? 'Disponível agora' : 'Avaliações liberadas'}</span>
+              <span>{isAvailable ? 'Disponível agora' : 'Atendendo'}</span>
             </div>
 
             {/* Selos & Favoritar */}
             <div className="flex items-center gap-1 pointer-events-auto">
-              {profile.verification_status === 'verified' && (
-                <div className="bg-black/85 p-1 rounded-lg border border-emerald-500/30 text-emerald-400" title="Perfil Verificado">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                </div>
+              {isGold && (
+                <span className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md flex items-center gap-0.5">
+                  <Sparkles className="w-2.5 h-2.5 fill-black" />
+                  <span>GOLD</span>
+                </span>
               )}
-              {profile.is_video_verified && (
-                <div className="bg-black/85 px-1.5 py-0.5 rounded-lg border border-purple-500/30 text-purple-300 text-[10px] font-bold flex items-center gap-0.5" title="Foto 100% Real Verificada em Vídeo">
-                  <Video className="w-3 h-3 text-purple-400" />
+
+              {profile.verification_status === 'verified' && (
+                <div className="bg-black/75 backdrop-blur-md p-1 rounded-full border border-emerald-500/40 text-emerald-400" title="Perfil Verificado">
+                  <ShieldCheck className="w-3.5 h-3.5" />
                 </div>
               )}
 
@@ -365,10 +355,10 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
                   if (onToggleFavorite) onToggleFavorite(profile.id);
                 }}
                 className={cn(
-                  "p-1.5 rounded-lg transition-all cursor-pointer shadow-md active:scale-90 ml-0.5",
+                  "p-1.5 rounded-full transition-all cursor-pointer shadow-md active:scale-90 ml-0.5 backdrop-blur-md",
                   isFavorite
-                    ? "bg-red-500/20 text-red-500 border border-red-500/40"
-                    : "bg-black/85 text-gray-300 border border-white/10 hover:text-red-400"
+                    ? "bg-red-500/30 text-red-500 border border-red-500/50"
+                    : "bg-black/75 text-gray-300 border border-white/10 hover:text-red-400"
                 )}
                 title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
               >
@@ -377,47 +367,39 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
             </div>
           </div>
 
-          {/* Botão Flutuante Direita '>' de Próxima Foto (Igual à Referência) */}
+          {/* Botão Flutuante Direita '>' de Próxima Foto */}
           {photosList.length > 1 && (
             <button
               type="button"
               onClick={handleNextPhoto}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white text-black font-extrabold flex items-center justify-center shadow-2xl z-20 hover:scale-110 active:scale-95 transition-all cursor-pointer border border-black/20"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white font-extrabold flex items-center justify-center shadow-2xl z-20 hover:scale-110 active:scale-95 transition-all cursor-pointer border border-white/20"
               title="Ver próxima foto"
             >
-              <ChevronRight className="w-5 h-5 text-black stroke-[3]" />
+              <ChevronRight className="w-4 h-4 text-white stroke-[3]" />
             </button>
           )}
 
-          {/* Dados Sobrepostos na Base da Foto (Igual à Referência) */}
+          {/* Dados Sobrepostos na Base da Foto */}
           <Link href={`/perfil/${profile.id}`} className="absolute bottom-2.5 left-3 right-3 z-20 space-y-1 text-white block">
-            {/* Linha 1: Nome + Ícones + Valor | Hora */}
+            {/* Linha 1: Nome + Valor */}
             <div className="flex items-center justify-between gap-1">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight truncate drop-shadow-md">
-                  {displayName}
-                </h3>
-                {isGold && (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[9px] font-black tracking-wider uppercase shrink-0 shadow-md" title="Assinante Gold VIP">
-                    <Sparkles className="w-2.5 h-2.5 fill-black" />
-                    <span>GOLD</span>
-                  </span>
-                )}
-              </div>
+              <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight truncate drop-shadow-md">
+                {displayName}
+              </h3>
 
-              <div className="shrink-0 text-xs sm:text-sm font-extrabold text-white flex items-center gap-1 drop-shadow-md">
+              <div className="shrink-0 text-xs sm:text-sm font-extrabold text-amber-300 flex items-center gap-1 drop-shadow-md">
                 {(!displayPrice || Number(displayPrice) < 300) ? (
-                  <span className="text-[11px] font-bold text-gold-light">Consultar</span>
+                  <span className="text-[11px] font-bold text-amber-300">Consultar</span>
                 ) : (
                   <>
                     <span>R$ {displayPrice}</span>
-                    <span className="text-[10px] font-normal text-gray-300">| 1 hora ∨</span>
+                    <span className="text-[10px] font-normal text-gray-300">/h</span>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Linha 2: Cidade / Bairro + Tag Com Local */}
+            {/* Linha 2: Localização + Com Local */}
             <div className="flex items-center justify-between text-[11px] text-gray-200">
               <div className="flex items-center gap-1 truncate font-medium">
                 <MapPin className="w-3 h-3 text-red-400 shrink-0" />
@@ -425,7 +407,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
               </div>
 
               {(profile.is_space_verified || profile.category === 'massage' || profile.category === 'both') && (
-                <div className="bg-black/85 px-2 py-0.5 rounded-lg border border-white/20 text-white text-[10px] font-bold flex items-center gap-1 shrink-0">
+                <div className="bg-black/75 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/20 text-white text-[10px] font-semibold flex items-center gap-1 shrink-0">
                   <span>🏠 Com local</span>
                 </div>
               )}
@@ -433,15 +415,13 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
           </Link>
         </div>
 
-        {/* Bloco Inferior de Botões de Ação */}
+        {/* Bloco Inferior de Botões de Ação & Chamada Comercial */}
         <div className="flex flex-col w-full z-20 bg-black">
-          {/* Faixa Promocional / Descrição do Anúncio (📢 Ex: "Promoção até as 15hr") */}
-          {cleanDesc && (
-            <Link href={`/perfil/${profile.id}`} className="w-full bg-gradient-to-r from-amber-500/15 via-black to-amber-500/15 border-t border-b border-amber-500/30 px-3 py-2 text-[11px] text-amber-200 font-medium line-clamp-2 leading-snug flex items-start gap-1.5 hover:text-amber-100 transition-colors">
-              <span className="text-amber-400 text-xs shrink-0 mt-0.5">📢</span>
-              <span className="line-clamp-2">{cleanDesc}</span>
-            </Link>
-          )}
+          {/* Faixa Promocional / Descrição do Anúncio (📢 Sempre Exibida com Texto do Anúncio ou Bio) */}
+          <Link href={`/perfil/${profile.id}`} className="w-full bg-gradient-to-r from-amber-500/15 via-black to-amber-500/15 border-t border-b border-amber-500/30 px-3 py-2 text-[11px] text-amber-200 font-medium leading-snug flex items-start gap-1.5 hover:text-amber-100 transition-colors">
+            <span className="text-amber-400 text-xs shrink-0 mt-0.5">📢</span>
+            <span className="line-clamp-2">{cleanDesc || "Atendimento exclusivo com agendamento direto pelo WhatsApp."}</span>
+          </Link>
 
           {/* Botão de Conteúdo VIP / FatalFans (Exibido para Gold VIP ou perfis com mídias VIP ativas) */}
           {hasVipShow && (

@@ -688,20 +688,36 @@ export default function VitrineClient({
 
       let filteredData = (data as unknown as Profile[]) || [];
 
-      // 2. Buscar quais perfis possuem conteúdo VIP/Exclusivo ativo cadastrado
-      if (filteredData.length > 0) {
-        const profileIds = filteredData.map(p => p.id);
-        const { data: vipMediaData } = await supabase
-          .from('premium_media')
-          .select('profile_id')
-          .in('profile_id', profileIds)
-          .eq('is_active', true);
+      // Helper para enriquecer perfis com dados da tabela ads e premium_media
+      const enrichProfilesWithAdsAndVip = async (profilesList: Profile[]): Promise<Profile[]> => {
+        if (profilesList.length === 0) return profilesList;
+        const profileIds = profilesList.map(p => p.id);
 
-        const vipSet = new Set(vipMediaData?.map(m => m.profile_id) || []);
-        filteredData = filteredData.map(p => ({
-          ...p,
-          has_vip_content: vipSet.has(p.id)
-        }));
+        const [vipRes, adsRes] = await Promise.all([
+          supabase.from('premium_media').select('profile_id').in('profile_id', profileIds).eq('is_active', true),
+          supabase.from('ads').select('profile_id, title, description, price, photos, videos').in('profile_id', profileIds).eq('is_active', true)
+        ]);
+
+        const vipSet = new Set(vipRes.data?.map(m => m.profile_id) || []);
+        const adsMap = new Map(adsRes.data?.map(a => [a.profile_id, a]) || []);
+
+        return profilesList.map(p => {
+          const ad = adsMap.get(p.id);
+          return {
+            ...p,
+            has_vip_content: vipSet.has(p.id) || p.subscription_tier === 'gold',
+            ad_title: ad?.title || p.ad_title || p.name,
+            ad_description: ad?.description || p.ad_description || p.bio || '',
+            ad_price: (ad?.price !== undefined && ad?.price !== null) ? ad.price : (p.ad_price || p.price_per_hour),
+            ad_photos: (ad?.photos && ad.photos.length > 0) ? ad.photos : p.ad_photos,
+            ad_videos: (ad?.videos && ad.videos.length > 0) ? ad.videos : p.ad_videos,
+          };
+        });
+      };
+
+      // 2. Enriquecer dados da busca principal
+      if (filteredData.length > 0) {
+        filteredData = await enrichProfilesWithAdsAndVip(filteredData);
       }
 
       // 3. Se o usuário buscou por uma cidade e não encontramos resultados,
@@ -711,18 +727,7 @@ export default function VitrineClient({
         let fallbackProfiles = (fallbackData as unknown as Profile[]) || [];
 
         if (fallbackProfiles.length > 0) {
-          const profileIds = fallbackProfiles.map(p => p.id);
-          const { data: vipMediaData } = await supabase
-            .from('premium_media')
-            .select('profile_id')
-            .in('profile_id', profileIds)
-            .eq('is_active', true);
-
-          const vipSet = new Set(vipMediaData?.map(m => m.profile_id) || []);
-          fallbackProfiles = fallbackProfiles.map(p => ({
-            ...p,
-            has_vip_content: vipSet.has(p.id)
-          }));
+          fallbackProfiles = await enrichProfilesWithAdsAndVip(fallbackProfiles);
         }
 
         filteredData = fallbackProfiles;
