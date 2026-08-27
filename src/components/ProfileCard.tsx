@@ -101,7 +101,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
         className={cn(
           "flex flex-col w-full h-full rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border border-white/10 group shadow-xl bg-black/40",
           isGold 
-            ? 'border-2 border-gold-primary/70 gold-ring-active' 
+            ? 'border-2 border-amber-400 gold-ring-active shadow-[0_0_25px_rgba(234,179,8,0.4)]' 
             : isAvailable 
               ? 'border-2 border-emerald-500/80 neon-ring-active' 
               : ''
@@ -113,6 +113,17 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
+          {/* Tarja Superior de Destaque Gold VIP */}
+          {isGold && (
+            <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-black py-0.5 px-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-between z-30 shadow-md">
+              <span className="flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-black fill-black animate-spin" /> 
+                CLUBE VIP GOLD
+              </span>
+              <span className="font-extrabold text-[9px] text-black/80">DESTAQUE MÁXIMO</span>
+            </div>
+          )}
+
           <Link href={`/perfil/${profile.id}`} className="absolute inset-0 z-0">
             <div className="protected-overlay" onContextMenu={(e) => e.preventDefault()} />
             
@@ -134,7 +145,10 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none z-10" />
 
           {/* Badges do Topo da Foto */}
-          <div className="absolute top-2.5 left-2.5 right-2.5 flex justify-between items-center z-20 pointer-events-none">
+          <div className={cn(
+            "absolute left-2.5 right-2.5 flex justify-between items-center z-20 pointer-events-none",
+            isGold ? "top-6" : "top-2.5"
+          )}>
             {/* Tag Avaliações Liberadas / Disponível */}
             <div className="bg-black/85 px-2.5 py-1 rounded-lg border border-white/15 text-white text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-md">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -191,11 +205,16 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
           <Link href={`/perfil/${profile.id}`} className="absolute bottom-2.5 left-3 right-3 z-20 space-y-1 text-white block">
             {/* Linha 1: Nome + Ícones + Valor | Hora */}
             <div className="flex items-center justify-between gap-1">
-              <div className="flex items-center gap-1 min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
                 <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight truncate drop-shadow-md">
                   {displayName}
                 </h3>
-                {isGold && <span className="text-xs text-gold-primary shrink-0" title="Gold VIP">🦋</span>}
+                {isGold && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[9px] font-black tracking-wider uppercase shrink-0 shadow-md" title="Assinante Gold VIP">
+                    <Sparkles className="w-2.5 h-2.5 fill-black" />
+                    <span>GOLD</span>
+                  </span>
+                )}
               </div>
 
               <div className="shrink-0 text-xs sm:text-sm font-extrabold text-white flex items-center gap-1 drop-shadow-md">

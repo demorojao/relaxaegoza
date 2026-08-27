@@ -125,21 +125,21 @@ body {
   will-change: opacity;
 }
 
-/* Glowing Gold Animations for Premium Gold Tier (GPU Accelerated via Opacity) */
+/* Glowing Gold Animations for Premium Gold Tier */
 @keyframes goldNeonPulse {
   0%, 100% {
-    opacity: 0.7;
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.45);
+    border-color: rgba(251, 191, 36, 0.85);
   }
   50% {
-    opacity: 1;
+    box-shadow: 0 0 28px rgba(234, 179, 8, 0.8);
+    border-color: rgba(253, 224, 71, 1);
   }
 }
 
 .gold-ring-active {
-  box-shadow: 0 0 12px rgba(197, 168, 128, 0.4);
-  border-color: rgba(197, 168, 128, 0.7);
   animation: goldNeonPulse 2.5s infinite ease-in-out;
-  will-change: opacity;
+  will-change: box-shadow, border-color;
 }
 
 /* Card image zoom effect */
