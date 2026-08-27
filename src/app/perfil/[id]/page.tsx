@@ -32,7 +32,7 @@ async function getCachedProfile(id: string) {
 
 async function getCachedPhotos(profileId: string) {
   'use cache';
-  cacheLife('days');
+  cacheLife({ stale: 5, revalidate: 10, expire: 60 });
   cacheTag(`profile-${profileId}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase

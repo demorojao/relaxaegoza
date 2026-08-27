@@ -891,8 +891,16 @@ export default function ProfileDetailsClient({
       });
     }
 
+    if (list.length === 0 && profile.avatar_url) {
+      list.push({
+        url: profile.avatar_url,
+        type: 'photo',
+        is_verified: profile.verification_status === 'verified'
+      });
+    }
+
     return list;
-  }, [ad, photos]);
+  }, [ad, photos, profile.avatar_url, profile.verification_status]);
 
   const isOwner = currentUser?.id === profile.id;
 
