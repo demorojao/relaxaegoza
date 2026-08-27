@@ -427,6 +427,13 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
                 </div>
               )}
             </div>
+
+            {/* Linha 3: Texto Promocional / Chamada do Anúncio */}
+            {cleanDesc && (
+              <p className="text-[11px] text-amber-200/95 font-medium line-clamp-2 pt-0.5 leading-tight drop-shadow-md bg-black/40 px-2 py-1 rounded-lg border border-amber-500/20 backdrop-blur-xs mt-1">
+                "{cleanDesc}"
+              </p>
+            )}
           </Link>
         </div>
 
