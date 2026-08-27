@@ -16,6 +16,33 @@ export interface PushinPayPixResponse {
   payer_national_registration?: string | null;
 }
 
+async function fetchWithRetry(url: string, options: RequestInit, retries = 3, delayMs = 1000): Promise<Response> {
+  let currentDelay = delayMs;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, options);
+      if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
+        if (attempt < retries) {
+          console.warn(`PushinPay API HTTP ${res.status}. Tentativa ${attempt}/${retries}. Aguardando ${currentDelay}ms...`);
+          await new Promise((r) => setTimeout(r, currentDelay));
+          currentDelay *= 1.5;
+          continue;
+        }
+      }
+      return res;
+    } catch (err) {
+      if (attempt < retries) {
+        console.warn(`Erro de conexão com PushinPay: ${err}. Tentativa ${attempt}/${retries}. Aguardando ${currentDelay}ms...`);
+        await new Promise((r) => setTimeout(r, currentDelay));
+        currentDelay *= 1.5;
+      } else {
+        throw err;
+      }
+    }
+  }
+  return fetch(url, options);
+}
+
 /**
  * Cria uma cobrança PIX na PushinPay
  * @param amountCents Valor em centavos (ex: R$ 50,00 = 5000)
@@ -42,7 +69,7 @@ export async function createPushinPayPixCharge({
     payload.webhook_url = webhookUrl;
   }
 
-  const response = await fetch(`${PUSHINPAY_API_URL}/pix/cashIn`, {
+  const response = await fetchWithRetry(`${PUSHINPAY_API_URL}/pix/cashIn`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -134,7 +161,7 @@ export async function requestPushinPayPixCashOut({
     pix_key: cleanPixKey,
   };
 
-  const response = await fetch(`${PUSHINPAY_API_URL}/pix/cashOut`, {
+  const response = await fetchWithRetry(`${PUSHINPAY_API_URL}/pix/cashOut`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,

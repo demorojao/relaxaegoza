@@ -105,6 +105,16 @@ CREATE INDEX IF NOT EXISTS idx_reviews_provider_id ON public.reviews(provider_id
 CREATE INDEX IF NOT EXISTS idx_reviews_client_id ON public.reviews(client_id);
 CREATE INDEX IF NOT EXISTS idx_stories_profile_id ON public.stories(profile_id);
 CREATE INDEX IF NOT EXISTS idx_profile_specialties_profile_id ON public.profile_specialties(profile_id);
-CREATE INDEX IF NOT EXISTS idx_profile_specialties_specialty_id ON public.profile_specialties(specialty_id);
+-- 5. FUNÇÃO PARA DESATIVAR ASSINATURAS EXPIRADAS AUTOMATICAMENTE
+CREATE OR REPLACE FUNCTION public.expire_outdated_subscriptions()
+RETURNS void AS $$
+BEGIN
+  UPDATE public.profiles
+  SET subscription_tier = 'free'
+  WHERE subscription_tier != 'free'
+    AND subscription_expires_at IS NOT NULL
+    AND subscription_expires_at < NOW();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- FIM DO SCRIPT
