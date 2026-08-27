@@ -688,11 +688,44 @@ export default function VitrineClient({
 
       let filteredData = (data as unknown as Profile[]) || [];
 
-      // 2. Se o usuário buscou por uma cidade e não encontramos resultados,
+      // 2. Buscar quais perfis possuem conteúdo VIP/Exclusivo ativo cadastrado
+      if (filteredData.length > 0) {
+        const profileIds = filteredData.map(p => p.id);
+        const { data: vipMediaData } = await supabase
+          .from('premium_media')
+          .select('profile_id')
+          .in('profile_id', profileIds)
+          .eq('is_active', true);
+
+        const vipSet = new Set(vipMediaData?.map(m => m.profile_id) || []);
+        filteredData = filteredData.map(p => ({
+          ...p,
+          has_vip_content: vipSet.has(p.id)
+        }));
+      }
+
+      // 3. Se o usuário buscou por uma cidade e não encontramos resultados,
       // realizamos uma busca de proximidade/geral como fallback (exibindo aviso de fallback)
       if (cityFilter && filteredData.length === 0) {
         const { data: fallbackData } = await supabase.rpc('get_premium_profiles');
-        filteredData = (fallbackData as unknown as Profile[]) || [];
+        let fallbackProfiles = (fallbackData as unknown as Profile[]) || [];
+
+        if (fallbackProfiles.length > 0) {
+          const profileIds = fallbackProfiles.map(p => p.id);
+          const { data: vipMediaData } = await supabase
+            .from('premium_media')
+            .select('profile_id')
+            .in('profile_id', profileIds)
+            .eq('is_active', true);
+
+          const vipSet = new Set(vipMediaData?.map(m => m.profile_id) || []);
+          fallbackProfiles = fallbackProfiles.map(p => ({
+            ...p,
+            has_vip_content: vipSet.has(p.id)
+          }));
+        }
+
+        filteredData = fallbackProfiles;
         setShowLocationFallbackWarning(true);
         setFallbackCityName(cityFilter);
       } else {

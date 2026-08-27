@@ -43,6 +43,7 @@ export interface Profile {
   ad_photos?: string[];
   ad_videos?: string[];
   photos?: any[];
+  has_vip_content?: boolean;
 }
 
 export interface Story {

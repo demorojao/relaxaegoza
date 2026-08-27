@@ -439,13 +439,15 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
 
         {/* Bloco Inferior de Botões de Ação (Estilo Exato da Referência) */}
         <div className="flex flex-col w-full z-20 bg-black">
-          {/* Botão de Conteúdo VIP / FatalFans (Crimson Bar) */}
-          <Link href={`/perfil/${profile.id}#clube-vip-section`}>
-            <div className="w-full py-2 px-3 bg-gradient-to-r from-wine-primary via-wine-dark to-wine-primary hover:from-wine-light hover:to-wine-primary text-white text-xs font-extrabold uppercase tracking-wide flex items-center justify-center gap-1.5 border-t border-white/10 transition-all cursor-pointer">
-              <span className="text-sm">🦋</span>
-              <span>Ver Conteúdo VIP</span>
-            </div>
-          </Link>
+          {/* Botão de Conteúdo VIP / FatalFans (Exibido Apenas se a profissional possuir mídias VIP cadastradas) */}
+          {profile.has_vip_content && (
+            <Link href={`/perfil/${profile.id}#clube-vip-section`}>
+              <div className="w-full py-2 px-3 bg-gradient-to-r from-wine-primary via-wine-dark to-wine-primary hover:from-wine-light hover:to-wine-primary text-white text-xs font-extrabold uppercase tracking-wide flex items-center justify-center gap-1.5 border-t border-white/10 transition-all cursor-pointer">
+                <span className="text-sm">🦋</span>
+                <span>Ver Conteúdo VIP</span>
+              </div>
+            </Link>
+          )}
 
           {/* Linha Divisória de Botões 50/50: Ver Telefone (Verde) | Ver Mais (Branco) */}
           <div className="flex items-stretch w-full border-t border-white/10">
