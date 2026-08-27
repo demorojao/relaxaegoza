@@ -18,7 +18,7 @@ interface ProfileCardProps {
   onToggleFavorite?: (id: string) => void;
 }
 
-function ProfessionalCatalogCard({ profile, isFavorite, onToggleFavorite }: { profile: Profile; isFavorite?: boolean; onToggleFavorite?: (id: string) => void }) {
+function ProfessionalCatalogItem({ profile, isFavorite, onToggleFavorite }: { profile: Profile; isFavorite?: boolean; onToggleFavorite?: (id: string) => void }) {
   const isSubscriptionActive = !profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
   const isGold = profile.subscription_tier === 'gold' && isSubscriptionActive;
   const isPro = profile.subscription_tier === 'pro' && isSubscriptionActive;
@@ -28,130 +28,120 @@ function ProfessionalCatalogCard({ profile, isFavorite, onToggleFavorite }: { pr
   const cleanBio = cleanDescription(rawBio);
 
   return (
-    <div className="block w-full h-full">
-      <Card
-        isInteractive
-        variant={isGold ? 'glass-gold' : isPro ? 'glass-wine' : 'glass'}
-        className={cn(
-          "flex flex-col justify-between w-full h-full rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border border-white/10 group shadow-xl bg-black/60 p-4 sm:p-5 relative min-h-[360px]",
-          isGold ? 'border-2 border-amber-400/80 shadow-[0_0_20px_rgba(234,179,8,0.25)]' : 'hover:border-white/20'
-        )}
-      >
-        {/* Tag de Assinante Gold / Verificada no topo */}
-        {isGold && (
-          <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-black py-0.5 px-3 text-[9px] font-black uppercase tracking-widest flex items-center justify-between z-20 shadow-sm">
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-black fill-black" />
-              PROFISSIONAL GOLD VIP
-            </span>
-          </div>
-        )}
-
-        {/* Favoritar (Topo Direito) */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (onToggleFavorite) onToggleFavorite(profile.id);
-          }}
-          className={cn(
-            "absolute right-3 p-1.5 rounded-lg transition-all cursor-pointer shadow-md z-20 active:scale-90",
-            isGold ? "top-4" : "top-3",
-            isFavorite
-              ? "bg-red-500/20 text-red-500 border border-red-500/40"
-              : "bg-black/60 text-gray-400 border border-white/10 hover:text-white"
-          )}
-          title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
-        >
-          <Heart className={cn("w-4 h-4", isFavorite && "fill-red-500")} />
-        </button>
-
-        <Link href={`/perfil/${profile.id}`} className={cn("space-y-3 block text-center flex-1 flex flex-col justify-center", isGold && "pt-3")}>
-          {/* Avatar Circular Limpo */}
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-full p-1 bg-gradient-to-b from-white/20 to-white/5 shrink-0">
+    <div className="w-full">
+      <div className={cn(
+        "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 w-full rounded-2xl border p-3.5 sm:p-4 transition-all duration-300 bg-black/60 shadow-lg group relative overflow-hidden",
+        isGold
+          ? 'border-amber-400/60 bg-gradient-to-r from-amber-500/10 via-black/80 to-black/60 shadow-[0_0_15px_rgba(234,179,8,0.15)]'
+          : isPro
+            ? 'border-wine-primary/40 bg-black/70'
+            : 'border-white/10 hover:border-white/20'
+      )}>
+        {/* Esquerda: Avatar + Informações Básicas */}
+        <Link href={`/perfil/${profile.id}`} className="flex items-center gap-3.5 flex-1 min-w-0 group/link">
+          {/* Avatar Circular */}
+          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 bg-gradient-to-b from-white/20 to-white/5 shrink-0">
             <div className={cn(
-              "w-full h-full rounded-full overflow-hidden relative border-2",
+              "w-full h-full rounded-full overflow-hidden relative border",
               isGold ? "border-amber-400 gold-ring-active" : "border-white/20"
             )}>
               <Image
                 src={getCDNUrl(profile.avatar_url) || '/avatar-placeholder.svg'}
                 alt={profile.name}
                 fill
-                sizes="112px"
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                sizes="64px"
+                className="object-cover group-hover/link:scale-105 transition-transform duration-300"
               />
             </div>
             {profile.verification_status === 'verified' && (
-              <div className="absolute bottom-0 right-0 bg-emerald-500 text-dark-bg p-1 rounded-full border-2 border-black shadow-md" title="Perfil Verificado">
-                <ShieldCheck className="w-3.5 h-3.5 fill-dark-bg text-emerald-400" />
+              <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500 text-dark-bg p-0.5 rounded-full border border-black shadow" title="Perfil Verificado">
+                <ShieldCheck className="w-3 h-3 fill-dark-bg text-emerald-400" />
               </div>
             )}
           </div>
 
-          {/* Nome & Idade */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-center gap-1.5 flex-wrap">
-              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight group-hover:text-gold-light transition-colors">
+          {/* Dados do Perfil */}
+          <div className="space-y-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight group-hover/link:text-gold-light transition-colors truncate">
                 {profile.name}
               </h3>
               {profile.age && (
-                <span className="text-sm font-light text-gray-400">, {profile.age}</span>
+                <span className="text-xs font-light text-gray-400">, {profile.age} anos</span>
+              )}
+              {isGold && (
+                <span className="inline-flex items-center gap-1 text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                  <Sparkles className="w-2.5 h-2.5 text-amber-300" /> VIP Gold
+                </span>
               )}
             </div>
 
-            {/* Localidade Simples */}
-            <div className="flex items-center justify-center gap-1 text-xs text-gray-400">
+            {/* Localidade */}
+            <div className="flex items-center gap-1 text-xs text-gray-400">
               <MapPin className="w-3.5 h-3.5 text-red-400 shrink-0" />
               <span className="truncate">{profile.neighborhood ? `${profile.neighborhood}, ${profile.city}` : profile.city}</span>
             </div>
+
+            {/* Bio Curta */}
+            {cleanBio && (
+              <p className="text-[11px] text-gray-300 font-light line-clamp-1 hidden sm:block">
+                {cleanBio}
+              </p>
+            )}
+
+            {/* Specialty Chips */}
+            {specialtyNames.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                {specialtyNames.slice(0, 3).map((spec: string) => (
+                  <span key={spec} className="text-[9px] bg-white/5 border border-white/10 text-gray-300 px-2 py-0.2 rounded-full font-medium">
+                    {spec}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-
-          {/* Bio Simples (Apenas 2 Linhas Limpas) */}
-          <p className="text-xs text-gray-300 font-light leading-relaxed line-clamp-2 px-1">
-            {cleanBio || 'Profissional cadastrada no portal. Confira fotos do perfil, especialidades e entre em contato.'}
-          </p>
-
-          {/* Especialidades Principais */}
-          {specialtyNames.length > 0 && (
-            <div className="flex flex-wrap items-center justify-center gap-1 pt-1">
-              {specialtyNames.slice(0, 3).map((spec: string) => (
-                <span key={spec} className="text-[10px] bg-white/5 border border-white/10 text-gray-300 px-2 py-0.5 rounded-full font-medium">
-                  {spec}
-                </span>
-              ))}
-            </div>
-          )}
         </Link>
 
-        {/* Botões de Ação na Parte Inferior */}
-        <div className="pt-3 mt-3 border-t border-white/10 flex items-center gap-2">
+        {/* Direita: Ações (WhatsApp + Ver Perfil + Favorito) */}
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onToggleFavorite) onToggleFavorite(profile.id);
+            }}
+            className={cn(
+              "p-2 rounded-xl transition-all cursor-pointer shadow-md active:scale-90",
+              isFavorite
+                ? "bg-red-500/20 text-red-500 border border-red-500/40"
+                : "bg-black/60 text-gray-400 border border-white/10 hover:text-white"
+            )}
+            title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+          >
+            <Heart className={cn("w-4 h-4", isFavorite && "fill-red-500")} />
+          </button>
+
           {profile.whatsapp ? (
             <a
               href={formatWhatsAppLink(profile.whatsapp, `Olá ${profile.name}, vi seu perfil no Relaxe & Goze!`) || '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1"
+              className="flex-1 sm:flex-initial"
             >
-              <button className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer">
+              <button className="w-full px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <span>💬 WhatsApp</span>
               </button>
             </a>
-          ) : (
-            <Link href={`/perfil/${profile.id}`} className="flex-1">
-              <button className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer">
-                <span>💬 WhatsApp</span>
-              </button>
-            </Link>
-          )}
+          ) : null}
 
-          <Link href={`/perfil/${profile.id}`} className="flex-1">
-            <button className="w-full py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-wider rounded-xl border border-white/10 transition-all cursor-pointer">
+          <Link href={`/perfil/${profile.id}`} className="flex-1 sm:flex-initial">
+            <button className="w-full px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-wider rounded-xl border border-white/10 transition-all cursor-pointer">
               <span>👤 Ver Perfil</span>
             </button>
           </Link>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
@@ -159,7 +149,7 @@ function ProfessionalCatalogCard({ profile, isFavorite, onToggleFavorite }: { pr
 export default function ProfileCard({ profile, showAdInfo = true, isFavorite = false, onToggleFavorite }: ProfileCardProps) {
   if (!showAdInfo) {
     return (
-      <ProfessionalCatalogCard 
+      <ProfessionalCatalogItem 
         profile={profile} 
         isFavorite={isFavorite} 
         onToggleFavorite={onToggleFavorite} 

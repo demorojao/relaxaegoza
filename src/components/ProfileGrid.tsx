@@ -49,7 +49,10 @@ export default function ProfileGrid({
             exit={{ opacity: 0 }}
             className="w-full"
           >
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+            <div className={showAdInfo 
+              ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6" 
+              : "flex flex-col space-y-3 max-w-4xl mx-auto w-full"
+            }>
               {profiles.map(profile => (
                 <ProfileCard 
                   key={profile.id} 
