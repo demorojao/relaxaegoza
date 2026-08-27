@@ -326,7 +326,7 @@ export default function MediaManager() {
           <div className="space-y-0.5">
             <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider">🚀 Publicação Automática no Drops</h4>
             <p className="text-xs text-gray-300 font-light leading-relaxed">
-              Todos os vídeos de até 15 segundos enviados nesta seção aparecem **automaticamente no Feed de Drops** (estilo Reels) e na aba Vídeos do seu perfil público.
+              Todos os vídeos de até 15 segundos enviados nesta seção aparecem **automaticamente no Feed de Drops** (estilo Reels) por **48 horas**, além de ficarem fixos na aba Vídeos do seu perfil público.
             </p>
           </div>
         </div>

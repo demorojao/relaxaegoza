@@ -163,11 +163,16 @@ export default function VitrineClient({
         const photosMap: Record<string, { url: string; type: 'photo' | 'video' }[]> = {};
         const profileIds = profiles.map(p => p.id);
 
-        // Buscar todas as fotos da galeria cadastradas na tabela profile_photos
+        // Limite de 48 horas para manter o Feed de Drops dinâmico e sem acúmulo de vídeos antigos
+        const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+
+        // Buscar apenas vídeos recentes da galeria (últimas 48 horas)
         const { data: galleryData } = await supabase
           .from('profile_photos')
-          .select('profile_id, url, media_type')
+          .select('profile_id, url, media_type, created_at')
           .in('profile_id', profileIds)
+          .eq('media_type', 'video')
+          .gte('created_at', fortyEightHoursAgo)
           .order('created_at', { ascending: false });
 
         const galleryMap: Record<string, { url: string; type: 'photo' | 'video' }[]> = {};
@@ -176,18 +181,23 @@ export default function VitrineClient({
             if (!galleryMap[item.profile_id]) galleryMap[item.profile_id] = [];
             galleryMap[item.profile_id].push({
               url: item.url,
-              type: item.media_type === 'video' ? 'video' : 'photo'
+              type: 'video'
             });
           });
         }
 
         profiles.forEach(p => {
+          // Drops é benefício exclusivo do Plano Gold ativo
+          const isSubActive = !p.subscription_expires_at || new Date(p.subscription_expires_at) >= new Date();
+          const isGold = p.subscription_tier === 'gold' && isSubActive;
+
           photosMap[p.id] = [];
+          if (!isGold) return;
+
           const addedUrls = new Set<string>();
 
-          // 1. Apenas Vídeos do Anúncio Principal (Drops é 100% Vídeos)
+          // 1. Vídeos do Anúncio Principal
           const adVideos = (p as any).ad_videos || [];
-
           adVideos.forEach((url: string) => {
             if (url && !addedUrls.has(url)) {
               addedUrls.add(url);
@@ -195,10 +205,10 @@ export default function VitrineClient({
             }
           });
 
-          // 2. Apenas Vídeos da Galeria de Fotos/Vídeos do Perfil
+          // 2. Vídeos da Galeria (Postados nas últimas 48h)
           const gMedia = galleryMap[p.id] || [];
           gMedia.forEach(item => {
-            if (item.type === 'video' && item.url && !addedUrls.has(item.url)) {
+            if (item.url && !addedUrls.has(item.url)) {
               addedUrls.add(item.url);
               photosMap[p.id].push(item);
             }
