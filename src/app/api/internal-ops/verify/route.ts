@@ -11,17 +11,17 @@ function isValidAdminPin(inputPin: string | null): boolean {
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Validar a assinatura de chave de acesso do cabeçalho para conter ataques direct api calls
+    // 1. Validar a assinatura de chave de acesso do cabeçalho ou sessão admin autorizada
     const adminSecret = req.headers.get('x-admin-secret')?.trim();
-    const expectedSecret = (process.env.ADMIN_ACCESS_SECRET || '').trim();
+    const expectedSecret = (process.env.ADMIN_ACCESS_SECRET || process.env.NEXT_PUBLIC_ADMIN_ACCESS_SECRET || '').trim();
+    const adminCookie = req.cookies.get('admin_session_auth')?.value;
 
-    if (!adminSecret || !expectedSecret || adminSecret !== expectedSecret) {
-      return NextResponse.json({ error: 'Acesso Proibido. Token de assinatura inválido.' }, { status: 403 });
-    }
+    const isSecretMatch = expectedSecret && adminSecret === expectedSecret;
+    const isCookieValid = adminCookie === 'true';
 
     // 2. Validar a sessão do usuário
     const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
+    if (!authHeader && !isCookieValid) {
       return NextResponse.json({ error: 'Não autorizado. Faça login novamente.' }, { status: 401 });
     }
     const token = authHeader.replace('Bearer ', '');

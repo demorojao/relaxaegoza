@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { Suspense } from 'react';
 import { getSupabaseServiceClient } from '@/lib/supabaseServer';
 import AdminDashboardClient from './AdminDashboardClient';
@@ -8,12 +9,15 @@ interface PageProps {
 }
 
 async function AdminDashboardPageContent({ searchParams }: PageProps) {
+  const cookieStore = await cookies();
+  const hasAdminCookie = cookieStore.get('admin_session_auth')?.value === 'true';
+
   const { key } = await searchParams;
   const secret = (process.env.ADMIN_ACCESS_SECRET || process.env.NEXT_PUBLIC_ADMIN_ACCESS_SECRET || '').trim();
+  const isKeyValid = Boolean(secret && key === secret);
 
-  // Se a chave na URL (?key=...) não corresponder ao segredo do ambiente, retorna 404 (Not Found)
-  // Fazendo com que a rota pareça completamente inexistente para hackers
-  if (!secret || key !== secret) {
+  // Se não possuir o Cookie HTTP-Only verificado e nem a chave legada na URL, esconde a rota com 404 Not Found
+  if (!hasAdminCookie && !isKeyValid) {
     notFound();
   }
 

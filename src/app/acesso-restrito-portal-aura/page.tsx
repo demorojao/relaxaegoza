@@ -39,7 +39,7 @@ export default function AdminRestrictedLoginPage() {
 
       if (error) throw error;
 
-      if (!data.user) {
+      if (!data.user || !data.session) {
         throw new Error('Falha na autenticação do usuário.');
       }
 
@@ -55,12 +55,26 @@ export default function AdminRestrictedLoginPage() {
         throw new Error('Acesso negado: Esta conta não possui privilégios de Administrador.');
       }
 
-      setSuccessMessage('Credenciais de Administrador validadas! Redirecionando...');
+      // 3. Validar o PIN no Servidor via API Serverless (/api/admin/verify-pin)
+      const pinResponse = await fetch('/api/admin/verify-pin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${data.session.access_token}`
+        },
+        body: JSON.stringify({ pin: pin.trim() })
+      });
 
-      // 3. Redirecionar para o painel de moderação
+      const pinResult = await pinResponse.json();
+      if (!pinResponse.ok) {
+        throw new Error(pinResult.error || 'PIN de Segurança Master incorreto.');
+      }
+
+      setSuccessMessage('Credenciais e PIN de Administrador validados com sucesso! Redirecionando...');
+
+      // 4. Redirecionar para o painel de moderação de forma limpa e segura (sem senhas na URL)
       setTimeout(() => {
-        const adminSecret = process.env.NEXT_PUBLIC_ADMIN_ACCESS_SECRET || '';
-        router.push(`/dashboard-interno-moderacao-aura?key=${adminSecret}`);
+        router.push('/dashboard-interno-moderacao-aura');
       }, 1000);
 
     } catch (err: any) {
