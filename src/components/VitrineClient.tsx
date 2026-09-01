@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types';
-import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon, ChevronLeft, ChevronRight, Trash2, ChevronUp } from 'lucide-react';
+import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon, ChevronLeft, ChevronRight, Trash2, ChevronUp, Lock } from 'lucide-react';
 import Link from 'next/link';
 import ProfileGrid from '../components/ProfileGrid';
 import ProfileReels from '../components/ProfileReels';
@@ -63,6 +63,9 @@ export default function VitrineClient({
   const [currentTab, setCurrentTab] = useState<'ads' | 'models'>('ads');
   const [userProfile, setUserProfile] = useState<any | null>(null);
   const [isAdModalOpen, setIsAdModalOpen] = useState(false);
+  const [user, setUser] = useState<any | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Garantir modo Vitrine (grid) no desktop
   useEffect(() => {
@@ -940,6 +943,10 @@ export default function VitrineClient({
   };
 
   const handleOpenStory = async (profile: Profile) => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
     setActiveStoryProfile(profile);
     setActiveSlideIndex(0);
     setStoryProgress(0);
@@ -1880,6 +1887,51 @@ export default function VitrineClient({
             checkUser();
           }}
         />
+      )}
+
+      {/* Modal de Restrição de Stories para Membros Cadastrados */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-gradient-to-b from-zinc-900 to-black border border-gold-primary/30 max-w-md w-full p-6 md:p-8 rounded-3xl text-center space-y-6 shadow-2xl relative">
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="w-16 h-16 bg-gold-primary/10 border border-gold-primary/30 rounded-2xl flex items-center justify-center mx-auto text-gold-primary shadow-lg shadow-gold-primary/20">
+              <Lock className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <span className="px-3 py-1 bg-gold-primary/10 border border-gold-primary/20 text-gold-primary text-[10px] font-bold uppercase rounded-full tracking-wider">
+                🔒 Exclusivo para Membros
+              </span>
+              <h3 className="text-xl font-bold text-white tracking-wide">
+                Stories Restritos aos Cadastrados
+              </h3>
+              <p className="text-xs text-gray-300 font-light leading-relaxed">
+                Para assistir aos Stories diários, vídeos e atualizações em tempo real das anunciantes, faça login na sua conta ou crie seu cadastro gratuitamente em menos de 1 minuto!
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <Link
+                href="/login"
+                className="block w-full py-3 bg-gold-primary hover:bg-gold-light text-dark-bg text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-gold-primary/20 cursor-pointer"
+              >
+                Entrar na Minha Conta
+              </Link>
+              <Link
+                href="/cadastro"
+                className="block w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer"
+              >
+                Criar Conta Grátis
+              </Link>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );
