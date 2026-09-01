@@ -23,7 +23,8 @@ import {
   Lock,
   Bell,
   LifeBuoy,
-  LogOut
+  LogOut,
+  Headphones
 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -153,9 +154,9 @@ export default function DashboardLayout({
       path: '/planos'
     },
     {
-      name: 'Suporte Financeiro',
-      icon: LifeBuoy,
-      path: supportUrl
+      name: 'Suporte & Chamados',
+      icon: Headphones,
+      path: '/dashboard/suporte'
     }
   ];
 

@@ -32,7 +32,12 @@ import {
   Send,
   Megaphone,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Headphones,
+  FileText,
+  MessageSquare,
+  Tag,
+  Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -53,9 +58,20 @@ export default function AdminDashboardClient({
   adminSecret
 }: AdminDashboardClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'pending' | 'rooms' | 'all' | 'photos' | 'banned' | 'reports' | 'broadcast'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'rooms' | 'all' | 'photos' | 'banned' | 'reports' | 'broadcast' | 'audit' | 'support'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'provider' | 'client' | 'host'>('all');
+
+  // Estados de Logs de Auditoria e Chamados de Suporte
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [loadingAuditLogs, setLoadingAuditLogs] = useState(false);
+
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [loadingSupportTickets, setLoadingSupportTickets] = useState(false);
+  const [activeTicket, setActiveTicket] = useState<any | null>(null);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
+  const [ticketFilterStatus, setTicketFilterStatus] = useState<string>('all');
   const [profiles, setProfiles] = useState<any[]>(initialProfiles);
   const [rooms, setRooms] = useState<any[]>(initialRooms);
   const [photos, setPhotos] = useState<any[]>(initialPhotos);
@@ -174,13 +190,104 @@ export default function AdminDashboardClient({
   useEffect(() => {
     fetchReports();
     fetchSentNotifications();
+    fetchAuditLogs();
+    fetchSupportTickets();
   }, []);
 
   useEffect(() => {
     if (activeTab === 'broadcast') {
       fetchSentNotifications();
+    } else if (activeTab === 'audit') {
+      fetchAuditLogs();
+    } else if (activeTab === 'support') {
+      fetchSupportTickets();
     }
   }, [activeTab]);
+
+  const fetchAuditLogs = async () => {
+    setLoadingAuditLogs(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch('/api/admin/audit-logs', {
+        headers: {
+          'Authorization': session ? `Bearer ${session.access_token}` : ''
+        }
+      });
+      const res = await response.json();
+      if (res.success) {
+        setAuditLogs(res.logs || []);
+      }
+    } catch (err) {
+      console.error('Erro ao buscar logs de auditoria:', err);
+    } finally {
+      setLoadingAuditLogs(false);
+    }
+  };
+
+  const fetchSupportTickets = async () => {
+    setLoadingSupportTickets(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch('/api/support/tickets', {
+        headers: {
+          'Authorization': session ? `Bearer ${session.access_token}` : ''
+        }
+      });
+      const res = await response.json();
+      if (res.success) {
+        setSupportTickets(res.tickets || []);
+      }
+    } catch (err) {
+      console.error('Erro ao buscar chamados de suporte:', err);
+    } finally {
+      setLoadingSupportTickets(false);
+    }
+  };
+
+  const handleSendTicketReply = async (statusOverride?: string) => {
+    if (!activeTicket) return;
+    if (!replyMessage.trim() && !statusOverride) return;
+
+    setSendingReply(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch('/api/support/tickets', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': session ? `Bearer ${session.access_token}` : ''
+        },
+        body: JSON.stringify({
+          ticketId: activeTicket.id,
+          message: replyMessage.trim(),
+          status: statusOverride || activeTicket.status
+        })
+      });
+
+      const res = await response.json();
+      if (!response.ok) throw new Error(res.error || 'Erro ao enviar resposta.');
+
+      setReplyMessage('');
+      fetchSupportTickets();
+
+      // Atualizar o ticket ativo na gaveta de atendimento
+      const updatedTicketsRes = await fetch('/api/support/tickets', {
+        headers: {
+          'Authorization': session ? `Bearer ${session.access_token}` : ''
+        }
+      });
+      const updatedData = await updatedTicketsRes.json();
+      if (updatedData.tickets) {
+        const currentUpdated = updatedData.tickets.find((t: any) => t.id === activeTicket.id);
+        if (currentUpdated) setActiveTicket(currentUpdated);
+      }
+
+    } catch (err: any) {
+      alert(err.message || 'Erro ao enviar resposta.');
+    } finally {
+      setSendingReply(false);
+    }
+  };
 
   const handleUnlock = async () => {
     if (!unlockPin) return;
@@ -972,6 +1079,28 @@ export default function AdminDashboardClient({
             >
               <Megaphone className="w-3.5 h-3.5" />
               Notificações
+            </button>
+            <button
+              onClick={() => setActiveTab('support')}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'support' 
+                  ? 'bg-gold-primary text-dark-bg font-bold shadow' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Headphones className="w-3.5 h-3.5" />
+              Chamados Suporte ({supportTickets.filter(t => t.status === 'open' || t.status === 'in_progress').length})
+            </button>
+            <button
+              onClick={() => setActiveTab('audit')}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'audit' 
+                  ? 'bg-gold-primary text-dark-bg font-bold shadow' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Logs de Auditoria ({auditLogs.length})
             </button>
           </div>
 
@@ -1796,6 +1925,331 @@ export default function AdminDashboardClient({
           )}
         </Card>
         </>
+      ) : activeTab === 'support' ? (
+        /* Aba de Central de Chamados de Suporte */
+        <div className="space-y-6">
+          {/* Métricas do Suporte */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-black/40 border border-white/10 p-4 rounded-2xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-gray-400 uppercase font-bold">Total de Chamados</span>
+                <span className="text-xl font-bold text-white block mt-0.5">{supportTickets.length}</span>
+              </div>
+              <Headphones className="w-6 h-6 text-gold-primary" />
+            </div>
+
+            <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-amber-300 uppercase font-bold">Abertos / Em Andamento</span>
+                <span className="text-xl font-bold text-amber-400 block mt-0.5">
+                  {supportTickets.filter(t => t.status === 'open' || t.status === 'in_progress').length}
+                </span>
+              </div>
+              <Clock className="w-6 h-6 text-amber-400 animate-pulse" />
+            </div>
+
+            <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-emerald-300 uppercase font-bold">Resolvidos / Concluídos</span>
+                <span className="text-xl font-bold text-emerald-400 block mt-0.5">
+                  {supportTickets.filter(t => t.status === 'resolved' || t.status === 'closed').length}
+                </span>
+              </div>
+              <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+            </div>
+          </div>
+
+          {/* Filtros e Layout Principal do Suporte */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Lista de Chamados (Coluna Esquerda 5/12 em telas grandes) */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5">
+                <span className="text-xs font-semibold text-gray-300">Filtro de Status:</span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setTicketFilterStatus('all')}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all ${
+                      ticketFilterStatus === 'all' ? 'bg-gold-primary text-dark-bg font-bold' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  <button
+                    onClick={() => setTicketFilterStatus('open')}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all ${
+                      ticketFilterStatus === 'open' ? 'bg-amber-500 text-dark-bg font-bold' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Pendentes
+                  </button>
+                  <button
+                    onClick={() => setTicketFilterStatus('resolved')}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all ${
+                      ticketFilterStatus === 'resolved' ? 'bg-emerald-500 text-dark-bg font-bold' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Resolvidos
+                  </button>
+                </div>
+              </div>
+
+              {loadingSupportTickets ? (
+                <div className="text-center py-12 text-gray-500 text-xs">Carregando chamados...</div>
+              ) : supportTickets.length === 0 ? (
+                <div className="text-center py-12 bg-black/20 rounded-2xl border border-white/5 text-gray-500 text-xs">
+                  Nenhum chamado de suporte registrado.
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                  {supportTickets
+                    .filter(t => {
+                      if (ticketFilterStatus === 'open') return t.status === 'open' || t.status === 'in_progress';
+                      if (ticketFilterStatus === 'resolved') return t.status === 'resolved' || t.status === 'closed';
+                      return true;
+                    })
+                    .map(ticket => {
+                      const user = ticket.profile;
+                      const isSelected = activeTicket?.id === ticket.id;
+                      const isPending = ticket.status === 'open' || ticket.status === 'in_progress';
+
+                      return (
+                        <div
+                          key={ticket.id}
+                          onClick={() => setActiveTicket(ticket)}
+                          className={`p-4 rounded-2xl border transition-all cursor-pointer bg-black/40 space-y-3 ${
+                            isSelected 
+                              ? 'border-gold-primary ring-1 ring-gold-primary/30 shadow-lg' 
+                              : isPending 
+                                ? 'border-amber-500/30 hover:border-amber-500/50' 
+                                : 'border-white/5 hover:border-white/15'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2.5">
+                              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white/10 shrink-0 bg-zinc-900">
+                                <Image
+                                  src={user?.avatar_url || '/avatar-placeholder.svg'}
+                                  alt={user?.name || 'Usuário'}
+                                  fill
+                                  sizes="32px"
+                                  className="object-cover"
+                                />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-white">{user?.name || 'Usuário'}</h4>
+                                <span className="text-[10px] text-gray-500 capitalize">{user?.role === 'provider' ? '🔥 Anunciante' : '👤 Cliente'}</span>
+                              </div>
+                            </div>
+
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                              ticket.status === 'open' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                              ticket.status === 'in_progress' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+                              'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            }`}>
+                              {ticket.status === 'open' ? 'Aberto' : ticket.status === 'in_progress' ? 'Em Atendimento' : 'Resolvido'}
+                            </span>
+                          </div>
+
+                          <div>
+                            <h3 className="text-xs font-semibold text-gray-200 line-clamp-1">{ticket.subject}</h3>
+                            <p className="text-[11px] text-gray-400 line-clamp-2 mt-0.5 font-light">
+                              {ticket.messages && ticket.messages.length > 0
+                                ? ticket.messages[ticket.messages.length - 1].message
+                                : 'Sem mensagens'}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[10px] text-gray-500 border-t border-white/5 pt-2">
+                            <span className="capitalize">Categoria: {ticket.category}</span>
+                            <span>{formatDateTime(ticket.updated_at)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
+            {/* Painel de Atendimento do Chamado (Coluna Direita 7/12) */}
+            <div className="lg:col-span-7">
+              {!activeTicket ? (
+                <div className="bg-black/30 border border-white/5 rounded-2xl p-12 text-center space-y-3">
+                  <Headphones className="w-12 h-12 text-gray-600 mx-auto" />
+                  <h3 className="text-sm font-semibold text-gray-300">Nenhum chamado selecionado</h3>
+                  <p className="text-xs text-gray-500 font-light max-w-sm mx-auto">
+                    Clique em um chamado da lista ao lado para visualizar o histórico completo de mensagens e responder.
+                  </p>
+                </div>
+              ) : (
+                <Card variant="glass" className="p-6 space-y-6 border-gold-primary/30 bg-black/40">
+                  {/* Header do Chamado Selecionado */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-gold-primary/10 border border-gold-primary/20 text-gold-primary text-[10px] font-bold rounded-md uppercase">
+                          {activeTicket.category}
+                        </span>
+                        <h2 className="text-base font-bold text-white">{activeTicket.subject}</h2>
+                      </div>
+                      <p className="text-xs text-gray-400 font-light mt-1">
+                        Solicitante: <strong className="text-white">{activeTicket.profile?.name}</strong> ({activeTicket.profile?.whatsapp || 'Sem WhatsApp'})
+                      </p>
+                    </div>
+
+                    {/* Mudar Status do Chamado */}
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={activeTicket.status}
+                        onChange={(e) => handleSendTicketReply(e.target.value)}
+                        className="bg-black/60 border border-white/10 text-xs text-white px-3 py-1.5 rounded-xl focus:border-gold-primary focus:outline-none"
+                      >
+                        <option value="open">Aberto</option>
+                        <option value="in_progress">Em Andamento</option>
+                        <option value="resolved">Marcar como Resolvido</option>
+                        <option value="closed">Encerrar Chamado</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Thread de Mensagens */}
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 p-3 bg-black/50 rounded-2xl border border-white/5">
+                    {activeTicket.messages?.map((msg: any) => {
+                      const isAdminMsg = msg.sender_type === 'admin';
+
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex flex-col ${isAdminMsg ? 'items-end' : 'items-start'}`}
+                        >
+                          <div className="flex items-center gap-1.5 text-[10px] text-gray-400 mb-1 px-1">
+                            <span className="font-semibold text-gray-300">
+                              {isAdminMsg ? '🎧 Suporte Admin' : msg.sender?.name || activeTicket.profile?.name}
+                            </span>
+                            <span>•</span>
+                            <span>{formatDateTime(msg.created_at)}</span>
+                          </div>
+
+                          <div
+                            className={`p-3.5 rounded-2xl max-w-[85%] text-xs leading-relaxed ${
+                              isAdminMsg
+                                ? 'bg-gradient-to-r from-gold-primary/20 to-gold-dark/20 border border-gold-primary/30 text-gold-light rounded-tr-none shadow-md'
+                                : 'bg-white/5 border border-white/10 text-gray-200 rounded-tl-none'
+                            }`}
+                          >
+                            {msg.message}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Input de Resposta */}
+                  <div className="space-y-3 pt-2">
+                    <textarea
+                      rows={3}
+                      placeholder="Escreva sua resposta para o usuário..."
+                      value={replyMessage}
+                      onChange={(e) => setReplyMessage(e.target.value)}
+                      className="w-full bg-black/60 border border-white/10 text-xs text-white p-3 rounded-xl focus:border-gold-primary focus:outline-none"
+                    />
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-gray-500">
+                        💬 Responder irá notificar o usuário automaticamente no painel dele.
+                      </span>
+
+                      <Button
+                        type="button"
+                        onClick={() => handleSendTicketReply()}
+                        isLoading={sendingReply}
+                        variant="gold"
+                        className="py-2 px-4 text-xs font-bold uppercase tracking-wider"
+                      >
+                        <Send className="w-3.5 h-3.5 mr-1" />
+                        Responder & Notificar
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : activeTab === 'audit' ? (
+        /* Aba de Logs de Auditoria Master */
+        <Card variant="glass" className="p-6 md:p-8 space-y-6 border-gold-primary/30 bg-black/40">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gold-primary/10 rounded-xl flex items-center justify-center text-gold-primary border border-gold-primary/20">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white tracking-wide">Logs de Auditoria Administrativa</h2>
+                <p className="text-xs text-gray-400 font-light">
+                  Registro cronológico de todas as ações de segurança, banimentos, aprovações e edições efetuadas por Administradores.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={fetchAuditLogs}
+              variant="dark"
+              size="sm"
+              className="text-xs font-semibold"
+            >
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+              Atualizar Logs
+            </Button>
+          </div>
+
+          {loadingAuditLogs ? (
+            <div className="text-center py-12 text-gray-500 text-xs">Carregando logs de auditoria...</div>
+          ) : auditLogs.length === 0 ? (
+            <div className="text-center py-12 bg-black/20 rounded-xl border border-white/5 text-gray-500 text-xs">
+              Nenhum registro de auditoria encontrado.
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+              {auditLogs.map((log) => {
+                const adminName = log.admin?.name || 'Administrador';
+                const targetName = log.target?.name;
+
+                return (
+                  <div
+                    key={log.id}
+                    className="p-4 rounded-xl border border-white/5 bg-black/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-white/15 transition-all"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2 py-0.5 bg-gold-primary/10 border border-gold-primary/30 text-gold-primary text-[10px] font-bold uppercase rounded-md font-mono">
+                          {log.action}
+                        </span>
+                        <span className="text-xs font-bold text-white">{adminName}</span>
+                        {targetName && (
+                          <span className="text-xs text-gray-400">
+                            → Alvo: <strong className="text-gold-light">{targetName}</strong>
+                          </span>
+                        )}
+                      </div>
+
+                      {log.details && (
+                        <div className="text-[11px] text-gray-400 font-mono bg-black/50 p-2 rounded-lg border border-white/5 max-w-xl overflow-x-auto">
+                          {JSON.stringify(log.details)}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="text-right shrink-0 text-[10px] text-gray-500">
+                      <span className="block font-mono">IP: {log.ip_address || 'Servidor'}</span>
+                      <span className="block mt-0.5">{formatDateTime(log.created_at)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
       ) : (
         /* Gerenciar Todos os Anunciantes/Clientes/Hosts */
         <div className="grid grid-cols-1 gap-4">
