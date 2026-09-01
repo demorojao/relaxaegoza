@@ -24,9 +24,11 @@ export async function POST(req: NextRequest) {
     if (!authHeader && !isCookieValid) {
       return NextResponse.json({ error: 'Não autorizado. Faça login novamente.' }, { status: 401 });
     }
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader ? authHeader.replace('Bearer ', '') : '';
     const supabaseServer = getSupabaseServerClient();
-    const { data: { user }, error: authError } = await supabaseServer.auth.getUser(token);
+    const { data: { user }, error: authError } = token 
+      ? await supabaseServer.auth.getUser(token)
+      : await supabaseServer.auth.getUser();
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Usuário não autenticado.' }, { status: 401 });
