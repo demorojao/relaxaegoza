@@ -182,15 +182,26 @@ export default function AdminDashboardClient({
     }
   }, [activeTab]);
 
-  const handleUnlock = () => {
+  const handleUnlock = async () => {
     if (!unlockPin) return;
     const cleanPin = unlockPin.trim();
-    if (cleanPin === '9847' || cleanPin === '1234' || cleanPin === '0000' || cleanPin.length >= 4) {
+    setUnlockError('');
+    try {
+      const token = await getAdminAccessToken();
+      const response = await fetch('/api/admin/verify-pin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ pin: cleanPin })
+      });
+      const res = await response.json();
+      if (!response.ok) throw new Error(res.error || 'PIN de desbloqueio incorreto.');
       setIsLocked(false);
       setUnlockPin('');
-      setUnlockError('');
-    } else {
-      setUnlockError('PIN de desbloqueio incorreto.');
+    } catch (err: any) {
+      setUnlockError(err.message || 'PIN de desbloqueio incorreto.');
     }
   };
 

@@ -35,12 +35,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Acesso Proibido. Esta conta não possui privilégios de Administrador.' }, { status: 403 });
     }
 
-    // 3. Validar o PIN de Segurança no Servidor
+    // 3. Validar o PIN de Segurança estritamente contra a variável de ambiente (sem códigos fixos)
     const cleanPin = pin.trim();
-    const envPin = (process.env.ADMIN_SECURITY_PIN || '894201').trim();
+    const envPin = (process.env.ADMIN_SECURITY_PIN || '').trim();
 
-    // Aceita o PIN cadastrado ou fallbacks de desenvolvimento definidos com segurança
-    const isValidPin = cleanPin === envPin || cleanPin === '9847' || cleanPin === '894201';
+    if (!envPin) {
+      return NextResponse.json({ error: 'PIN de Segurança não configurado no servidor (ADMIN_SECURITY_PIN).' }, { status: 500 });
+    }
+
+    const isValidPin = cleanPin === envPin;
 
     if (!isValidPin) {
       return NextResponse.json({ error: 'PIN de Segurança Admin incorreto.' }, { status: 403 });
