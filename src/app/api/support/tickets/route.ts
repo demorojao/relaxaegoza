@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabaseServer';
 
+export const dynamic = 'force-dynamic';
+
 // GET: Buscar chamados (Se for Admin, traz todos; Se for usuário comum, traz apenas os dele)
 export async function GET(req: NextRequest) {
   try {
