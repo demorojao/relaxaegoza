@@ -63,8 +63,6 @@ export default function VitrineClient({
   const [currentTab, setCurrentTab] = useState<'ads' | 'models'>('ads');
   const [userProfile, setUserProfile] = useState<any | null>(null);
   const [isAdModalOpen, setIsAdModalOpen] = useState(false);
-  const [user, setUser] = useState<any | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Garantir modo Vitrine (grid) no desktop
