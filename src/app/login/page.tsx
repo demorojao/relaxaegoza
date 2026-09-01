@@ -72,17 +72,27 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMessage('');
     setSuccessMessage('');
+
+    // Timeout de 15 segundos para evitar travamento infinito caso o servidor SMTP do Supabase não responda
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('TIMEOUT_SMTP')), 15000)
+    );
+
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(recoveryEmail.trim(), {
+      const resetPromise = supabase.auth.resetPasswordForEmail(recoveryEmail.trim(), {
         redirectTo: `${window.location.origin}/login?type=recovery`,
       });
+
+      const { error } = (await Promise.race([resetPromise, timeoutPromise])) as any;
       if (error) throw error;
       setSuccessMessage('E-mail de recuperação enviado com sucesso! Verifique sua caixa de entrada.');
       setRecoveryEmail('');
     } catch (err: any) {
       let friendlyMessage = err.message || '';
-      if (err.message === 'Error sending recovery email' || err.message?.includes('sending recovery email')) {
-        friendlyMessage = 'O servidor de e-mail atingiu o limite ou falhou. Por favor, aguarde alguns minutos ou configure o SMTP no painel do Supabase.';
+      if (err.message === 'TIMEOUT_SMTP') {
+        friendlyMessage = 'O servidor de e-mail demorou para responder. Verifique se as configurações de SMTP no Supabase estão corretas ou se o e-mail cadastrado existe.';
+      } else if (err.message === 'Error sending recovery email' || err.message?.includes('sending recovery email')) {
+        friendlyMessage = 'Falha ao enviar e-mail de recuperação. Verifique as configurações de SMTP no painel do Supabase.';
       } else if (friendlyMessage.includes('pattern') || friendlyMessage.includes('Unexpected')) {
         friendlyMessage = 'Erro na comunicação. Por favor, tente novamente em alguns instantes.';
       }
