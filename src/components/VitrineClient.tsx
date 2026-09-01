@@ -1768,6 +1768,9 @@ export default function VitrineClient({
                 <Link href="/termos-de-uso" className="hover:text-gold-light transition-colors">
                   Termos de Uso
                 </Link>
+                <a href="mailto:suporte@relaxegoze.com" className="hover:text-gold-light transition-colors">
+                  Suporte: suporte@relaxegoze.com
+                </a>
                 <Link href="/cadastro" className="hover:text-gold-light transition-colors">
                   Cadastrar Anúncio
                 </Link>
