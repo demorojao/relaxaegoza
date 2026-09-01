@@ -36,13 +36,14 @@ function CheckoutContent() {
       try {
         const response = await fetch(`/api/checkout/status?id=${paymentId}`);
         if (!response.ok) {
-          const data = await response.json();
+          const data = await response.json().catch(() => ({}));
           throw new Error(data.error || 'Erro ao carregar dados do pagamento.');
         }
 
         const data = await response.json();
         setPayment(data);
         setLoading(false);
+        setError(null);
 
         // Se o status for pago, redirecionar
         if (data.status === 'paid') {
@@ -56,10 +57,11 @@ function CheckoutContent() {
           }, 3000);
         }
       } catch (err: any) {
-        console.error(err);
-        setError(err.message || 'Erro ao conectar ao servidor.');
+        console.warn('Hiccup na consulta de status Pix, mantendo polling:', err.message);
         setLoading(false);
-        clearInterval(intervalId);
+        if (!payment) {
+          setError(err.message || 'Erro ao conectar ao servidor.');
+        }
       }
     }
 
