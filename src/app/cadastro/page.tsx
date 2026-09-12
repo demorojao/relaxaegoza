@@ -156,7 +156,7 @@ export default function RegisterPage() {
 
           <CardContent className="p-6 md:p-8">
             {/* Toggle Role Selector */}
-            <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5 mb-8">
+            <div className="grid grid-cols-3 gap-1.5 bg-black/40 p-1.5 rounded-xl border border-white/5 mb-8">
               <button
                 onClick={() => setRole('client')}
                 type="button"
@@ -178,6 +178,17 @@ export default function RegisterPage() {
                 }`}
               >
                 Anunciante
+              </button>
+              <button
+                onClick={() => setRole('host')}
+                type="button"
+                className={`py-2 text-[10px] sm:text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
+                  role === 'host' 
+                    ? 'bg-emerald-500 text-dark-bg font-bold shadow' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Dono de Sala
               </button>
             </div>
 
@@ -204,6 +215,18 @@ export default function RegisterPage() {
                   <p className="font-semibold text-white">Portal de Alto Padrão & Luxo</p>
                   <p className="text-gray-400 font-light leading-relaxed">
                     O Relaxe & Goze é uma vitrine exclusiva para acompanhantes de luxo e massoterapeutas de elite. Para preservar o padrão premium do portal, <span className="text-gold-primary font-medium">exigimos o valor mínimo de R$ 300,00 por hora (ou a opção "Consultar valor")</span> em todos os anúncios publicados.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {role === 'host' && (
+              <div className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs p-4 rounded-2xl mb-6 flex gap-3 items-start animate-fadeIn">
+                <Sparkles className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-white">🎁 Oferta de Lançamento: 100 Primeiros Locais Grátis</p>
+                  <p className="text-gray-300 font-light leading-relaxed">
+                    Cadastre sua sala ou espaço <span className="text-emerald-400 font-bold">100% grátis durante o lançamento</span>. Divulgue seu local para centenas de profissionais qualificadas na sua região com isenção total de mensalidade!
                   </p>
                 </div>
               </div>

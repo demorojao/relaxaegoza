@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types';
-import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon, ChevronLeft, ChevronRight, Trash2, ChevronUp, Lock } from 'lucide-react';
+import { Sparkles, LogOut, LayoutDashboard, LogIn, Trophy, Heart, X, User, SlidersHorizontal, Play, Grid, Map as MapIcon, ChevronLeft, ChevronRight, Trash2, ChevronUp, Lock, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import ProfileGrid from '../components/ProfileGrid';
 import ProfileReels from '../components/ProfileReels';
@@ -1157,6 +1157,11 @@ export default function VitrineClient({
         <Logo />
         
         <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
+          <Link href="/espacos" className="flex items-center gap-1 text-xs text-emerald-400 hover:text-white transition-colors font-semibold shrink-0" title="Salas & Espaços">
+            <Building2 className="w-4 h-4 text-emerald-400" />
+            <span className="hidden sm:inline">Salas & Espaços</span>
+          </Link>
+
           <Link href="/rankings" className="flex items-center gap-1 text-xs text-gold-light hover:text-white transition-colors font-semibold shrink-0" title="Rankings">
             <Trophy className="w-4 h-4 text-gold-primary" />
             <span className="hidden sm:inline">Rankings</span>
@@ -1775,6 +1780,9 @@ export default function VitrineClient({
                 </Link>
                 <a href="mailto:suporte@relaxegoze.com" className="hover:text-gold-light transition-colors">
                   Suporte: suporte@relaxegoze.com
+                </a>
+                <a href={`https://wa.me/${process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '551151922273'}`} target="_blank" rel="noopener noreferrer" className="hover:text-gold-light transition-colors flex items-center gap-1">
+                  <span>Contato/WhatsApp: (11) 5192-2273</span>
                 </a>
                 <Link href="/cadastro" className="hover:text-gold-light transition-colors">
                   Cadastrar Anúncio

@@ -183,8 +183,7 @@ export default function DashboardLayout({
     }
   ];
 
-  // Forçado a exibir apenas itens de provedor para ocultar recursos de salas e reservas do host temporariamente para o lançamento
-  const menuItems = providerItems;
+  const menuItems = role === 'host' ? hostItems : providerItems;
 
   return (
     <div className="min-h-screen bg-dark-bg text-gray-100 flex flex-col md:flex-row selection:bg-gold-primary selection:text-dark-bg">

@@ -22,7 +22,8 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState<'client' | 'provider'>('client');
+  const [role, setRole] = useState<'client' | 'provider' | 'host'>('client');
+
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -199,13 +200,12 @@ export default function LoginPage() {
         if (profile.role !== role) {
           // Deslogar sessão criada para não deixar o usuário logado de forma inconsistente
           await supabase.auth.signOut();
-          throw new Error(`Esta conta está cadastrada como ${
-            profile.role === 'provider' ? 'Profissional' : 'Cliente'
-          }. Por favor, selecione a aba correta acima para entrar.`);
+          const roleLabel = profile.role === 'provider' ? 'Profissional' : profile.role === 'host' ? 'Dono de Sala' : 'Cliente';
+          throw new Error(`Esta conta está cadastrada como ${roleLabel}. Por favor, selecione a aba correta acima para entrar.`);
         }
 
         // Redireciona de acordo com o papel real no banco
-        if (profile.role === 'provider') {
+        if (profile.role === 'provider' || profile.role === 'host') {
           router.push('/dashboard');
         } else {
           router.push('/client-dashboard');
@@ -243,45 +243,56 @@ export default function LoginPage() {
 
         {/* Login Card */}
         <Card 
-          variant={role === 'provider' ? 'glass-wine' : 'glass-gold'}
+          variant={role === 'provider' ? 'glass-wine' : role === 'host' ? 'glass-gold' : 'glass-gold'}
           className="relative shadow-2xl overflow-visible border-none"
         >
           {/* Neon Top Line based on Selected Role */}
           <div className={`absolute top-0 left-6 right-6 h-[2px] transition-colors duration-500 rounded-full ${
-            role === 'provider' ? 'bg-wine-primary shadow-[0_0_10px_rgba(155,44,44,0.8)]' : 'bg-gold-primary shadow-[0_0_10px_rgba(197,168,128,0.8)]'
+            role === 'provider' ? 'bg-wine-primary shadow-[0_0_10px_rgba(155,44,44,0.8)]' : role === 'host' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'bg-gold-primary shadow-[0_0_10px_rgba(197,168,128,0.8)]'
           }`} />
 
           <CardContent className="p-6 md:p-8">
             {/* Toggle Role Selector */}
             {view === 'login' && (
-              <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5 mb-8">
+              <div className="grid grid-cols-3 gap-1.5 bg-black/40 p-1.5 rounded-xl border border-white/5 mb-8">
                 <button
                   type="button"
                   onClick={() => setRole('client')}
-                  className={`py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
+                  className={`py-2 text-[10px] sm:text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
                     role === 'client' 
                       ? 'bg-gold-primary text-dark-bg font-bold shadow' 
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  Sou Cliente
+                  Cliente
                 </button>
                 <button
                   type="button"
                   onClick={() => setRole('provider')}
-                  className={`py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
+                  className={`py-2 text-[10px] sm:text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
                     role === 'provider' 
                       ? 'bg-wine-primary text-white font-bold shadow' 
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  Sou Profissional
+                  Profissional
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('host')}
+                  className={`py-2 text-[10px] sm:text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer ${
+                    role === 'host' 
+                      ? 'bg-emerald-500 text-dark-bg font-bold shadow' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Dono de Sala
                 </button>
               </div>
             )}
 
             <h2 className="text-xl font-semibold text-white tracking-wide mb-6">
-              {view === 'login' && `Entrar como ${role === 'client' ? 'Cliente' : 'Profissional'}`}
+              {view === 'login' && `Entrar como ${role === 'client' ? 'Cliente' : role === 'provider' ? 'Profissional' : 'Dono de Sala'}`}
               {view === 'forgot' && 'Recuperar Senha'}
               {view === 'reset' && 'Nova Senha'}
             </h2>

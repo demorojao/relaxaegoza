@@ -21,7 +21,9 @@ export async function generateStaticParams() {
     .select('city')
     .eq('role', 'provider');
 
-  if (!profiles) return [];
+  if (!profiles || profiles.length === 0) {
+    return [{ state: 'sp', city: 'sao-paulo' }];
+  }
   
   const paths = profiles
     .filter(p => p.city)
@@ -36,7 +38,7 @@ export async function generateStaticParams() {
     index === self.findIndex((t) => t.state === value.state && t.city === value.city)
   );
 
-  return uniquePaths;
+  return uniquePaths.length > 0 ? uniquePaths : [{ state: 'sp', city: 'sao-paulo' }];
 }
 
 export async function generateMetadata({ params }: Props) {

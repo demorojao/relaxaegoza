@@ -270,18 +270,39 @@ export default function PricingPage() {
         })}
       </div>
 
+      {/* Seção Donos de Salas & Espaços */}
+      <div className="max-w-4xl mx-auto w-full mb-16 relative z-10 glass-effect rounded-3xl p-8 border border-emerald-500/30 text-left">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <span className="text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              🎁 Campanha de Lançamento para Proprietários
+            </span>
+            <h3 className="text-xl font-bold text-white">É Proprietário de Salas ou Estúdios de Atendimento?</h3>
+            <p className="text-xs text-gray-300 font-light leading-relaxed max-w-xl">
+              Os 100 primeiros donos de imóvel cadastram salas <strong className="text-emerald-400">100% grátis durante o lançamento</strong>. Conecte seu espaço com centenas de acompanhantes e massoterapeutas ativas na sua região.
+            </p>
+          </div>
+          <Link href="/cadastro?role=host" className="shrink-0 w-full md:w-auto">
+            <button className="w-full md:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-[0_4px_16px_rgba(16,185,129,0.3)] cursor-pointer flex items-center justify-center gap-2">
+              Cadastrar Minha Sala Grátis
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </Link>
+        </div>
+      </div>
+
       {/* Suporte Financeiro (Prevenção de MED) */}
       <div className="max-w-xl mx-auto w-full mb-10 bg-dark-card/40 border border-dark-border/40 rounded-2xl p-5 text-center relative z-10">
         <p className="text-xs text-gray-400 font-light mb-3">
           Dificuldades no pagamento ou precisa de liberação imediata? Fale diretamente com o nosso <strong>Departamento Financeiro</strong>.
         </p>
         <a 
-          href={`https://wa.me/${process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '5500000000000'}?text=${encodeURIComponent('Olá! Preciso de suporte com o pagamento / liberação de plano no portal.')}`}
+          href={`https://wa.me/${process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '551151922273'}?text=${encodeURIComponent('Olá! Preciso de suporte com o pagamento / liberação de plano no portal.')}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 text-xs font-semibold text-gold-primary hover:text-gold-light transition-colors cursor-pointer"
         >
-          Falar com o Suporte Financeiro via WhatsApp &rarr;
+          Falar com o Suporte Financeiro via WhatsApp (11) 5192-2273 &rarr;
         </a>
       </div>
 

@@ -256,12 +256,14 @@ export default function TermsOfUsePage() {
                 </h3>
 
                 <div className="space-y-2 text-xs text-gray-300 font-light">
-                  <p>Para enviar um pedido formal de remoção de anúncio ou foto, envie um e-mail para:</p>
-                  <div className="bg-black/60 border border-white/10 p-3 rounded-xl font-mono text-gold-light font-bold text-sm flex items-center justify-between">
+                  <p>Para enviar um pedido formal ou obter suporte por WhatsApp ou e-mail:</p>
+                  <div className="bg-black/60 border border-white/10 p-3 rounded-xl font-mono text-gold-light font-bold text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                     <a href="mailto:suporte@relaxegoze.com" className="hover:underline flex items-center gap-1.5">
-                      <span>suporte@relaxegoze.com</span>
+                      <span>E-mail: suporte@relaxegoze.com</span>
                     </a>
-                    <span className="text-[10px] text-gray-500 font-sans font-normal">Resposta em até 24h</span>
+                    <a href={`https://wa.me/${process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '551151922273'}`} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1.5 text-emerald-400">
+                      <span>WhatsApp: (11) 5192-2273</span>
+                    </a>
                   </div>
                 </div>
 

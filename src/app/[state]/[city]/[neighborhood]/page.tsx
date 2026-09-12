@@ -22,7 +22,9 @@ export async function generateStaticParams() {
     .select('city, neighborhood')
     .eq('role', 'provider');
 
-  if (!profiles) return [];
+  if (!profiles || profiles.length === 0) {
+    return [{ state: 'sp', city: 'sao-paulo', neighborhood: 'moema' }];
+  }
   
   const paths: { state: string; city: string; neighborhood: string }[] = [];
   profiles.forEach(p => {
@@ -43,7 +45,7 @@ export async function generateStaticParams() {
     index === self.findIndex((t) => t.state === value.state && t.city === value.city && t.neighborhood === value.neighborhood)
   );
 
-  return uniquePaths;
+  return uniquePaths.length > 0 ? uniquePaths : [{ state: 'sp', city: 'sao-paulo', neighborhood: 'moema' }];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
