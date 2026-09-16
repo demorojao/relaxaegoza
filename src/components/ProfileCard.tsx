@@ -7,7 +7,7 @@ import { MapPin, DollarSign, Star, ShieldCheck, Building2, Sparkles, ChevronLeft
 import { Profile } from '../types';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { cn, cleanDescription, formatWhatsAppLink } from '@/lib/utils';
+import { cn, cleanDescription, formatWhatsAppLink, getEffectiveTier } from '@/lib/utils';
 
 import { getCDNUrl } from '../lib/mediaHelper';
 
@@ -19,9 +19,9 @@ interface ProfileCardProps {
 }
 
 function ProfessionalCatalogItem({ profile, isFavorite, onToggleFavorite }: { profile: Profile; isFavorite?: boolean; onToggleFavorite?: (id: string) => void }) {
-  const isSubscriptionActive = !profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
-  const isGold = profile.subscription_tier === 'gold' && isSubscriptionActive;
-  const isPro = profile.subscription_tier === 'pro' && isSubscriptionActive;
+  const effectiveTier = getEffectiveTier(profile);
+  const isGold = effectiveTier === 'gold';
+  const isPro = effectiveTier === 'pro';
   const specialtyNames = profile.specialties?.map(s => s.specialties?.name).filter(Boolean) || [];
 
   const rawBio = profile.bio || '';
@@ -158,9 +158,9 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
   }
   const specialtyNames = profile.specialties?.map(s => s.specialties?.name).filter(Boolean) || [];
 
-  const isSubscriptionActive = !profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
-  const isGold = profile.subscription_tier === 'gold' && isSubscriptionActive;
-  const isPro = profile.subscription_tier === 'pro' && isSubscriptionActive;
+  const effectiveTier = getEffectiveTier(profile);
+  const isGold = effectiveTier === 'gold';
+  const isPro = effectiveTier === 'pro';
   
   const [isAvailable, setIsAvailable] = React.useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);

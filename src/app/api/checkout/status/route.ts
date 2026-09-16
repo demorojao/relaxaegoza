@@ -9,8 +9,7 @@ export async function GET(req: NextRequest) {
     // Forçar comportamento dinâmico compatível com cacheComponents
     await headers();
 
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = req.nextUrl.searchParams.get('id');
 
     if (!id) {
       return NextResponse.json({ error: 'ID do pagamento não informado.' }, { status: 400 });

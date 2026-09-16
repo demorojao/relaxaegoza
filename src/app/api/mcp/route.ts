@@ -33,6 +33,43 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (method === 'tools/call') {
+      const { name, arguments: toolArgs } = body.params || {};
+      if (name === 'list-professionals') {
+        const { getSupabaseServiceClient } = await import('@/lib/supabaseServer');
+        const supabaseService = getSupabaseServiceClient();
+        
+        let query = supabaseService
+          .from('profiles')
+          .select('id, name, city, price_per_hour, category, avatar_url')
+          .eq('role', 'provider');
+
+        if (toolArgs?.city) {
+          query = query.ilike('city', `%${toolArgs.city}%`);
+        }
+
+        const { data: profiles } = await query.limit(20);
+
+        return NextResponse.json({
+          jsonrpc: '2.0',
+          id: body.id || 1,
+          result: {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(profiles || [])
+              }
+            ]
+          }
+        }, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': '*'
+          }
+        });
+      }
+    }
+
     return NextResponse.json({
       jsonrpc: '2.0',
       id: body.id || 1,

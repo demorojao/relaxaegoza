@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { getCDNUrl } from '../../../lib/mediaHelper';
 import { applyWatermark } from '@/lib/watermark';
 import { uploadToR2, deleteFromR2 } from '@/lib/r2Client';
+import { getEffectiveTier } from '@/lib/utils';
 
 export default function StoriesManager() {
   const [user, setUser] = useState<any>(null);
@@ -626,10 +627,10 @@ export default function StoriesManager() {
     );
   }
 
-  const tier = profile?.subscription_tier || 'free';
+  const tier = getEffectiveTier(profile);
   const isGold = tier === 'gold';
   const isBronze = tier === 'free' || !tier;
-  const isPro = tier === 'pro' || tier === 'silver';
+  const isPro = tier === 'pro';
   const limitText = isGold ? 'Ilimitado (Gold Premium)' : isPro ? `${storiesInLast24h} / 3 no dia (Plano Pro)` : '0 (Bronze)';
 
   if (isBronze) {

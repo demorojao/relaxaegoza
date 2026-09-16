@@ -43,7 +43,7 @@ export default function BoostPage() {
     if (user) {
       const { data } = await supabase
         .from('profiles')
-        .select('id, name, subscription_tier, boost_expires_at, last_free_boost_at')
+        .select('id, name, subscription_tier, subscription_expires_at, boost_expires_at, last_free_boost_at')
         .eq('id', user.id).single();
       if (data) setProfile(data);
     }

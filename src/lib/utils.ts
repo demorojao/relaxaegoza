@@ -75,7 +75,26 @@ export function cleanDescription(text: string | null | undefined): string {
     .replace(/[ \t]+/g, ' ')
     // Limpa mais de 2 quebras de linha seguidas para no máximo parágrafos duplos
     .replace(/\n{3,}/g, '\n\n')
-    .trim();
 }
+
+/**
+ * Calcula o plano efetivo do perfil levando em consideração a data de expiração da assinatura.
+ */
+export function getEffectiveTier(profile: { subscription_tier?: string | null; subscription_expires_at?: string | null } | null | undefined): 'free' | 'pro' | 'gold' {
+  if (!profile) return 'free';
+  const rawTier = (profile.subscription_tier || 'free').toLowerCase();
+  const tier = rawTier === 'pro' ? 'pro' : (rawTier === 'gold' || rawTier.startsWith('gold')) ? 'gold' : 'free';
+  if (tier === 'free') return 'free';
+
+  if (profile.subscription_expires_at) {
+    const expiresAt = new Date(profile.subscription_expires_at).getTime();
+    if (isNaN(expiresAt) || expiresAt < Date.now()) {
+      return 'free';
+    }
+  }
+
+  return tier;
+}
+
 
 

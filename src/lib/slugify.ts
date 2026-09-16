@@ -1,9 +1,139 @@
 export const CITY_TO_STATE_MAP: Record<string, string> = {
+  // SP
   'sao-paulo': 'sp',
-  'curitiba': 'pr',
+  'campinas': 'sp',
+  'santos': 'sp',
+  'ribeirao-preto': 'sp',
+  'sao-jose-dos-campos': 'sp',
+  'sorocaba': 'sp',
+  'barueri': 'sp',
+  'barueri-alphaville': 'sp',
+  'alphaville': 'sp',
+  'bauru': 'sp',
+  'piracicaba': 'sp',
+  'sao-bernardo-do-campo': 'sp',
+  'sao-caetano-do-sul': 'sp',
+  'santo-andre': 'sp',
+  'osasco': 'sp',
+  'jundiai': 'sp',
+
+  // RJ
   'rio-de-janeiro': 'rj',
+  'niteroi': 'rj',
+  'petropolis': 'rj',
+  'teresopolis': 'rj',
+  'duque-de-caxias': 'rj',
+  'nova-iguacu': 'rj',
+  'sao-goncalo': 'rj',
+  'buzios': 'rj',
+  'cabo-frio': 'rj',
+
+  // MG
   'belo-horizonte': 'mg',
-  'brasilia': 'df'
+  'uberlandia': 'mg',
+  'juiz-de-fora': 'mg',
+  'contagem': 'mg',
+  'betim': 'mg',
+
+  // PR
+  'curitiba': 'pr',
+  'londrina': 'pr',
+  'maringa': 'pr',
+  'ponta-grossa': 'pr',
+  'foz-do-iguacu': 'pr',
+
+  // SC
+  'florianopolis': 'sc',
+  'joinville': 'sc',
+  'blumenau': 'sc',
+  'balneario-camboriu': 'sc',
+  'chapeco': 'sc',
+  'criciuma': 'sc',
+
+  // RS
+  'porto-alegre': 'rs',
+  'caxias-do-sul': 'rs',
+  'canoas': 'rs',
+  'pelotas': 'rs',
+  'santa-maria': 'rs',
+
+  // DF
+  'brasilia': 'df',
+
+  // GO
+  'goiania': 'go',
+  'aparecida-de-goiania': 'go',
+  'anapolis': 'go',
+
+  // BA
+  'salvador': 'ba',
+  'feira-de-santana': 'ba',
+  'vitoria-da-conquista': 'ba',
+
+  // PE
+  'recife': 'pe',
+  'jaboatao-dos-guararapes': 'pe',
+  'olinda': 'pe',
+
+  // CE
+  'fortaleza': 'ce',
+  'caucaia': 'ce',
+  'juazeiro-do-norte': 'ce',
+
+  // ES
+  'vitoria': 'es',
+  'vila-velha': 'es',
+  'serra': 'es',
+
+  // PA
+  'belem': 'pa',
+  'anandindeua': 'pa',
+
+  // MA
+  'sao-luis': 'ma',
+
+  // PB
+  'joao-pessoa': 'pb',
+  'campina-grande': 'pb',
+
+  // RN
+  'natal': 'rn',
+  'mossoro': 'rn',
+
+  // AL
+  'maceio': 'al',
+
+  // SE
+  'aracaju': 'se',
+
+  // MT
+  'cuiaba': 'mt',
+  'varzea-grande': 'mt',
+
+  // MS
+  'campo-grande': 'ms',
+  'dourados': 'ms',
+
+  // AM
+  'manaus': 'am',
+
+  // PI
+  'teresina': 'pi',
+
+  // RO
+  'porto-velho': 'ro',
+
+  // AP
+  'macapa': 'ap',
+
+  // RR
+  'boa-vista': 'rr',
+
+  // AC
+  'rio-branco': 'ac',
+
+  // TO
+  'palmas': 'to'
 };
 
 /**

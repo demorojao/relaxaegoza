@@ -16,6 +16,7 @@ import {
   Award
 } from 'lucide-react';
 import Link from 'next/link';
+import { getEffectiveTier } from '@/lib/utils';
 
 interface HostDashboardViewProps {
   profile: any;
@@ -52,7 +53,8 @@ export default function HostDashboardView({ profile }: HostDashboardViewProps) {
         console.error('Erro ao verificar promo de host:', err);
       }
 
-      if (profile.subscription_tier !== 'free' || isFree) {
+      const effectiveTier = getEffectiveTier(profile);
+      if (effectiveTier !== 'free' || isFree) {
         await fetchHostData();
       } else {
         setLoading(false);
@@ -60,7 +62,7 @@ export default function HostDashboardView({ profile }: HostDashboardViewProps) {
     }
     
     checkHostPromoAndFetch();
-  }, [profile.id, profile.created_at, profile.subscription_tier]);
+  }, [profile.id, profile.created_at, profile.subscription_tier, profile.subscription_expires_at]);
 
   const handleHostSubscribe = async () => {
     setSubmittingCheckout(true);
@@ -193,7 +195,7 @@ export default function HostDashboardView({ profile }: HostDashboardViewProps) {
     );
   }
 
-  if (profile.subscription_tier === 'free' && !isFreeLaunch) {
+  if (getEffectiveTier(profile) === 'free' && !isFreeLaunch) {
     return (
       <div className="max-w-md mx-auto py-12 text-center space-y-6 relative z-20 animate-fadeIn selection:bg-emerald-500 selection:text-dark-bg">
         <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/35 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto shadow-[0_0_15px_rgba(16,185,129,0.25)] animate-pulse">

@@ -747,17 +747,22 @@ export default function ProfileEditor() {
       }
 
       // 1. Salvar ou atualizar na tabela ads
+      const adPayload: any = {
+        profile_id: user.id,
+        title: adTitle,
+        description: adDescription,
+        price: Number(adPrice),
+        photos: adPhotos,
+        videos: adVideos,
+        is_active: adIsActive
+      };
+      if (ad?.id) {
+        adPayload.id = ad.id;
+      }
+
       const { error: adError } = await supabase
         .from('ads')
-        .upsert({
-          profile_id: user.id,
-          title: adTitle,
-          description: adDescription,
-          price: Number(adPrice),
-          photos: adPhotos,
-          videos: adVideos,
-          is_active: adIsActive
-        }, { onConflict: 'profile_id' });
+        .upsert(adPayload, { onConflict: ad?.id ? 'id' : 'profile_id' });
 
       if (adError) throw adError;
 

@@ -29,7 +29,7 @@ export default function PricingPage() {
     fetchProviderCount();
   }, []);
 
-  const handleCheckout = async (tier: 'pro' | 'gold') => {
+  const handleCheckout = async (tier: string) => {
     setLoadingTier(tier);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -225,7 +225,7 @@ export default function PricingPage() {
                     {plan.features.map((feat) => (
                       <li key={feat} className="flex items-start gap-2.5 text-xs text-gray-300 font-light leading-relaxed">
                         <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                          plan.tierKey === 'gold' 
+                          plan.tierKey.startsWith('gold') || plan.tierKey === 'gold' 
                             ? 'text-gold-primary' 
                             : plan.tierKey === 'pro'
                               ? 'text-wine-light'
@@ -247,10 +247,10 @@ export default function PricingPage() {
                 </Link>
               ) : (
                 <button
-                  onClick={() => handleCheckout(plan.tierKey as 'pro' | 'gold')}
+                  onClick={() => handleCheckout(plan.tierKey)}
                   disabled={loadingTier !== null}
                   className={`w-full py-3.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 ${
-                    plan.tierKey === 'gold'
+                    plan.tierKey.startsWith('gold') || plan.tierKey === 'gold'
                       ? 'bg-gold-primary text-dark-bg hover:bg-gold-light hover:shadow-[0_8px_24px_rgba(197,168,128,0.3)] font-bold' 
                       : plan.tierKey === 'pro'
                         ? 'bg-wine-primary text-white hover:bg-wine-light hover:shadow-[0_8px_24px_rgba(155,44,44,0.3)] font-bold border border-wine-light/20'

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types';
+import { getEffectiveTier } from '@/lib/utils';
 
 export function useStories(categoryFilter: string) {
   const [storiesProfiles, setStoriesProfiles] = useState<Profile[]>([]);
@@ -10,7 +11,7 @@ export function useStories(categoryFilter: string) {
     const fetchStories = async () => {
       setIsStoryLoading(true);
       let query = supabase.from('profiles')
-        .select('id, name, avatar_url, subscription_tier, is_available_now, whatsapp, category')
+        .select('id, name, avatar_url, subscription_tier, subscription_expires_at, is_available_now, whatsapp, category')
         .eq('is_available_now', true)
         .in('subscription_tier', ['pro', 'gold']);
         
@@ -24,10 +25,15 @@ export function useStories(categoryFilter: string) {
       
       const { data } = await query;
       if (data) {
-        const sorted = (data as unknown as Profile[]).sort((a, b) => {
-          const getScore = (p: Profile) => (p.subscription_tier === 'gold' ? 2 : p.subscription_tier === 'pro' ? 1 : 0);
-          return getScore(b) - getScore(a);
-        });
+        const sorted = (data as unknown as Profile[])
+          .filter(p => getEffectiveTier(p) !== 'free')
+          .sort((a, b) => {
+            const getScore = (p: Profile) => {
+              const tier = getEffectiveTier(p);
+              return tier === 'gold' ? 2 : tier === 'pro' ? 1 : 0;
+            };
+            return getScore(b) - getScore(a);
+          });
         setStoriesProfiles(sorted);
       }
       setIsStoryLoading(false);

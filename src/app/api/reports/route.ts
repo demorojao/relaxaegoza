@@ -13,10 +13,16 @@ export async function POST(req: NextRequest) {
     // Tentar obter usuário autenticado, mas permitir denúncia anônima
     let reporterId: string | null = null;
     const authHeader = req.headers.get('authorization');
-    if (authHeader) {
+    const supabaseServer = getSupabaseServerClient();
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.replace('Bearer ', '');
-      const supabaseServer = getSupabaseServerClient();
       const { data: { user } } = await supabaseServer.auth.getUser(token);
+      if (user) {
+        reporterId = user.id;
+      }
+    } else {
+      const { data: { user } } = await supabaseServer.auth.getUser();
       if (user) {
         reporterId = user.id;
       }

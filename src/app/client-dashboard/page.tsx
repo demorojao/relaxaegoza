@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { uploadToR2 } from '@/lib/r2Client';
+import { getCDNUrl } from '@/lib/mediaHelper';
 
 export default function ClientDashboard() {
   const router = useRouter();
@@ -73,7 +74,7 @@ export default function ClientDashboard() {
         const providerIds = subsData.map(s => s.provider_id);
         const { data: providersData } = await supabase
           .from('profiles')
-          .select('id, name, city, state, subscription_price_cents, profile_photo')
+          .select('id, name, city, subscription_price_cents, avatar_url')
           .in('id', providerIds);
 
         const joined = subsData.map(s => ({
@@ -286,8 +287,8 @@ export default function ClientDashboard() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-full overflow-hidden border border-gold-primary/40 bg-dark-bg shrink-0">
-                          {sub.provider?.profile_photo ? (
-                            <img src={sub.provider.profile_photo} alt={sub.provider.name} className="w-full h-full object-cover" />
+                          {sub.provider?.avatar_url ? (
+                            <img src={sub.provider.avatar_url} alt={sub.provider.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gold-primary font-bold">
                               {sub.provider.name?.charAt(0) || 'P'}
@@ -513,7 +514,7 @@ export default function ClientDashboard() {
                           onClick={() => setPreviewMediaItem({ url: media.media_url, type: isVideo ? 'video' : 'photo', title: media.title })}
                         >
                           <img 
-                            src={media.preview_url || media.media_url} 
+                            src={getCDNUrl(media.preview_url || media.media_url)} 
                             alt={media.title || 'Mídia Exclusiva'} 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 select-none"
                             onContextMenu={(e) => e.preventDefault()}
@@ -577,7 +578,7 @@ export default function ClientDashboard() {
           <div className="max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-gold-primary/30 shadow-2xl relative flex items-center justify-center">
             {previewMediaItem.type === 'video' ? (
               <video 
-                src={previewMediaItem.url} 
+                src={getCDNUrl(previewMediaItem.url)} 
                 controls 
                 autoPlay 
                 controlsList="nodownload"
@@ -586,7 +587,7 @@ export default function ClientDashboard() {
               />
             ) : (
               <img 
-                src={previewMediaItem.url} 
+                src={getCDNUrl(previewMediaItem.url)} 
                 alt="Mídia Ampliada" 
                 className="max-w-full max-h-[85vh] object-contain rounded-xl select-none" 
                 onContextMenu={(e) => e.preventDefault()}

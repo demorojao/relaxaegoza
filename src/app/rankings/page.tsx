@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { Sparkles, Trophy, Star, ShieldCheck, ChevronLeft, Award } from 'lucide-react';
 import Link from 'next/link';
 import { getCDNUrl } from '../../lib/mediaHelper';
+import { getEffectiveTier } from '@/lib/utils';
 
 interface RankedProfile {
   id: string;
@@ -58,15 +59,14 @@ export default function RankingsPage() {
           const pReviews = reviewsMap[p.id] || [];
           const count = pReviews.length;
 
-          // Se não houver reviews, preenchemos com notas padrão altas (como se fossem iniciais recomendadas) ou 0
           const sumMassage = pReviews.reduce((acc, curr) => acc + curr.rating_massage, 0);
           const sumService = pReviews.reduce((acc, curr) => acc + curr.rating_service, 0);
           const sumEnvironment = pReviews.reduce((acc, curr) => acc + curr.rating_environment, 0);
 
-          const avgMassage = count > 0 ? Number((sumMassage / count).toFixed(1)) : 4.8; // default
-          const avgService = count > 0 ? Number((sumService / count).toFixed(1)) : 4.9; // default
-          const avgEnvironment = count > 0 ? Number((sumEnvironment / count).toFixed(1)) : 4.7; // default
-          const avgOverall = Number(((avgMassage + avgService + avgEnvironment) / 3).toFixed(1));
+          const avgMassage = count > 0 ? Number((sumMassage / count).toFixed(1)) : 0;
+          const avgService = count > 0 ? Number((sumService / count).toFixed(1)) : 0;
+          const avgEnvironment = count > 0 ? Number((sumEnvironment / count).toFixed(1)) : 0;
+          const avgOverall = count > 0 ? Number(((avgMassage + avgService + avgEnvironment) / 3).toFixed(1)) : 0;
 
           return {
             id: p.id,
@@ -80,8 +80,8 @@ export default function RankingsPage() {
             avgService,
             avgEnvironment,
             avgOverall,
-            reviewCount: count || 3, // default mock review count for aesthetics if 0
-            subscription_tier: (!p.subscription_expires_at || new Date(p.subscription_expires_at) >= new Date()) ? (p.subscription_tier || 'free') : 'free'
+            reviewCount: count,
+            subscription_tier: getEffectiveTier(p)
           };
         });
 
@@ -94,17 +94,24 @@ export default function RankingsPage() {
     }
   };
 
-  // Ordenar perfis de acordo com a aba selecionada com desempate por plano (Gold > Pro > Free)
+  // Ordenar perfis de acordo com a aba selecionada (Priorizando quem possui avaliações reais e desempate por plano)
   const sortedProfiles = [...profiles].sort((a, b) => {
     const getTierScore = (tier: string) => (tier === 'gold' ? 2 : tier === 'pro' ? 1 : 0);
     
+    // Perfis com avaliações sempre ficam acima de perfis sem avaliações
+    if (a.reviewCount > 0 && b.reviewCount === 0) return -1;
+    if (a.reviewCount === 0 && b.reviewCount > 0) return 1;
+
     let diff = 0;
     if (activeTab === 'massage') diff = b.avgMassage - a.avgMassage;
     else if (activeTab === 'service') diff = b.avgService - a.avgService;
     else diff = b.avgEnvironment - a.avgEnvironment;
     
-    // Se a diferença de nota for insignificante (empate), desempata pelo plano de assinatura
+    // Se a diferença de nota for insignificante (empate), desempata por quantidade de avaliações e plano de assinatura
     if (Math.abs(diff) < 0.01) {
+      if (a.reviewCount !== b.reviewCount) {
+        return b.reviewCount - a.reviewCount;
+      }
       return getTierScore(b.subscription_tier) - getTierScore(a.subscription_tier);
     }
     return diff;

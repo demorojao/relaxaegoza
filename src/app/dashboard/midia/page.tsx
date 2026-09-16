@@ -9,6 +9,7 @@ import { applyWatermark } from '@/lib/watermark';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { uploadToR2, deleteFromR2 } from '@/lib/r2Client';
 import { getCDNUrl } from '@/lib/mediaHelper';
+import { getEffectiveTier } from '@/lib/utils';
 
 export default function MediaManager() {
   const [user, setUser] = useState<any>(null);
@@ -191,11 +192,7 @@ export default function MediaManager() {
     }
 
     // Enforcamento de Limites de Mídia baseados no Plano (com checagem de expiração)
-    const effectiveTier = profile.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
-      ? 'free'
-      : (profile.subscription_tier || 'free');
-
-    const tier = effectiveTier;
+    const tier = getEffectiveTier(profile);
     const photosList = media.filter(m => m.media_type === 'photo' || !m.media_type);
     const videosList = media.filter(m => m.media_type === 'video');
 
@@ -292,9 +289,7 @@ export default function MediaManager() {
     );
   }
 
-  const tier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
-    ? 'free'
-    : (profile?.subscription_tier || 'free');
+  const tier = getEffectiveTier(profile);
   const photos = media.filter(m => m.media_type === 'photo' || !m.media_type);
   const videos = media.filter(m => m.media_type === 'video');
 

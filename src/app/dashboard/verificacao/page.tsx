@@ -6,6 +6,7 @@ import { Shield, ShieldCheck, ShieldAlert, Upload, Sparkles, Building2, HelpCirc
 import Link from 'next/link';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { uploadToR2 } from '@/lib/r2Client';
+import { getEffectiveTier } from '@/lib/utils';
 
 export default function VerificationPanel() {
   const [user, setUser] = useState<any>(null);
@@ -200,7 +201,7 @@ export default function VerificationPanel() {
               Para validar que você é realmente a pessoa das fotos de perfil, envie uma foto legível do seu documento de identidade (RG ou CNH) e uma selfie segurando um papel manuscrito com seu **Nome Artístico**.
             </p>
 
-            {profile?.verification_status === 'none' && !success && (
+            {(profile?.verification_status === 'none' || profile?.verification_status === 'rejected') && !success && (
               <form onSubmit={handleIdentitySubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <label htmlFor="selfie-file-input" className="text-xs text-gray-400 font-medium">Selfie segurando papel manuscrito</label>
@@ -325,10 +326,7 @@ export default function VerificationPanel() {
         {/* Lado Direito: Selo de Ambiente Validado (Espaço Físico) */}
         <div className="glass-effect rounded-2xl border border-dark-border/60 p-6 flex flex-col justify-between space-y-6 relative overflow-hidden">
           {(() => {
-            const effectiveTier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
-              ? 'free'
-              : (profile?.subscription_tier || 'free');
-            const isGold = effectiveTier === 'gold';
+            const isGold = getEffectiveTier(profile) === 'gold';
             return !isGold;
           })() && (
             <div className="absolute inset-0 bg-black/80 backdrop-blur-[5px] z-30 flex flex-col items-center justify-center p-6 text-center border border-white/5">

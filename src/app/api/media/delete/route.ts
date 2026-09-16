@@ -31,7 +31,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Acesso negado. Você só pode excluir seus próprios arquivos.' }, { status: 403 });
     }
 
-    const fileKey = `${user.id}/${decodeURIComponent(urlParts[1])}`;
+    const relativePath = urlParts.slice(1).join(`${user.id}/`);
+    const cleanPath = decodeURIComponent(relativePath).split('?')[0].split('#')[0];
+    const fileKey = `${user.id}/${cleanPath}`;
 
     // 3. Excluir do Cloudflare R2
     const command = new DeleteObjectCommand({

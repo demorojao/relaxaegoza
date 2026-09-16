@@ -27,7 +27,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn, formatWhatsAppLink, cleanDescription } from '@/lib/utils';
+import { cn, formatWhatsAppLink, cleanDescription, getEffectiveTier } from '@/lib/utils';
 import { supabase } from '../lib/supabase';
 import { getCDNUrl } from '../lib/mediaHelper';
 
@@ -388,9 +388,9 @@ export default function ProfileReels({
           const isActive = index === activeIndex;
           const isFavorited = favorites.includes(profile.id);
 
-          const isSubscriptionActive = !profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
-          const isGold = profile.subscription_tier === 'gold' && isSubscriptionActive;
-          const isPro = profile.subscription_tier === 'pro' && isSubscriptionActive;
+          const effectiveTier = getEffectiveTier(profile);
+          const isGold = effectiveTier === 'gold';
+          const isPro = effectiveTier === 'pro';
 
           return (
             <div 

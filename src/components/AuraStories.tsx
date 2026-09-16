@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Profile } from '../types';
 import { getCDNUrl } from '../lib/mediaHelper';
 import Link from 'next/link';
+import { getEffectiveTier } from '@/lib/utils';
 
 interface AuraStoriesProps {
   storiesProfiles: Profile[];
@@ -42,10 +43,22 @@ export default function AuraStories({ storiesProfiles, handleOpenStory, overlay 
         </div>
       ) : (
         <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x -webkit-overflow-scrolling-touch transform-gpu">
+          {canPost && (
+            <Link href="/dashboard/stories" className="flex flex-col items-center gap-1 shrink-0 group cursor-pointer snap-start">
+              <div className="relative p-[2.5px] rounded-full">
+                <div className={`${overlay ? 'w-12 h-12 sm:w-14 sm:h-14' : 'w-14 h-14 sm:w-16 sm:h-16'} rounded-full border-2 border-dashed border-gold-primary/50 flex items-center justify-center bg-gold-primary/10 group-hover:bg-gold-primary/20 transition-all`}>
+                  <span className="text-gold-primary text-2xl font-light leading-none">+</span>
+                </div>
+              </div>
+              <span className="text-[10px] sm:text-xs text-gray-300 group-hover:text-gold-light transition-colors max-w-[70px] truncate text-center font-medium">
+                Criar Story
+              </span>
+            </Link>
+          )}
           {storiesProfiles.map((profile) => {
-            const isSubscriptionActive = !profile.subscription_expires_at || new Date(profile.subscription_expires_at) >= new Date();
-            const isPremium = profile.subscription_tier === 'gold' && isSubscriptionActive;
-            const isPro = profile.subscription_tier === 'pro' && isSubscriptionActive;
+            const effectiveTier = getEffectiveTier(profile);
+            const isPremium = effectiveTier === 'gold';
+            const isPro = effectiveTier === 'pro';
             const avatarSize = overlay ? 'w-12 h-12 sm:w-14 sm:h-14' : 'w-14 h-14 sm:w-16 sm:h-16';
             return (
               <button

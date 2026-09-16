@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
       return new Response('OK', { status: 200 });
     }
 
-    const transactionId = body.id || body.txid || body.transaction_id || body.reference;
+    const rawTxId = body.id ?? body.txid ?? body.transaction_id ?? body.reference;
+    const transactionId = rawTxId !== undefined && rawTxId !== null ? String(rawTxId) : '';
     const status = body.status || body.payment_status;
 
     if (!transactionId) {

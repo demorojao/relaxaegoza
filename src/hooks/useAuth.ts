@@ -28,9 +28,19 @@ export function useAuth() {
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (session) {
           setUser(session.user);
+          const { data } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          
+          const userRole = data?.role || session.user.user_metadata?.role || null;
+          if (userRole) {
+            setRole(userRole);
+          }
         } else {
           setUser(null);
           setRole(null);

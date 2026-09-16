@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Profile } from '../types';
+import { getEffectiveTier } from '../lib/utils';
 
 interface UseProfilesOptions {
   cityFilter: string;
@@ -21,9 +22,9 @@ export function useProfiles(options: UseProfilesOptions) {
     const fetchProfiles = async () => {
       setLoading(true);
       let query = supabase.from('profiles').select(`
-        id, name, age, city, price_per_hour, avatar_url, subscription_tier, boost_expires_at, is_available_now, is_space_verified, verification_status, neighborhood, latitude, longitude, category, amenities, target_audience,
+        id, name, age, city, price_per_hour, avatar_url, subscription_tier, subscription_expires_at, boost_expires_at, is_available_now, is_space_verified, verification_status, neighborhood, latitude, longitude, category, amenities, target_audience,
         specialties:profile_specialties(specialties(name))
-      `);
+      `).eq('role', 'provider');
 
       if (options.cityFilter) query = query.ilike('city', `%${options.cityFilter}%`);
       if (options.priceFilter) {
@@ -74,8 +75,9 @@ export function useProfiles(options: UseProfilesOptions) {
           if (p.boost_expires_at && new Date(p.boost_expires_at).getTime() > now) {
             score += 2000;
           }
-          if (p.subscription_tier === 'gold') score += 1000;
-          if (p.subscription_tier === 'pro') score += 500;
+          const effectiveTier = getEffectiveTier(p);
+          if (effectiveTier === 'gold') score += 1000;
+          if (effectiveTier === 'pro') score += 500;
           if (p.is_available_now) score += 250;
           return score;
         };

@@ -7,6 +7,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { getCDNUrl } from '../lib/mediaHelper';
 import { triggerRevalidate } from '../lib/revalidate';
+import { getEffectiveTier } from '../lib/utils';
 
 interface AdEditorModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
   const [isActive, setIsActive] = useState(true);
   const [gallery, setGallery] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [adId, setAdId] = useState<string | null>(null);
   
   // Boost states
   const [boostTimeLeft, setBoostTimeLeft] = useState<string | null>(null);
@@ -90,9 +92,7 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
     }
   };
 
-  const effectiveTier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
-    ? 'free'
-    : (profile?.subscription_tier || 'free');
+  const effectiveTier = getEffectiveTier(profile);
 
   const tier = effectiveTier;
   const tierName = tier === 'free' ? 'Bronze (Grátis)' : tier === 'pro' ? 'Pro (Silver)' : 'Gold (Premium)';
@@ -120,6 +120,7 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
 
       if (adError) throw adError;
       if (adData) {
+        setAdId(adData.id || null);
         setTitle(adData.title || '');
         setDescription(adData.description || '');
         const rawPrice = adData.price;
@@ -134,6 +135,7 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
         setSelectedVideos(adData.videos || []);
         setIsActive(adData.is_active ?? true);
       } else {
+        setAdId(null);
         // Fallbacks from profile
         setTitle(`Atendimento com ${profile.name}`);
         setDescription(profile.bio || '');
@@ -213,7 +215,7 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
     setErrorMsg(null);
 
     try {
-      const payload = {
+      const payload: any = {
         profile_id: profile.id,
         title,
         description,
@@ -223,9 +225,13 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
         is_active: isActive,
       };
 
+      if (adId) {
+        payload.id = adId;
+      }
+
       const { error } = await supabase
         .from('ads')
-        .upsert(payload, { onConflict: 'profile_id' });
+        .upsert(payload, { onConflict: adId ? 'id' : 'profile_id' });
 
       if (error) throw error;
 

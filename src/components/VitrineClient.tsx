@@ -17,7 +17,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
-import { cn, formatWhatsAppLink } from '@/lib/utils';
+import { cn, formatWhatsAppLink, getEffectiveTier } from '@/lib/utils';
 import Logo from './Logo';
 import AdEditorModal from './AdEditorModal';
 import { triggerRevalidate } from '../lib/revalidate';
@@ -355,8 +355,13 @@ export default function VitrineClient({
           }
           
           // Reverse geocoding do OpenStreetMap Nominatim
-          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`)
-            .then(res => res.json())
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`, {
+            headers: { 'Accept': 'application/json' }
+          })
+            .then(res => {
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return res.json();
+            })
             .then(data => {
               const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || data.address?.state_district;
               if (city) {
@@ -366,7 +371,7 @@ export default function VitrineClient({
                 }
               }
             })
-            .catch(err => console.error("Erro no reverse geocoding da cidade:", err));
+            .catch(err => console.warn("Erro no reverse geocoding da cidade:", err));
         },
         (error) => {
           console.log("Erro ao obter localização do usuário:", error);
@@ -618,7 +623,7 @@ export default function VitrineClient({
         .select(`
           profile_id,
           profiles:profiles(
-            id, name, avatar_url, subscription_tier, is_available_now, whatsapp, category, city
+            id, name, avatar_url, subscription_tier, subscription_expires_at, is_available_now, whatsapp, category, city
           )
         `)
         .gt('expires_at', new Date().toISOString());
@@ -658,7 +663,10 @@ export default function VitrineClient({
 
       // Ordena por prioridade de plano (Gold > Pro > Bronze)
       const sorted = finalStories.sort((a, b) => {
-        const getScore = (p: Profile) => (p.subscription_tier === 'gold' ? 2 : p.subscription_tier === 'pro' ? 1 : 0);
+        const getScore = (p: Profile) => {
+          const tier = getEffectiveTier(p);
+          return tier === 'gold' ? 2 : tier === 'pro' ? 1 : 0;
+        };
         return getScore(b) - getScore(a);
       });
 
@@ -706,7 +714,7 @@ export default function VitrineClient({
           const ad = adsMap.get(p.id);
           return {
             ...p,
-            has_vip_content: vipSet.has(p.id) || p.subscription_tier === 'gold',
+            has_vip_content: vipSet.has(p.id) || getEffectiveTier(p) === 'gold',
             ad_title: ad?.title || p.ad_title || p.name,
             ad_description: ad?.description || p.ad_description || p.bio || '',
             ad_price: (ad?.price !== undefined && ad?.price !== null) ? ad.price : (p.ad_price || p.price_per_hour),
@@ -890,8 +898,13 @@ export default function VitrineClient({
             sessionStorage.setItem('rg_user_coords', JSON.stringify(coordsArr));
           }
           
-          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`)
-            .then(res => res.json())
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`, {
+            headers: { 'Accept': 'application/json' }
+          })
+            .then(res => {
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return res.json();
+            })
             .then(data => {
               const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || data.address?.state_district;
               if (city) {
@@ -901,7 +914,7 @@ export default function VitrineClient({
                 }
               }
             })
-            .catch(err => console.error("Erro no reverse geocoding da cidade:", err));
+            .catch(err => console.warn("Erro no reverse geocoding da cidade:", err));
         },
         () => {
           alert('Não foi possível obter sua localização por GPS no momento. Você pode escolher a cidade manualmente no menu.');
@@ -1041,9 +1054,15 @@ export default function VitrineClient({
   useEffect(() => {
     if (activeStoryPhotos[activeSlideIndex]?.id) {
       const currentStoryId = activeStoryPhotos[activeSlideIndex].id;
-      supabase.rpc('increment_story_views', { story_id: currentStoryId }).then(({ error }) => {
-        if (error) console.error('Erro ao registrar visualização do story:', error);
-      });
+      const recordView = async () => {
+        try {
+          const { error } = await supabase.rpc('increment_story_views', { story_id: currentStoryId });
+          if (error) console.warn('Erro ao registrar visualização do story:', error);
+        } catch (err) {
+          console.warn('Erro inesperado ao registrar visualização do story:', err);
+        }
+      };
+      recordView();
     }
   }, [activeSlideIndex, activeStoryPhotos]);
 

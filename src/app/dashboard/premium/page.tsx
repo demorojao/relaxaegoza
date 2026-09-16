@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { getCDNUrl } from '../../../lib/mediaHelper';
 import { uploadToR2, deleteFromR2 } from '@/lib/r2Client';
-import { isValidCPF, formatCPF, formatWhatsAppLink } from '@/lib/utils';
+import { isValidCPF, formatCPF, formatWhatsAppLink, getEffectiveTier } from '@/lib/utils';
 
 export default function PremiumPage() {
   const [profile, setProfile] = useState<any>(null);
@@ -69,7 +69,7 @@ export default function PremiumPage() {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: p } = await supabase.from('profiles').select('id, name, subscription_tier, subscription_price_cents, pix_key').eq('id', user.id).single();
+      const { data: p } = await supabase.from('profiles').select('id, name, subscription_tier, subscription_expires_at, subscription_price_cents, pix_key').eq('id', user.id).single();
       if (p) {
         setProfile(p);
         setSubPrice(p.subscription_price_cents ? (p.subscription_price_cents / 100).toFixed(2) : '');
@@ -254,9 +254,7 @@ export default function PremiumPage() {
     </div>
   );
 
-  const effectiveTier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
-    ? 'free'
-    : (profile?.subscription_tier || 'free');
+  const effectiveTier = getEffectiveTier(profile);
   const tier = effectiveTier;
   const isGold = tier === 'gold';
 

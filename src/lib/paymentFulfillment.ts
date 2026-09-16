@@ -26,19 +26,20 @@ function serverRevalidate(city?: string, neighborhood?: string, profileId?: stri
  * Processa a entrega/ativação de um pagamento confirmado (Assinaturas Pro/Gold ou Boosts)
  * @param paymentRecordOrTxid UUID do registro na tabela 'payments' OU objeto da linha de 'payments'
  */
-export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise<boolean> {
+export async function fulfillPayment(paymentRecordOrTxid: string | number | any): Promise<boolean> {
   const supabaseService = getSupabaseServiceClient();
 
   let payment: any = null;
 
-  if (typeof paymentRecordOrTxid === 'string') {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(paymentRecordOrTxid);
+  if (typeof paymentRecordOrTxid === 'string' || typeof paymentRecordOrTxid === 'number') {
+    const txIdStr = String(paymentRecordOrTxid).trim();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(txIdStr);
 
     if (isUuid) {
       const { data: byId } = await supabaseService
         .from('payments')
         .select('*')
-        .eq('id', paymentRecordOrTxid)
+        .eq('id', txIdStr)
         .maybeSingle();
 
       if (byId) {
@@ -50,7 +51,7 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
       const { data: byTxId } = await supabaseService
         .from('payments')
         .select('*')
-        .eq('txid', paymentRecordOrTxid)
+        .eq('txid', txIdStr)
         .maybeSingle();
       payment = byTxId;
     }
@@ -106,16 +107,19 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
     else if (tier === 'boost_2h') durationHours = 2;
     else if (is_gift) durationHours = 6;
 
-    const currentBoostExpires = targetProfile?.boost_expires_at
-      ? new Date(targetProfile.boost_expires_at)
-      : new Date();
-
-    const baseDate = currentBoostExpires > new Date() ? currentBoostExpires : new Date();
-    const newExpires = new Date(baseDate.getTime() + durationHours * 60 * 60 * 1000);
+    const currentBoostTime = targetProfile?.boost_expires_at
+      ? new Date(targetProfile.boost_expires_at).getTime()
+      : 0;
+    const nowTime = Date.now();
+    const baseBoostTime = !isNaN(currentBoostTime) && currentBoostTime > nowTime ? currentBoostTime : nowTime;
+    const newExpires = new Date(baseBoostTime + durationHours * 60 * 60 * 1000);
 
     await supabaseService
       .from('profiles')
-      .update({ boost_expires_at: newExpires.toISOString() })
+      .update({ 
+        boost_expires_at: newExpires.toISOString(),
+        is_available_now: true
+      })
       .eq('id', targetUserId);
 
     console.log(`Boost ativado com sucesso para ${targetUserId}. Expira em: ${newExpires.toISOString()}`);
@@ -154,11 +158,12 @@ export async function fulfillPayment(paymentRecordOrTxid: string | any): Promise
     else if (tier === 'gold_15d') days = 15;
     else if (tier === 'gold_30d' || tier === 'gold') days = 30;
 
-    const currentSubExpires = targetProfile?.subscription_expires_at
-      ? new Date(targetProfile.subscription_expires_at)
-      : new Date();
-    const baseSubDate = currentSubExpires > new Date() ? currentSubExpires : new Date();
-    const expiresAt = new Date(baseSubDate.getTime() + days * 24 * 60 * 60 * 1000);
+    const currentSubTime = targetProfile?.subscription_expires_at
+      ? new Date(targetProfile.subscription_expires_at).getTime()
+      : 0;
+    const nowTime = Date.now();
+    const baseSubTime = !isNaN(currentSubTime) && currentSubTime > nowTime ? currentSubTime : nowTime;
+    const expiresAt = new Date(baseSubTime + days * 24 * 60 * 60 * 1000);
 
     const actualTier = tier === 'pro' ? 'pro' : 'gold';
 

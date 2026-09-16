@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getCDNUrl } from '@/lib/mediaHelper';
-import { cleanDescription } from '@/lib/utils';
+import { cleanDescription, formatWhatsAppLink } from '@/lib/utils';
 
 interface BioClientViewProps {
   profile: any;
@@ -34,12 +34,13 @@ export default function BioClientView({ profile, ad, mediaCount = 0 }: BioClient
   const bioText = cleanDescription(rawBioText) || 'Atendimento exclusivo de alta qualidade com discrição, conforto e elegância.';
   const city = profile?.city || ad?.city || 'São Paulo';
   const neighborhood = profile?.neighborhood || ad?.neighborhood || '';
-  const isAvailable = profile?.is_available || false;
+  const isAvailable = profile?.is_available_now || false;
   const whatsappNumber = profile?.whatsapp || ad?.whatsapp || '';
 
-  const cleanWhatsapp = whatsappNumber.replace(/\D/g, '');
-  const whatsappMessage = encodeURIComponent(`Olá ${name}! Vi seu cartão no Instagram/TikTok e gostaria de informações sobre horários de atendimento.`);
-  const whatsappUrl = cleanWhatsapp ? `https://wa.me/55${cleanWhatsapp}?text=${whatsappMessage}` : '#';
+  const whatsappUrl = formatWhatsAppLink(
+    whatsappNumber, 
+    `Olá ${name}! Vi seu cartão no Instagram/TikTok e gostaria de informações sobre horários de atendimento.`
+  ) || '#';
 
   const handleShare = () => {
     if (navigator.share) {

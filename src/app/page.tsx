@@ -3,6 +3,7 @@ import { cacheLife } from 'next/cache';
 import { supabase } from '../lib/supabase';
 import VitrineClient from '../components/VitrineClient';
 import { Profile } from '../types';
+import { getEffectiveTier } from '../lib/utils';
 
 export const metadata = {
   title: 'Relaxe & Goze | Acompanhantes de Luxo e Massagistas de Elite Premium',
@@ -27,7 +28,7 @@ export default async function Home() {
     .select(`
       profile_id,
       profiles:profiles(
-        id, name, avatar_url, subscription_tier, is_available_now, whatsapp, category,
+        id, name, avatar_url, subscription_tier, subscription_expires_at, is_available_now, whatsapp, category,
         ads:ads(is_active)
       )
     `)
@@ -49,7 +50,10 @@ export default async function Home() {
   
   let initialStories = Array.from(profileMap.values());
   initialStories.sort((a, b) => {
-    const getScore = (p: Profile) => (p.subscription_tier === 'gold' ? 2 : p.subscription_tier === 'pro' ? 1 : 0);
+    const getScore = (p: Profile) => {
+      const tier = getEffectiveTier(p);
+      return tier === 'gold' ? 2 : tier === 'pro' ? 1 : 0;
+    };
     return getScore(b) - getScore(a);
   });
 

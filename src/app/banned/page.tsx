@@ -55,14 +55,20 @@ export default function BannedPage() {
             Se você acredita que isto foi um engano ou deseja solicitar uma revisão, entre em contato com o nosso suporte de auditoria.
           </p>
           
-          <a
-            href="https://wa.me/5500000000000?text=Olá!%20Meu%20acesso%20ao%20portal%20foi%20bloqueado%20por%20IP%20e%20gostaria%20de%20solicitar%20uma%20revisão."
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider transition-all block cursor-pointer shadow-lg shadow-red-500/20 active:scale-[0.98]"
-          >
-            Contatar Suporte Relaxe & Goze
-          </a>
+          {(() => {
+            const supportPhone = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '551151922273';
+            const supportUrl = `https://wa.me/${supportPhone}?text=${encodeURIComponent('Olá! Meu acesso ao portal foi bloqueado por IP e gostaria de solicitar uma revisão.')}`;
+            return (
+              <a
+                href={supportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider transition-all block cursor-pointer shadow-lg shadow-red-500/20 active:scale-[0.98]"
+              >
+                Contatar Suporte Relaxe & Goze
+              </a>
+            );
+          })()}
         </div>
       </div>
       

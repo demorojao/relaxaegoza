@@ -21,7 +21,7 @@ function CheckoutContent() {
   const [copied, setCopied] = useState(false);
   const [payment, setPayment] = useState<any>(null);
 
-  const supportPhone = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '5500000000000';
+  const supportPhone = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '551151922273';
   const supportUrl = `https://wa.me/${supportPhone}?text=${encodeURIComponent(
     `Olá! Estou na página de checkout Pix (ID: ${paymentId}) e gostaria de verificar meu pagamento.`
   )}`;

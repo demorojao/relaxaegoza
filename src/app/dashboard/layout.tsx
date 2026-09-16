@@ -104,7 +104,7 @@ export default function DashboardLayout({
     fetchRole();
   }, []);
 
-  const supportPhone = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '5500000000000';
+  const supportPhone = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '551151922273';
   const supportUrl = `https://wa.me/${supportPhone}?text=${encodeURIComponent('Olá! Preciso de suporte com o financeiro / pagamentos do portal.')}`;
 
   const providerItems = [

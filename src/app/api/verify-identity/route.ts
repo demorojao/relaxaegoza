@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
       .from('profiles')
       .update({
         verification_status: 'pending',
-        selfie_url: selfieUrl,
-        document_url: documentUrl,
+        verification_selfie: selfieUrl,
+        verification_document: documentUrl,
       })
       .eq('id', user.id);
 

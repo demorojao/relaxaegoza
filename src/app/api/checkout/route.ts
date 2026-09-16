@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabaseServer';
 import { createPushinPayPixCharge } from '@/lib/pushinpay';
+import { getEffectiveTier } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -97,9 +98,7 @@ export async function POST(req: NextRequest) {
     }
     // 2. Caso: Boost comum (2, 6 ou 12 Horas)
     else if (isBoost) {
-      const effectiveTier = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()
-        ? 'free'
-        : (profile?.subscription_tier || 'free');
+      const effectiveTier = getEffectiveTier(profile);
 
       if (!['pro', 'gold'].includes(effectiveTier)) {
         return NextResponse.json({ error: 'Você precisa ter uma assinatura ativa (Pro ou Gold) para comprar um Boost.' }, { status: 400 });

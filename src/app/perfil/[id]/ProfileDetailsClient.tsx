@@ -42,7 +42,7 @@ import {
   Camera,
   Image as ImageIcon
 } from 'lucide-react';
-import { formatWhatsAppLink, cleanDescription } from '@/lib/utils';
+import { formatWhatsAppLink, cleanDescription, getEffectiveTier } from '@/lib/utils';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { getCDNUrl } from '@/lib/mediaHelper';
 import dynamic from 'next/dynamic';
@@ -971,7 +971,7 @@ export default function ProfileDetailsClient({
       {/* Avatar Principal com Carrossel e Deslize (Swipe) */}
       <div 
         className={`w-full md:w-1/3 aspect-4/5 sm:aspect-3/4 max-h-90 md:max-h-none rounded-2xl overflow-hidden shadow-2xl relative shrink-0 border-2 protected-media touch-pan-y group ${
-          isAvailable ? 'border-emerald-500 neon-ring-active' : profile.subscription_tier === 'gold' ? 'border-gold-primary' : 'border-white/5'
+          isAvailable ? 'border-emerald-500 neon-ring-active' : getEffectiveTier(profile) === 'gold' ? 'border-gold-primary' : 'border-white/5'
         }`}
         onTouchStart={handleHeroTouchStart}
         onTouchEnd={handleHeroTouchEnd}
@@ -1056,7 +1056,7 @@ export default function ProfileDetailsClient({
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight flex items-center gap-2">
               {profile.name}
-              {profile.subscription_tier === 'gold' && (
+              {getEffectiveTier(profile) === 'gold' && (
                 <span className="text-2xl animate-bounce" title="Gold VIP">👑</span>
               )}
               , <span className="font-light text-gray-400">{profile.age}</span>

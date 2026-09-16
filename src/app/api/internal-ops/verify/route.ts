@@ -433,9 +433,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Campos de atualização inválidos.' }, { status: 400 });
       }
 
+      const payload = { ...updateFields };
+      if (payload.subscription_tier && !payload.subscription_expires_at) {
+        if (payload.subscription_tier === 'free') {
+          payload.subscription_expires_at = null;
+        } else {
+          payload.subscription_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        }
+      }
+
       const { error: updateError } = await supabaseService
         .from('profiles')
-        .update(updateFields)
+        .update(payload)
         .eq('id', profileId);
 
       if (updateError) throw updateError;

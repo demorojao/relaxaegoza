@@ -42,14 +42,15 @@ export default function FinancialGoalsCalculator({ profile, onSave }: FinancialG
 
       const vipTotal = (vipPurchases || []).reduce((acc, p) => acc + (p.net_amount_cents || 0), 0);
 
-      // 2. Ganhos de Mimos/Presentes
+      // 2. Ganhos de Mimos/Presentes (Tabela payments)
       const { data: giftPurchases } = await supabase
-        .from('gift_purchases')
-        .select('net_amount_cents')
-        .eq('provider_id', profile.id)
+        .from('payments')
+        .select('amount_cents')
+        .eq('target_profile_id', profile.id)
+        .in('status', ['paid', 'completed'])
         .gte('created_at', startOfMonth);
 
-      const giftTotal = (giftPurchases || []).reduce((acc, p) => acc + (p.net_amount_cents || 0), 0);
+      const giftTotal = (giftPurchases || []).reduce((acc, p) => acc + (p.amount_cents || 0), 0);
 
       setCurrentEarningsCents(vipTotal + giftTotal);
     } catch (err) {

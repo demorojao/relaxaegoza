@@ -14,6 +14,13 @@ export function getSupabaseServerClient() {
 export function getSupabaseServiceClient() {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+  if (!supabaseServiceRoleKey) {
+    console.warn(
+      'AVISO DE SEGURANÇA/SISTEMA: SUPABASE_SERVICE_ROLE_KEY não foi encontrada nas variáveis de ambiente. Operações administrativas (webhooks, callbacks) podem ser rejeitadas pelo Supabase.'
+    );
+  }
+
   return createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: {
       persistSession: false,
@@ -21,3 +28,4 @@ export function getSupabaseServiceClient() {
     }
   });
 }
+

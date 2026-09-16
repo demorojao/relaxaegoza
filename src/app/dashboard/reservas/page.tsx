@@ -12,7 +12,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { formatWhatsAppLink } from '@/lib/utils';
+import { formatWhatsAppLink, getEffectiveTier } from '@/lib/utils';
 
 export default function HostBookingsPage() {
   const router = useRouter();
@@ -22,10 +22,10 @@ export default function HostBookingsPage() {
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'cancelled'>('pending');
 
   useEffect(() => {
-    fetchBookings();
+    fetchHostBookings();
   }, []);
 
-  const fetchBookings = async () => {
+  const fetchHostBookings = async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -56,8 +56,7 @@ export default function HostBookingsPage() {
 
         const isFreeLaunch = !countError && hostRank !== null && hostRank <= 100;
 
-        const isSubscriptionActive = !profData.subscription_expires_at || new Date(profData.subscription_expires_at) >= new Date();
-        const effectiveTier = isSubscriptionActive ? (profData.subscription_tier || 'free') : 'free';
+        const effectiveTier = getEffectiveTier(profData);
 
         if (effectiveTier === 'free' && !isFreeLaunch) {
           router.push('/dashboard');

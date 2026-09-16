@@ -45,11 +45,25 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    const cleanPixKey = profile.pix_key.trim().replace(/\D/g, '');
-    if (!isValidCPF(cleanPixKey)) {
-      return NextResponse.json({
-        error: 'A chave PIX cadastrada deve ser obrigatoriamente o seu CPF (11 dígitos válidos) para prevenção de fraudes.'
-      }, { status: 400 });
+    const rawPixKey = profile.pix_key.trim();
+    let cleanPixKey = rawPixKey.replace(/\s+/g, '');
+
+    const onlyDigits = rawPixKey.replace(/\D/g, '');
+    const isCpfFormat = /^\d{11}$/.test(onlyDigits) || /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(rawPixKey);
+
+    if (isCpfFormat) {
+      if (!isValidCPF(onlyDigits)) {
+        return NextResponse.json({
+          error: 'O CPF informado como chave PIX é inválido. Por favor, verifique os dígitos.'
+        }, { status: 400 });
+      }
+      cleanPixKey = onlyDigits;
+    } else {
+      if (cleanPixKey.length < 5) {
+        return NextResponse.json({
+          error: 'Chave PIX inválida. Informe um CPF válido, E-mail, Telefone ou Chave Aleatória.'
+        }, { status: 400 });
+      }
     }
 
     // 2. Buscar compras pendentes de repasse (sem payout_id e concluídas)
@@ -113,13 +127,20 @@ export async function POST(req: NextRequest) {
       .is('payout_id', null)
       .select('id');
 
-    if (lockError || !updatedPurchases || updatedPurchases.length === 0) {
+    if (lockError || !updatedPurchases || updatedPurchases.length !== purchaseIds.length) {
+      if (updatedPurchases && updatedPurchases.length > 0) {
+        await supabaseService
+          .from('content_purchases')
+          .update({ payout_id: null })
+          .in('id', updatedPurchases.map((u: any) => u.id));
+      }
+
       await supabaseService
         .from('payouts')
-        .update({ status: 'failed', error_message: 'Concorrência detectada. Saque duplicado impedido.' })
+        .update({ status: 'failed', error_message: 'Concorrência detectada. Saque duplicado ou concorrente impedido.' })
         .eq('id', payoutRecord.id);
 
-      return NextResponse.json({ error: 'Já existe uma solicitação de saque em processamento para estas vendas.' }, { status: 400 });
+      return NextResponse.json({ error: 'Já existe uma solicitação de saque simultânea em processamento para algumas destas vendas.' }, { status: 400 });
     }
 
     // 4. Executar transferência PIX via PushinPay

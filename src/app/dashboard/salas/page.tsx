@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { uploadToR2 } from '@/lib/r2Client';
+import { getEffectiveTier } from '@/lib/utils';
 
 const AMENITIES_LIST = [
   { id: 'ar_condicionado', name: 'Ar Condicionado' },
@@ -82,9 +83,7 @@ export default function HostRoomsPage() {
           .lte('created_at', profData.created_at);
 
         const isFreeLaunch = !countError && hostRank !== null && hostRank <= 100;
-
-        const isSubscriptionActive = !profData.subscription_expires_at || new Date(profData.subscription_expires_at) >= new Date();
-        const effectiveTier = isSubscriptionActive ? (profData.subscription_tier || 'free') : 'free';
+        const effectiveTier = getEffectiveTier(profData);
 
         if (effectiveTier === 'free' && !isFreeLaunch) {
           router.push('/dashboard');
