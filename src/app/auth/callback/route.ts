@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
       const selectedRole = roleParam || user.user_metadata?.role || 'client';
       const userMeta = user.user_metadata || {};
       const userName = userMeta.full_name || userMeta.name || user.email?.split('@')[0] || 'Usuário Google';
+      const userAvatar = userMeta.avatar_url || userMeta.picture || null;
 
       const { data: newProfile, error: insertError } = await supabaseService
         .from('profiles')
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest) {
           age: 18,
           city: 'São Paulo',
           price_per_hour: 0,
+          avatar_url: userAvatar,
           whatsapp: '',
           neighborhood: '',
           subscription_tier: 'free',

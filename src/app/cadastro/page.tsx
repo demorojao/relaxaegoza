@@ -134,15 +134,11 @@ export default function RegisterPage() {
       if (authError) throw authError;
 
       if (authData.user) {
-        setSuccessMessage('Cadastro realizado com sucesso! Redirecionando...');
+        setSuccessMessage('Conta criada com sucesso! ✉️ Enviamos um e-mail de ativação. Por favor, verifique sua caixa de entrada (e pasta de spam) para confirmar sua conta antes de fazer o login.');
         
         setTimeout(() => {
-          if (role === 'provider' || role === 'host') {
-            router.push('/dashboard');
-          } else {
-            router.push('/client-dashboard');
-          }
-        }, 1500);
+          router.push('/login?registered=true');
+        }, 4000);
       }
     } catch (err: any) {
       let friendlyMessage = err.message || '';
@@ -380,12 +376,18 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Botão Google Auth */}
+              {/* Botão Google Auth com separação visual por perfil */}
               <button
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={loading}
-                className="w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-semibold flex items-center justify-center gap-3 transition-all cursor-pointer shadow-sm hover:scale-[1.01]"
+                className={`w-full py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border text-white text-xs font-semibold flex items-center justify-center gap-3 transition-all cursor-pointer shadow-sm hover:scale-[1.01] ${
+                  role === 'provider' 
+                    ? 'border-wine-primary/40 hover:border-wine-primary/80' 
+                    : role === 'host' 
+                      ? 'border-emerald-500/40 hover:border-emerald-500/80' 
+                      : 'border-gold-primary/40 hover:border-gold-primary/80'
+                }`}
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -405,7 +407,11 @@ export default function RegisterPage() {
                     d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
                   />
                 </svg>
-                <span>Cadastrar com o Google</span>
+                <span>
+                  Cadastrar como <strong className={role === 'provider' ? 'text-wine-light' : role === 'host' ? 'text-emerald-400' : 'text-gold-primary'}>
+                    {role === 'client' ? 'Cliente' : role === 'provider' ? 'Anunciante' : 'Dono de Sala'}
+                  </strong> com o Google
+                </span>
               </button>
             </form>
 

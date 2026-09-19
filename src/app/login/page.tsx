@@ -44,6 +44,10 @@ export default function LoginPage() {
                        window.location.search.includes('access_token=') ||
                        window.location.search.includes('code=');
                         
+    if (window.location.search.includes('registered=true')) {
+      setSuccessMessage('Conta criada com sucesso! ✉️ Enviamos um e-mail de ativação. Por favor, acesse sua caixa de entrada (e pasta de spam) para ativar sua conta.');
+    }
+
     if (!isRecovery) {
       supabase.auth.signOut().catch((err) => console.error('Erro ao deslogar no carregamento:', err));
     } else {
@@ -239,8 +243,8 @@ export default function LoginPage() {
       let friendlyMessage = err.message || '';
       if (err.message === 'Invalid login credentials') {
         friendlyMessage = 'E-mail ou senha incorretos. Por favor, verifique suas credenciais.';
-      } else if (err.message === 'Email not confirmed') {
-        friendlyMessage = 'Por favor, confirme seu e-mail de cadastro para continuar.';
+      } else if (err.message === 'Email not confirmed' || err.message?.includes('not confirmed')) {
+        friendlyMessage = 'E-mail ainda não confirmado. ✉️ Por favor, acesse sua caixa de entrada (e pasta de spam) e clique no link de ativação enviado pelo Supabase.';
       } else if (err.message === 'User not found') {
         friendlyMessage = 'Usuário não encontrado. Verifique seu e-mail.';
       } else if (friendlyMessage.includes('pattern') || friendlyMessage.includes('Unexpected')) {
@@ -391,12 +395,18 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Botão Google Auth */}
+                {/* Botão Google Auth com separação visual por perfil */}
                 <button
                   type="button"
                   onClick={handleGoogleLogin}
                   disabled={loading}
-                  className="w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-semibold flex items-center justify-center gap-3 transition-all cursor-pointer shadow-sm hover:scale-[1.01]"
+                  className={`w-full py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border text-white text-xs font-semibold flex items-center justify-center gap-3 transition-all cursor-pointer shadow-sm hover:scale-[1.01] ${
+                    role === 'provider' 
+                      ? 'border-wine-primary/40 hover:border-wine-primary/80' 
+                      : role === 'host' 
+                        ? 'border-emerald-500/40 hover:border-emerald-500/80' 
+                        : 'border-gold-primary/40 hover:border-gold-primary/80'
+                  }`}
                 >
                   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                     <path
@@ -416,7 +426,11 @@ export default function LoginPage() {
                       d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
                     />
                   </svg>
-                  <span>Entrar com o Google</span>
+                  <span>
+                    Entrar como <strong className={role === 'provider' ? 'text-wine-light' : role === 'host' ? 'text-emerald-400' : 'text-gold-primary'}>
+                      {role === 'client' ? 'Cliente' : role === 'provider' ? 'Profissional' : 'Dono de Sala'}
+                    </strong> com o Google
+                  </span>
                 </button>
               </form>
             )}
