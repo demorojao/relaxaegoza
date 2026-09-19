@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 3. Redirecionar conforme a role real do usuário
+    // 3. Redirecionar conforme a role real do usuário e gravar os cookies de sessão no navegador
     let targetPath = '/client-dashboard';
     if (userRole === 'admin') {
       targetPath = '/acesso-restrito-portal-aura';
@@ -76,7 +76,29 @@ export async function GET(request: NextRequest) {
       targetPath = next;
     }
 
-    return NextResponse.redirect(`${origin}${targetPath}`);
+    const response = NextResponse.redirect(`${origin}${targetPath}`);
+
+    // Gravar o cookie nativo do Supabase no navegador para o cliente ficar logado instantaneamente
+    if (authData.session) {
+      const projectRef = 'ivlaeilkomqhqwerojny';
+      const cookieName = `sb-${projectRef}-auth-token`;
+      const cookieValue = JSON.stringify([
+        authData.session.access_token,
+        authData.session.refresh_token,
+        null,
+        null,
+        null
+      ]);
+      
+      response.cookies.set(cookieName, cookieValue, {
+        path: '/',
+        maxAge: authData.session.expires_in || 604800,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      });
+    }
+
+    return response;
   } catch (err) {
     console.error('OAuth Callback: Erro inesperado:', err);
     return NextResponse.redirect(`${origin}/login?error=unexpected`);
