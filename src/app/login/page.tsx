@@ -38,22 +38,27 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema)
   });  // Limpar sessão antiga ao carregar a página (com bypass se for redefinição de senha)
   useEffect(() => {
-    const isRecovery = window.location.hash.includes('type=recovery') || 
-                       window.location.search.includes('type=recovery') ||
-                       window.location.hash.includes('access_token=') ||
-                       window.location.search.includes('access_token=') ||
-                       window.location.search.includes('code=');
-                        
-    if (window.location.search.includes('registered=true')) {
+    const search = window.location.search;
+    const hash = window.location.hash;
+
+    const isRecovery = search.includes('type=recovery') || hash.includes('type=recovery');
+
+    // Se o usuário for redirecionado do Google Auth com um código (?code=...)
+    const code = new URLSearchParams(search).get('code');
+    if (code && !isRecovery) {
+      const roleParam = new URLSearchParams(search).get('role') || 'client';
+      router.push(`/auth/callback?code=${code}&role=${roleParam}`);
+      return;
+    }
+
+    if (search.includes('registered=true')) {
       setSuccessMessage('Conta criada com sucesso! ✉️ Enviamos um e-mail de ativação. Por favor, acesse sua caixa de entrada (e pasta de spam) para ativar sua conta.');
     }
 
-    if (!isRecovery) {
-      supabase.auth.signOut().catch((err) => console.error('Erro ao deslogar no carregamento:', err));
-    } else {
+    if (isRecovery) {
       setView('reset');
     }
-  }, []);
+  }, [router]);
 
   // Ouvinte para capturar o evento de recuperação do Supabase Auth
   useEffect(() => {
