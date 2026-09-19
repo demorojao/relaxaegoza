@@ -159,84 +159,115 @@ export default function DashboardMetrics() {
 
   const fetchProfile = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // Registrar IP de forma assíncrona
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        fetch('/api/log-ip', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }).catch(err => console.error('Erro ao logar IP:', err));
-      }
 
-      const { data } = await supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    let currentUser = session?.user;
+
+    if (!currentUser) {
+      const { data: { user } } = await supabase.auth.getUser();
+      currentUser = user;
+    }
+
+    if (!currentUser) {
+      router.push('/login');
+      setLoading(false);
+      return;
+    }
+
+    if (session?.access_token) {
+      fetch('/api/log-ip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      }).catch(err => console.error('Erro ao logar IP:', err));
+    }
+
+    let { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+
+    if (!data) {
+      console.log('Dashboard: Perfil não encontrado. Autocriando perfil de profissional...');
+      const userMeta = currentUser.user_metadata || {};
+      const { data: newProf } = await supabase
         .from('profiles')
+        .insert({
+          id: currentUser.id,
+          name: userMeta.full_name || userMeta.name || currentUser.email?.split('@')[0] || 'Profissional',
+          role: 'provider',
+          age: 18,
+          city: 'São Paulo',
+          price_per_hour: 0,
+          subscription_tier: 'free',
+          verification_status: 'none'
+        })
         .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      if (data) {
-        if (data.role === 'client') {
-          router.push('/client-dashboard');
-          return;
-        }
-        setProfile(data);
-        setIsAvailable(data.is_available_now || false);
+        .maybeSingle();
 
-        // Buscar anúncio ativo do usuário
-        const { data: adData } = await supabase
-          .from('ads')
-          .select('*')
-          .eq('profile_id', user.id)
-          .maybeSingle();
-        setAd(adData);
+      if (newProf) {
+        data = newProf;
+      }
+    }
 
-        // Buscar dados reais de tráfego do Supabase (últimos 7 dias)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-        sevenDaysAgo.setHours(0, 0, 0, 0);
+    if (data) {
+      if (data.role === 'client') {
+        router.push('/client-dashboard');
+        return;
+      }
+      setProfile(data);
+      setIsAvailable(data.is_available_now || false);
 
-        const { data: events } = await supabase
-          .from('analytics_events')
-          .select('event_type, created_at')
-          .eq('provider_id', user.id)
-          .gte('created_at', sevenDaysAgo.toISOString());
+      // Buscar anúncio ativo do usuário
+      const { data: adData } = await supabase
+        .from('ads')
+        .select('*')
+        .eq('profile_id', currentUser.id)
+        .maybeSingle();
+      setAd(adData);
 
-        if (events) {
-          const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-          const last7Days: any[] = [];
-          for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            last7Days.push({
-              dateStr: d.toISOString().split('T')[0],
-              dayLabel: daysOfWeek[d.getDay()],
-              views: 0,
-              clicks: 0
-            });
-          }
+      // Buscar dados reais de tráfego do Supabase (últimos 7 dias)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
 
-          events.forEach((evt: any) => {
-            const dateOnly = evt.created_at.split('T')[0];
-            const dayObj = last7Days.find(d => d.dateStr === dateOnly);
-            if (dayObj) {
-              if (evt.event_type === 'profile_view') dayObj.views += 1;
-              else if (evt.event_type === 'whatsapp_click') dayObj.clicks += 1;
-            }
+      const { data: events } = await supabase
+        .from('analytics_events')
+        .select('event_type, created_at')
+        .eq('provider_id', currentUser.id)
+        .gte('created_at', sevenDaysAgo.toISOString());
+
+      if (events) {
+        const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        const last7Days: any[] = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          last7Days.push({
+            dateStr: d.toISOString().split('T')[0],
+            dayLabel: daysOfWeek[d.getDay()],
+            views: 0,
+            clicks: 0
           });
-
-          setRealTrafficData(last7Days.map(d => ({
-            day: d.dayLabel,
-            views: d.views,
-            clicks: d.clicks
-          })));
         }
-      } else {
-        router.push('/login');
+
+        events.forEach((evt: any) => {
+          const dateOnly = evt.created_at.split('T')[0];
+          const dayObj = last7Days.find(d => d.dateStr === dateOnly);
+          if (dayObj) {
+            if (evt.event_type === 'profile_view') dayObj.views += 1;
+            else if (evt.event_type === 'whatsapp_click') dayObj.clicks += 1;
+          }
+        });
+
+        setRealTrafficData(last7Days.map(d => ({
+          day: d.dayLabel,
+          views: d.views,
+          clicks: d.clicks
+        })));
       }
     } else {
       router.push('/login');

@@ -85,6 +85,9 @@ export default function RegisterPage() {
         provider: 'google',
         options: {
           redirectTo: `${origin}/auth/callback?role=${role}`,
+          data: {
+            role: role,
+          },
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

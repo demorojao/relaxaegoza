@@ -37,7 +37,27 @@ export default function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema)
   });  // Limpar sessão antiga ao carregar a página (com bypass se for redefinição de senha)
+  // Verificar se o usuário já possui sessão ativa ou se foi redirecionado com código de OAuth
   useEffect(() => {
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (profile?.role === 'admin') {
+          router.replace('/acesso-restrito-portal-aura');
+        } else if (profile?.role === 'provider' || profile?.role === 'host') {
+          router.replace('/dashboard');
+        } else {
+          router.replace('/client-dashboard');
+        }
+      }
+    }
+
     const search = window.location.search;
     const hash = window.location.hash;
 
@@ -51,8 +71,16 @@ export default function LoginPage() {
       return;
     }
 
+    if (!isRecovery && !search.includes('registered=true') && !search.includes('error=')) {
+      checkSession();
+    }
+
     if (search.includes('registered=true')) {
       setSuccessMessage('Conta criada com sucesso! ✉️ Enviamos um e-mail de ativação. Por favor, acesse sua caixa de entrada (e pasta de spam) para ativar sua conta.');
+    }
+
+    if (search.includes('error=auth_failed')) {
+      setErrorMessage('Erro ao realizar login com o Google. Por favor, tente novamente.');
     }
 
     if (isRecovery) {
@@ -157,6 +185,9 @@ export default function LoginPage() {
         provider: 'google',
         options: {
           redirectTo: `${origin}/auth/callback?role=${role}`,
+          data: {
+            role: role,
+          },
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

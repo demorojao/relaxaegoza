@@ -22,30 +22,48 @@ function CallbackContent() {
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) {
-            console.warn('Callback: Falha ao trocar código (pode ter sido consumido):', exchangeError);
+            console.warn('Callback: Aviso na troca de código PKCE (pode ter sido processado automaticamente):', exchangeError);
           }
         }
 
-        // 2. Obter a sessão ativa no cliente
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError || !session?.user) {
+        // 2. Obter a sessão ativa no cliente (getSession com fallback para getUser)
+        const { data: { session } } = await supabase.auth.getSession();
+        let user = session?.user;
+
+        if (!user) {
+          const { data: { user: fetchedUser } } = await supabase.auth.getUser();
+          user = fetchedUser;
+        }
+
+        if (!user) {
           throw new Error('Sessão não encontrada após autenticação com o Google.');
         }
 
-        const user = session.user;
+        const targetRole = roleParam || user.user_metadata?.role || 'client';
 
-        // 3. Verificar o perfil existente no banco de dados
+        // 3. Verificar se o perfil já existe no banco
         let { data: profile } = await supabase
           .from('profiles')
           .select('id, role')
           .eq('id', user.id)
           .maybeSingle();
 
-        let userRole = profile?.role;
-
-        // 4. Se o perfil não existir (Primeiro login do usuário com Google), criar automaticamente
-        if (!profile) {
-          const selectedRole = roleParam || user.user_metadata?.role || 'client';
+        // 4. Se o perfil existir, porém o papel for diferente do selecionado na tela de login, sincronizar
+        if (profile) {
+          if (roleParam && profile.role !== roleParam) {
+            console.log(`Callback: Atualizando papel do perfil de ${profile.role} para ${roleParam}`);
+            const { data: updatedProf } = await supabase
+              .from('profiles')
+              .update({ role: roleParam })
+              .eq('id', user.id)
+              .select('role')
+              .maybeSingle();
+            if (updatedProf) {
+              profile = updatedProf;
+            }
+          }
+        } else {
+          // 5. Se o perfil não existir (criação via Google), criar linha em profiles
           const userMeta = user.user_metadata || {};
           const userName = userMeta.full_name || userMeta.name || user.email?.split('@')[0] || 'Usuário Google';
           const userAvatar = userMeta.avatar_url || userMeta.picture || null;
@@ -55,7 +73,7 @@ function CallbackContent() {
             .insert({
               id: user.id,
               name: userName,
-              role: selectedRole,
+              role: targetRole,
               age: 18,
               city: 'São Paulo',
               price_per_hour: 0,
@@ -66,18 +84,20 @@ function CallbackContent() {
               verification_status: 'none'
             })
             .select('role')
-            .single();
+            .maybeSingle();
 
           if (insertError) {
             console.error('Callback: Erro ao criar perfil do usuário Google:', insertError);
           } else if (newProfile) {
-            userRole = newProfile.role;
+            profile = newProfile;
           }
         }
 
+        let userRole = profile?.role || targetRole;
+
         if (!isSubscribed) return;
 
-        // 5. Redirecionar para o painel correspondente ao papel do usuário
+        // 6. Redirecionar para o painel correspondente ao papel do usuário
         if (userRole === 'admin') {
           router.replace('/acesso-restrito-portal-aura');
         } else if (userRole === 'provider' || userRole === 'host') {

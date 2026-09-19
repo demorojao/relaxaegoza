@@ -32,22 +32,57 @@ export default function ClientDashboard() {
 
   const fetchClientProfile = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase
+
+    const { data: { session } } = await supabase.auth.getSession();
+    let currentUser = session?.user;
+
+    if (!currentUser) {
+      const { data: { user } } = await supabase.auth.getUser();
+      currentUser = user;
+    }
+
+    if (!currentUser) {
+      router.push('/login');
+      setLoading(false);
+      return;
+    }
+
+    let { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+
+    if (!data) {
+      console.log('ClientDashboard: Perfil não encontrado. Autocriando perfil de cliente...');
+      const userMeta = currentUser.user_metadata || {};
+      const { data: newProf } = await supabase
         .from('profiles')
+        .insert({
+          id: currentUser.id,
+          name: userMeta.full_name || userMeta.name || currentUser.email?.split('@')[0] || 'Cliente',
+          role: 'client',
+          age: 18,
+          city: 'São Paulo',
+          price_per_hour: 0,
+          subscription_tier: 'free',
+          verification_status: 'none'
+        })
         .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      if (data) {
-        if (data.role === 'provider' || data.role === 'host') {
-          router.push('/dashboard');
-          return;
-        }
-        setProfile(data);
-        fetchClientSubscriptions(user.id);
+        .maybeSingle();
+
+      if (newProf) {
+        data = newProf;
       }
+    }
+
+    if (data) {
+      if (data.role === 'provider' || data.role === 'host') {
+        router.push('/dashboard');
+        return;
+      }
+      setProfile(data);
+      fetchClientSubscriptions(currentUser.id);
     } else {
       router.push('/login');
     }
