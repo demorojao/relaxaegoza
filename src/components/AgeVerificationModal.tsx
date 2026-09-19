@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ShieldAlert } from 'lucide-react';
+import { safeLocalStorage, safeSessionStorage } from '@/lib/safeStorage';
 
 export default function AgeVerificationModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,21 +10,26 @@ export default function AgeVerificationModal() {
 
   useEffect(() => {
     setMounted(true);
-    // Limpa gravações antigas em localStorage para forçar em todas as sessões
-    localStorage.removeItem('ageVerified');
+    safeLocalStorage.removeItem('ageVerified');
     
-    const isVerifiedInSession = sessionStorage.getItem('ageVerified');
+    const isVerifiedInSession = safeSessionStorage.getItem('ageVerified');
     if (!isVerifiedInSession) {
       setIsOpen(true);
-      document.body.style.overflow = 'hidden';
+      if (typeof document !== 'undefined' && document.body) {
+        document.body.style.overflow = 'hidden';
+      }
     }
   }, []);
 
   const handleAccept = () => {
-    sessionStorage.setItem('ageVerified', 'true');
-    window.dispatchEvent(new Event('ageVerifiedSuccess'));
+    safeSessionStorage.setItem('ageVerified', 'true');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('ageVerifiedSuccess'));
+    }
     setIsOpen(false);
-    document.body.style.overflow = 'unset';
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.style.overflow = 'unset';
+    }
   };
 
   const handleReject = () => {

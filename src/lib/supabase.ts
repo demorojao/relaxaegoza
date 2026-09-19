@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { safeLocalStorage } from './safeStorage';
 
 const supabaseUrl = 
   process.env.NEXT_PUBLIC_SUPABASE_URL || 
@@ -12,9 +13,11 @@ const supabaseAnonKey =
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    storage: safeLocalStorage,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
   }
 });
+
 

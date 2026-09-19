@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Sparkles, X, ChevronRight, Gem, Lock } from 'lucide-react';
 import Logo from './Logo';
+import { safeLocalStorage, safeSessionStorage } from '@/lib/safeStorage';
 
 export default function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,8 +13,8 @@ export default function WelcomeModal() {
     setMounted(true);
 
     const checkAndShow = () => {
-      const hasSeenWelcome = localStorage.getItem('rg_welcome_seen');
-      const isAgeVerified = sessionStorage.getItem('ageVerified');
+      const hasSeenWelcome = safeLocalStorage.getItem('rg_welcome_seen');
+      const isAgeVerified = safeSessionStorage.getItem('ageVerified');
       
       if (isAgeVerified && !hasSeenWelcome) {
         setTimeout(() => {
@@ -28,12 +29,18 @@ export default function WelcomeModal() {
       checkAndShow();
     };
 
-    window.addEventListener('ageVerifiedSuccess', handleAgeSuccess);
-    return () => window.removeEventListener('ageVerifiedSuccess', handleAgeSuccess);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ageVerifiedSuccess', handleAgeSuccess);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('ageVerifiedSuccess', handleAgeSuccess);
+      }
+    };
   }, []);
 
   const handleClose = () => {
-    localStorage.setItem('rg_welcome_seen', 'true');
+    safeLocalStorage.setItem('rg_welcome_seen', 'true');
     setIsOpen(false);
   };
 

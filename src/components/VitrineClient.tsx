@@ -21,6 +21,7 @@ import { cn, formatWhatsAppLink, getEffectiveTier } from '@/lib/utils';
 import Logo from './Logo';
 import AdEditorModal from './AdEditorModal';
 import { triggerRevalidate } from '../lib/revalidate';
+import { safeLocalStorage, safeSessionStorage } from '../lib/safeStorage';
 
 
 // Removido MapComponent dinâmico que agora está em ProfileGrid
@@ -254,14 +255,12 @@ export default function VitrineClient({
 
   // Carregar favoritos salvos do localStorage ao montar
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedFavs = localStorage.getItem('aura_favorites');
-      if (savedFavs) {
-        try {
-          setFavorites(JSON.parse(savedFavs));
-        } catch (e) {
-          console.error(e);
-        }
+    const savedFavs = safeLocalStorage.getItem('aura_favorites');
+    if (savedFavs) {
+      try {
+        setFavorites(JSON.parse(savedFavs));
+      } catch (e) {
+        console.error(e);
       }
     }
   }, []);
@@ -269,9 +268,7 @@ export default function VitrineClient({
   const handleToggleFavorite = (profileId: string) => {
     setFavorites(prev => {
       const next = prev.includes(profileId) ? prev.filter(id => id !== profileId) : [...prev, profileId];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('aura_favorites', JSON.stringify(next));
-      }
+      safeLocalStorage.setItem('aura_favorites', JSON.stringify(next));
       return next;
     });
   };
@@ -302,15 +299,13 @@ export default function VitrineClient({
   const activeProgressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('aura_liked_stories_v1');
-        if (stored) {
-          setLikedStories(JSON.parse(stored));
-        }
-      } catch (e) {
-        console.error('Erro ao ler stories curtidos do localStorage', e);
+    try {
+      const stored = safeLocalStorage.getItem('aura_liked_stories_v1');
+      if (stored) {
+        setLikedStories(JSON.parse(stored));
       }
+    } catch (e) {
+      console.error('Erro ao ler stories curtidos do localStorage', e);
     }
   }, []);
 
@@ -329,17 +324,15 @@ export default function VitrineClient({
   useEffect(() => {
     checkUser();
     fetchSpecialties();
-    if (typeof window !== 'undefined') {
-      const cachedCity = sessionStorage.getItem('rg_detected_city');
-      const cachedCoords = sessionStorage.getItem('rg_user_coords');
-      if (cachedCity && cachedCoords) {
-        try {
-          setDetectedCity(cachedCity);
-          setUserCoords(JSON.parse(cachedCoords));
-          return;
-        } catch (e) {
-          // Fallback se JSON for inválido
-        }
+    const cachedCity = safeSessionStorage.getItem('rg_detected_city');
+    const cachedCoords = safeSessionStorage.getItem('rg_user_coords');
+    if (cachedCity && cachedCoords) {
+      try {
+        setDetectedCity(cachedCity);
+        setUserCoords(JSON.parse(cachedCoords));
+        return;
+      } catch (e) {
+        // Fallback se JSON for inválido
       }
     }
 
@@ -350,9 +343,7 @@ export default function VitrineClient({
           const lon = position.coords.longitude;
           const coordsArr: [number, number] = [lat, lon];
           setUserCoords(coordsArr);
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem('rg_user_coords', JSON.stringify(coordsArr));
-          }
+          safeSessionStorage.setItem('rg_user_coords', JSON.stringify(coordsArr));
           
           // Reverse geocoding do OpenStreetMap Nominatim
           fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`, {
@@ -366,9 +357,7 @@ export default function VitrineClient({
               const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || data.address?.state_district;
               if (city) {
                 setDetectedCity(city);
-                if (typeof window !== 'undefined') {
-                  sessionStorage.setItem('rg_detected_city', city);
-                }
+                safeSessionStorage.setItem('rg_detected_city', city);
               }
             })
             .catch(err => console.warn("Erro no reverse geocoding da cidade:", err));
@@ -878,10 +867,8 @@ export default function VitrineClient({
   };
 
   const handleRecalculateLocation = () => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('rg_detected_city');
-      sessionStorage.removeItem('rg_user_coords');
-    }
+    safeSessionStorage.removeItem('rg_detected_city');
+    safeSessionStorage.removeItem('rg_user_coords');
     setDetectedCity('');
     setUserCoords(null);
     setCityFilter('');
@@ -894,9 +881,7 @@ export default function VitrineClient({
           const lon = position.coords.longitude;
           const coordsArr: [number, number] = [lat, lon];
           setUserCoords(coordsArr);
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem('rg_user_coords', JSON.stringify(coordsArr));
-          }
+          safeSessionStorage.setItem('rg_user_coords', JSON.stringify(coordsArr));
           
           fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`, {
             headers: { 'Accept': 'application/json' }
@@ -909,9 +894,7 @@ export default function VitrineClient({
               const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || data.address?.state_district;
               if (city) {
                 setDetectedCity(city);
-                if (typeof window !== 'undefined') {
-                  sessionStorage.setItem('rg_detected_city', city);
-                }
+                safeSessionStorage.setItem('rg_detected_city', city);
               }
             })
             .catch(err => console.warn("Erro no reverse geocoding da cidade:", err));
@@ -1022,12 +1005,10 @@ export default function VitrineClient({
     const newLikedMap = { ...likedStories, [storyId]: true };
     setLikedStories(newLikedMap);
 
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('aura_liked_stories_v1', JSON.stringify(newLikedMap));
-      } catch (e) {
-        console.error('Erro ao salvar stories curtidos no localStorage', e);
-      }
+    try {
+      safeLocalStorage.setItem('aura_liked_stories_v1', JSON.stringify(newLikedMap));
+    } catch (e) {
+      console.error('Erro ao salvar stories curtidos no localStorage', e);
     }
 
     // Incrementar localmente exatamente 1 vez

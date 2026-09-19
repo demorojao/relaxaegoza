@@ -30,6 +30,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatWhatsAppLink, cleanDescription, getEffectiveTier } from '@/lib/utils';
 import { supabase } from '../lib/supabase';
 import { getCDNUrl } from '../lib/mediaHelper';
+import { safeLocalStorage } from '../lib/safeStorage';
 
 interface ProfileReelsProps {
   profiles: Profile[];
@@ -80,14 +81,12 @@ export default function ProfileReels({
 
   // Carregar favoritos do localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const favs = localStorage.getItem('aura_favorites');
-      if (favs) {
-        try {
-          setFavorites(JSON.parse(favs));
-        } catch (e) {
-          console.error(e);
-        }
+    const favs = safeLocalStorage.getItem('aura_favorites');
+    if (favs) {
+      try {
+        setFavorites(JSON.parse(favs));
+      } catch (e) {
+        console.error(e);
       }
     }
   }, []);
@@ -215,7 +214,7 @@ export default function ProfileReels({
       newFavs.push(profileId);
     }
     setFavorites(newFavs);
-    localStorage.setItem('aura_favorites', JSON.stringify(newFavs));
+    safeLocalStorage.setItem('aura_favorites', JSON.stringify(newFavs));
   };
 
   const handleShare = (profile: Profile) => {
