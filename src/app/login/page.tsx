@@ -33,6 +33,27 @@ export default function LoginPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showResendConfirmation, setShowResendConfirmation] = useState(false);
+  const [lastEmailAttempt, setLastEmailAttempt] = useState('');
+  const [resendingEmail, setResendingEmail] = useState(false);
+
+  const handleResendConfirmation = async () => {
+    if (!lastEmailAttempt) return;
+    setResendingEmail(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: lastEmailAttempt.trim(),
+      });
+      if (error) throw error;
+      setSuccessMessage('E-mail de ativação reenviado com sucesso! Verifique sua caixa de entrada e spam.');
+      setShowResendConfirmation(false);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Erro ao reenviar e-mail de ativação.');
+    } finally {
+      setResendingEmail(false);
+    }
+  };
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema)
@@ -201,10 +222,13 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     setLoading(true);
     setErrorMessage('');
+    setShowResendConfirmation(false);
+    const targetEmail = values.email.trim();
+    setLastEmailAttempt(targetEmail);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: values.email.trim(),
+        email: targetEmail,
         password: values.password,
       });
 
@@ -249,22 +273,10 @@ export default function LoginPage() {
           throw new Error('Perfil não encontrado no banco de dados.');
         }
 
-        // SE FOR ADMIN: Redireciona diretamente para a porta restrita de administração
+        // Redireciona automaticamente de acordo com o papel REAL no banco de dados
         if (profile.role === 'admin') {
           router.push('/acesso-restrito-portal-aura');
-          return;
-        }
-
-        // Validação de segurança: garantir que o papel real corresponda à seleção da interface
-        if (profile.role !== role) {
-          // Deslogar sessão criada para não deixar o usuário logado de forma inconsistente
-          await supabase.auth.signOut();
-          const roleLabel = profile.role === 'provider' ? 'Profissional' : profile.role === 'host' ? 'Dono de Sala' : 'Cliente';
-          throw new Error(`Esta conta está cadastrada como ${roleLabel}. Por favor, selecione a aba correta acima para entrar.`);
-        }
-
-        // Redireciona de acordo com o papel real no banco
-        if (profile.role === 'provider' || profile.role === 'host') {
+        } else if (profile.role === 'provider' || profile.role === 'host') {
           router.push('/dashboard');
         } else {
           router.push('/client-dashboard');
@@ -276,6 +288,7 @@ export default function LoginPage() {
         friendlyMessage = 'E-mail ou senha incorretos. Por favor, verifique suas credenciais.';
       } else if (err.message === 'Email not confirmed' || err.message?.includes('not confirmed')) {
         friendlyMessage = 'E-mail ainda não confirmado. ✉️ Por favor, acesse sua caixa de entrada (e pasta de spam) e clique no link de ativação enviado pelo Supabase.';
+        setShowResendConfirmation(true);
       } else if (err.message === 'User not found') {
         friendlyMessage = 'Usuário não encontrado. Verifique seu e-mail.';
       } else if (friendlyMessage.includes('pattern') || friendlyMessage.includes('Unexpected')) {
@@ -357,9 +370,23 @@ export default function LoginPage() {
             </h2>
 
             {errorMessage && (
-              <div className="flex items-start gap-2.5 bg-red-500/10 border border-red-500/20 text-red-200 text-xs p-3.5 rounded-xl mb-6">
-                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                <span>{errorMessage}</span>
+              <div className="flex flex-col gap-2.5 bg-red-500/10 border border-red-500/20 text-red-200 text-xs p-3.5 rounded-xl mb-6">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <span>{errorMessage}</span>
+                </div>
+                {showResendConfirmation && lastEmailAttempt && (
+                  <Button
+                    type="button"
+                    variant="outline-wine"
+                    size="sm"
+                    className="mt-2 text-xs py-1.5 border-red-500/30 hover:bg-red-500/20 text-white cursor-pointer"
+                    onClick={handleResendConfirmation}
+                    disabled={resendingEmail}
+                  >
+                    {resendingEmail ? 'Reenviando...' : `Reenviar E-mail de Ativação para ${lastEmailAttempt}`}
+                  </Button>
+                )}
               </div>
             )}
 

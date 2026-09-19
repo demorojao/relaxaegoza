@@ -51,22 +51,11 @@ function CallbackContent() {
           .eq('id', user.id)
           .maybeSingle();
 
-        // 4. Se o perfil existir, garantir que o papel seja público (ajustar de 'admin' ou divergência para o papel selecionado)
+        // 4. Se o perfil já existe, PRESERVAR o papel cadastrado do usuário no banco (jamais alterar de provider para client)
         if (profile) {
-          if (profile.role === 'admin' || profile.role !== publicTargetRole) {
-            console.log(`Callback: Ajustando papel do perfil de ${profile.role} para ${publicTargetRole}`);
-            const { data: updatedProf } = await supabase
-              .from('profiles')
-              .update({ role: publicTargetRole })
-              .eq('id', user.id)
-              .select('id, role')
-              .maybeSingle();
-            if (updatedProf) {
-              profile = updatedProf;
-            }
-          }
+          console.log(`Callback: Perfil existente encontrado para ${user.id} com papel '${profile.role}'. Preservando perfil.`);
         } else {
-          // 5. Se o perfil não existir (primeiro login via Google), criar perfil público em profiles
+          // 5. Se o perfil não existir (primeiro login de nova conta via Google), criar perfil público em profiles
           const userMeta = user.user_metadata || {};
           const userName = userMeta.full_name || userMeta.name || user.email?.split('@')[0] || 'Usuário Google';
           const userAvatar = userMeta.avatar_url || userMeta.picture || null;

@@ -134,6 +134,13 @@ export default function RegisterPage() {
       if (authError) throw authError;
 
       if (authData.user) {
+        // Se a lista de identidades for vazia, o Supabase indica que a conta já existe
+        if (authData.user.identities && authData.user.identities.length === 0) {
+          setErrorMessage('Este e-mail já possui um cadastro ativo no portal. Por favor, acesse a tela de login para entrar ou redefinir sua senha.');
+          setLoading(false);
+          return;
+        }
+
         setSuccessMessage('Conta criada com sucesso! ✉️ Enviamos um e-mail de ativação. Por favor, verifique sua caixa de entrada (e pasta de spam) para confirmar sua conta antes de fazer o login.');
         
         setTimeout(() => {
@@ -142,8 +149,8 @@ export default function RegisterPage() {
       }
     } catch (err: any) {
       let friendlyMessage = err.message || '';
-      if (err.message === 'User already registered') {
-        friendlyMessage = 'Este e-mail já está cadastrado no portal. Tente fazer login.';
+      if (err.message === 'User already registered' || err.message?.includes('already registered') || err.message?.includes('user_already_exists')) {
+        friendlyMessage = 'Este e-mail já está cadastrado no portal. Por favor, acesse a tela de login para entrar ou redefinir sua senha.';
       } else if (err.message === 'Password should be at least 6 characters') {
         friendlyMessage = 'A senha deve conter pelo menos 6 caracteres.';
       } else if (friendlyMessage.includes('pattern') || friendlyMessage.includes('Unexpected')) {
