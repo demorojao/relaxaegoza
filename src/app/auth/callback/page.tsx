@@ -28,7 +28,7 @@ function CallbackContent() {
 
         // 2. Obter a sessão ativa no cliente (getSession com fallback para getUser)
         const { data: { session } } = await supabase.auth.getSession();
-        let user = session?.user;
+        let user: any = session?.user ?? null;
 
         if (!user) {
           const { data: { user: fetchedUser } } = await supabase.auth.getUser();
@@ -56,7 +56,7 @@ function CallbackContent() {
               .from('profiles')
               .update({ role: roleParam })
               .eq('id', user.id)
-              .select('role')
+              .select('id, role')
               .maybeSingle();
             if (updatedProf) {
               profile = updatedProf;
@@ -83,7 +83,7 @@ function CallbackContent() {
               subscription_tier: 'free',
               verification_status: 'none'
             })
-            .select('role')
+            .select('id, role')
             .maybeSingle();
 
           if (insertError) {

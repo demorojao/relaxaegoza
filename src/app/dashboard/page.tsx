@@ -161,7 +161,7 @@ export default function DashboardMetrics() {
     setLoading(true);
 
     const { data: { session } } = await supabase.auth.getSession();
-    let currentUser = session?.user;
+    let currentUser: any = session?.user ?? null;
 
     if (!currentUser) {
       const { data: { user } } = await supabase.auth.getUser();
