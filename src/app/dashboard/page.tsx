@@ -387,15 +387,7 @@ export default function DashboardMetrics() {
   }
 
   if (profile?.role === 'host') {
-    return (
-      <div className="max-w-md mx-auto py-20 text-center space-y-4 animate-fadeIn">
-        <Building2 className="w-12 h-12 text-gold-primary mx-auto" />
-        <h2 className="text-xl font-bold text-white">Recurso de Locais Temporariamente Indisponível</h2>
-        <p className="text-xs text-gray-400 font-light leading-relaxed">
-          O cadastro e aluguel de espaços físicos está temporariamente ocultado para o lançamento do portal. Em breve você poderá gerenciar suas salas por aqui!
-        </p>
-      </div>
-    );
+    return <HostDashboardView profile={profile} />;
   }
 
   if (profile && !profile.avatar_url) {
