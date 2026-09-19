@@ -39,7 +39,10 @@ function CallbackContent() {
           throw new Error('Sessão não encontrada após autenticação com o Google.');
         }
 
-        const targetRole = roleParam || user.user_metadata?.role || 'client';
+        // O login do Google é EXCLUSIVAMENTE para usuários públicos (cliente, profissional ou dono de sala).
+        // Sob nenhuma hipótese o Google OAuth deve redirecionar ou atribuir permissões de admin.
+        const publicTargetRole: 'client' | 'provider' | 'host' = 
+          (roleParam === 'provider' || roleParam === 'host') ? roleParam : 'client';
 
         // 3. Verificar se o perfil já existe no banco
         let { data: profile } = await supabase
@@ -48,13 +51,13 @@ function CallbackContent() {
           .eq('id', user.id)
           .maybeSingle();
 
-        // 4. Se o perfil existir, porém o papel for diferente do selecionado na tela de login, sincronizar
+        // 4. Se o perfil existir, garantir que o papel seja público (ajustar de 'admin' ou divergência para o papel selecionado)
         if (profile) {
-          if (roleParam && profile.role !== roleParam) {
-            console.log(`Callback: Atualizando papel do perfil de ${profile.role} para ${roleParam}`);
+          if (profile.role === 'admin' || profile.role !== publicTargetRole) {
+            console.log(`Callback: Ajustando papel do perfil de ${profile.role} para ${publicTargetRole}`);
             const { data: updatedProf } = await supabase
               .from('profiles')
-              .update({ role: roleParam })
+              .update({ role: publicTargetRole })
               .eq('id', user.id)
               .select('id, role')
               .maybeSingle();
@@ -63,7 +66,7 @@ function CallbackContent() {
             }
           }
         } else {
-          // 5. Se o perfil não existir (criação via Google), criar linha em profiles
+          // 5. Se o perfil não existir (primeiro login via Google), criar perfil público em profiles
           const userMeta = user.user_metadata || {};
           const userName = userMeta.full_name || userMeta.name || user.email?.split('@')[0] || 'Usuário Google';
           const userAvatar = userMeta.avatar_url || userMeta.picture || null;
@@ -73,7 +76,7 @@ function CallbackContent() {
             .insert({
               id: user.id,
               name: userName,
-              role: targetRole,
+              role: publicTargetRole,
               age: 18,
               city: 'São Paulo',
               price_per_hour: 0,
@@ -93,14 +96,12 @@ function CallbackContent() {
           }
         }
 
-        let userRole = profile?.role || targetRole;
+        const finalRole = (profile?.role === 'provider' || profile?.role === 'host') ? profile.role : 'client';
 
         if (!isSubscribed) return;
 
-        // 6. Redirecionar para o painel correspondente ao papel do usuário
-        if (userRole === 'admin') {
-          router.replace('/acesso-restrito-portal-aura');
-        } else if (userRole === 'provider' || userRole === 'host') {
+        // 6. Redirecionar EXCLUSIVAMENTE para o painel correspondente (jamais para a rota de admin)
+        if (finalRole === 'provider' || finalRole === 'host') {
           router.replace('/dashboard');
         } else {
           router.replace('/client-dashboard');

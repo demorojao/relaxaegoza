@@ -48,11 +48,9 @@ export default function LoginPage() {
           .eq('id', session.user.id)
           .maybeSingle();
 
-        if (profile?.role === 'admin') {
-          router.replace('/acesso-restrito-portal-aura');
-        } else if (profile?.role === 'provider' || profile?.role === 'host') {
+        if (profile?.role === 'provider' || profile?.role === 'host') {
           router.replace('/dashboard');
-        } else {
+        } else if (profile?.role === 'client') {
           router.replace('/client-dashboard');
         }
       }
