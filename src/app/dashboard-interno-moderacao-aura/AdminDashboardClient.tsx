@@ -132,9 +132,9 @@ export default function AdminDashboardClient({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Estados do Formulário de Login de Admin Integrado
-  const [adminEmailInput, setAdminEmailInput] = useState('admin.aura2026@relaxaegoza.com');
+  const [adminEmailInput, setAdminEmailInput] = useState('');
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
-  const [adminPinLoginInput, setAdminPinLoginInput] = useState('0817');
+  const [adminPinLoginInput, setAdminPinLoginInput] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
@@ -1000,7 +1000,7 @@ export default function AdminDashboardClient({
                 <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-gray-400" />
                 <input
                   type="email"
-                  placeholder="admin.aura2026@relaxaegoza.com"
+                  placeholder="seu.email@admin.com"
                   value={adminEmailInput}
                   onChange={(e) => setAdminEmailInput(e.target.value)}
                   className="w-full bg-black/60 border border-white/10 text-sm text-white pl-10 pr-4 py-2.5 rounded-xl focus:border-gold-primary focus:outline-none transition-all"
@@ -1029,7 +1029,7 @@ export default function AdminDashboardClient({
                 <input
                   type="password"
                   maxLength={6}
-                  placeholder="0817"
+                  placeholder="••••"
                   value={adminPinLoginInput}
                   onChange={(e) => setAdminPinLoginInput(e.target.value)}
                   className="w-full bg-black/60 border border-white/10 text-sm text-white pl-10 pr-4 py-2.5 rounded-xl focus:border-gold-primary focus:outline-none transition-all"
@@ -1055,7 +1055,7 @@ export default function AdminDashboardClient({
               className="w-full py-2.5 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-gray-300 font-medium transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <User className="w-4 h-4 text-gold-primary" />
-              Entrar com Google (joao.joukoski@gmail.com)
+              Entrar com Google
             </button>
           </div>
         </div>
