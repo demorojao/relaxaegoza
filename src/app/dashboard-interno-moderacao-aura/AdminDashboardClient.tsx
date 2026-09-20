@@ -1641,75 +1641,170 @@ export default function AdminDashboardClient({
         )
       ) : activeTab === 'photos' ? (
         (() => {
-          const unverifiedPhotos = photos.filter(photo => !photo.is_verified);
-          return unverifiedPhotos.length === 0 ? (
-            <Card variant="glass" className="p-16 border-dashed border-white/10 text-center bg-black/10">
-              <ImageIcon className="w-12 h-12 text-emerald-500/80 mx-auto mb-3" />
-              <h3 className="text-sm font-semibold text-white">Nenhuma foto pendente!</h3>
-              <p className="text-xs text-gray-500 font-light mt-1 max-w-sm mx-auto">
-                Todas as fotos da galeria enviadas pelos anunciantes já foram moderadas e aprovadas.
-              </p>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {unverifiedPhotos.map((photo) => {
-                const profileName = photo.profiles?.name || 'Anunciante';
-                const profileRole = photo.profiles?.role === 'client' ? 'Cliente' : 'Provedor';
-                
+          const query = searchQuery.trim().toLowerCase();
+          const unverifiedPhotos = photos.filter(photo => {
+            if (photo.is_verified) return false;
+            if (roleFilter === 'provider' && photo.profiles?.role !== 'provider') return false;
+            if (roleFilter === 'client' && photo.profiles?.role !== 'client') return false;
+            if (!query) return true;
+            const profileName = (photo.profiles?.name || '').toLowerCase();
+            const profileCity = (photo.profiles?.city || '').toLowerCase();
+            const profileId = (photo.profile_id || '').toLowerCase();
+            return profileName.includes(query) || profileCity.includes(query) || profileId.includes(query);
+          });
+
+          if (unverifiedPhotos.length === 0) {
+            return (
+              <Card variant="glass" className="p-16 border-dashed border-white/10 text-center bg-black/10">
+                <ImageIcon className="w-12 h-12 text-emerald-500/80 mx-auto mb-3" />
+                <h3 className="text-sm font-semibold text-white">Nenhuma foto pendente!</h3>
+                <p className="text-xs text-gray-500 font-light mt-1 max-w-sm mx-auto">
+                  Todas as fotos da galeria enviadas pelos anunciantes já foram moderadas e aprovadas.
+                </p>
+              </Card>
+            );
+          }
+
+          // Agrupar fotos por perfil (profile_id)
+          const groupedMap = new Map<string, { profile: any; photos: typeof unverifiedPhotos }>();
+          unverifiedPhotos.forEach(photo => {
+            const profileId = photo.profile_id || photo.profiles?.id || 'desconhecido';
+            if (!groupedMap.has(profileId)) {
+              groupedMap.set(profileId, {
+                profile: photo.profiles || { id: profileId, name: 'Anunciante' },
+                photos: []
+              });
+            }
+            groupedMap.get(profileId)!.photos.push(photo);
+          });
+
+          const groups = Array.from(groupedMap.values());
+
+          return (
+            <div className="space-y-8">
+              {groups.map(({ profile, photos: profilePhotos }) => {
+                const isClient = profile.role === 'client';
                 return (
-                  <Card key={photo.id} variant="glass" className="overflow-hidden border-white/5 bg-black/35 shadow-xl flex flex-col justify-between">
-                    <div className="relative aspect-[3/4] w-full bg-black/40 border-b border-white/5 group">
-                      <img 
-                        src={photo.photo_url}
-                        alt={`Foto de ${profileName}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div 
-                        className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-zoom-in"
-                        onClick={() => setSelectedImage(photo.photo_url)}
-                      >
-                        <Eye className="w-6 h-6 text-white" />
-                      </div>
-                      {photo.media_type === 'video' && (
-                        <div className="absolute top-2 left-2 bg-red-500/80 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">
-                          Vídeo
+                  <Card key={profile.id || profilePhotos[0].id} variant="glass-gold" className="p-6 border-white/10 bg-black/40 shadow-2xl space-y-6">
+                    {/* Cabeçalho do Perfil que enviou as fotos */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-12 h-12 rounded-full overflow-hidden border border-amber-400/40 shrink-0 bg-black/60">
+                          <Image
+                            src={profile.avatar_url || '/avatar-placeholder.svg'}
+                            alt={profile.name || 'Anunciante'}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
                         </div>
-                      )}
-                    </div>
-                    
-                    <div className="p-4 space-y-3">
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-white truncate">{profileName}</h4>
-                        <div className="flex justify-between items-center text-[9px]">
-                          <span className="text-gray-500 font-light uppercase tracking-wider">{profileRole}</span>
-                          <span className="text-gold-light font-mono flex items-center gap-1">
-                            <Clock className="w-2.5 h-2.5 text-gold-primary" />
-                            {formatDateTime(photo.created_at)}
-                          </span>
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-base font-bold text-white tracking-tight">{profile.name || 'Anunciante'}</h3>
+                            {isClient ? (
+                              <span className="text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/25 px-2 py-0.5 rounded-full font-bold uppercase">Cliente</span>
+                            ) : (
+                              <span className="text-[9px] bg-gold-primary/10 text-gold-light border border-gold-primary/25 px-2 py-0.5 rounded-full font-bold uppercase">Provedor</span>
+                            )}
+                            <span className="text-[10px] text-amber-300 font-mono bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-bold">
+                              {profilePhotos.length} {profilePhotos.length === 1 ? 'mídia pendente' : 'mídias pendentes'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-400">
+                            {profile.city && <span>Cidade: <strong className="text-white">{profile.city}</strong></span>}
+                            {profile.whatsapp && <span>WhatsApp: <strong className="text-white">{profile.whatsapp}</strong></span>}
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="flex gap-2">
+
+                      {/* Botões de Ação em Lote (Aprovar Todas / Recusar Todas deste Perfil) */}
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                         <Button
                           variant="gold"
-                          onClick={() => handlePhotoModeration(photo.id, 'verified')}
+                          onClick={async () => {
+                            if (!confirm(`Deseja aprovar todas as ${profilePhotos.length} fotos enviadas por ${profile.name || 'este perfil'}?`)) return;
+                            for (const ph of profilePhotos) {
+                              await handlePhotoModeration(ph.id, 'verified');
+                            }
+                          }}
                           disabled={actionLoading !== null}
-                          isLoading={actionLoading === `${photo.id}-photo`}
-                          className="flex-1 py-2 text-[10px]"
+                          className="py-2 px-3 text-xs font-bold"
                         >
                           <Check className="w-3.5 h-3.5 mr-1" />
-                          Aprovar
+                          Aprovar Todas ({profilePhotos.length})
                         </Button>
                         <Button
                           variant="dark"
-                          onClick={() => handlePhotoModeration(photo.id, 'rejected')}
+                          onClick={async () => {
+                            if (!confirm(`Deseja recusar todas as ${profilePhotos.length} fotos enviadas por ${profile.name || 'este perfil'}?`)) return;
+                            for (const ph of profilePhotos) {
+                              await handlePhotoModeration(ph.id, 'rejected');
+                            }
+                          }}
                           disabled={actionLoading !== null}
-                          className="flex-1 border border-red-500/30 hover:bg-red-500/10 text-red-400 py-2 text-[10px]"
+                          className="py-2 px-3 text-xs font-bold border border-red-500/30 hover:bg-red-500/10 text-red-400"
                         >
                           <X className="w-3.5 h-3.5 mr-1 text-red-500" />
-                          Recusar
+                          Recusar Todas
                         </Button>
                       </div>
+                    </div>
+
+                    {/* Grid de Fotos / Mídias Enviadas por Este Perfil */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      {profilePhotos.map((photo) => (
+                        <div key={photo.id} className="bg-black/50 border border-white/10 rounded-xl overflow-hidden flex flex-col justify-between group hover:border-amber-400/40 transition-all">
+                          <div className="relative aspect-[3/4] w-full bg-black/40 border-b border-white/5">
+                            <img
+                              src={photo.photo_url}
+                              alt={`Mídia de ${profile.name || 'Anunciante'}`}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div
+                              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-zoom-in z-10"
+                              onClick={() => setSelectedImage(photo.photo_url)}
+                            >
+                              <Eye className="w-6 h-6 text-white" />
+                            </div>
+                            {photo.media_type === 'video' && (
+                              <div className="absolute top-2 left-2 bg-red-500/90 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase z-10 shadow">
+                                Vídeo
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="p-3 space-y-2.5">
+                            <div className="text-[10px] text-gray-400 font-mono flex items-center justify-between">
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-2.5 h-2.5 text-gold-primary" />
+                                {formatDateTime(photo.created_at)}
+                              </span>
+                            </div>
+
+                            <div className="flex gap-1.5">
+                              <Button
+                                variant="gold"
+                                onClick={() => handlePhotoModeration(photo.id, 'verified')}
+                                disabled={actionLoading !== null}
+                                isLoading={actionLoading === `${photo.id}-photo`}
+                                className="flex-1 py-1.5 text-[10px] h-auto"
+                              >
+                                <Check className="w-3 h-3 mr-0.5" />
+                                Aprovar
+                              </Button>
+                              <Button
+                                variant="dark"
+                                onClick={() => handlePhotoModeration(photo.id, 'rejected')}
+                                disabled={actionLoading !== null}
+                                className="flex-1 border border-red-500/30 hover:bg-red-500/10 text-red-400 py-1.5 text-[10px] h-auto"
+                              >
+                                <X className="w-3 h-3 mr-0.5 text-red-500" />
+                                Recusar
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </Card>
                 );
