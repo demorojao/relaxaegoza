@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Profissional de destino nao encontrada.' }, { status: 404 });
       }
 
-      amountCents = 2500; // R$ 25,00 (era R$ 50,00)
+      amountCents = 3500; // R$ 35,00
       isBoostFlag = true;
       isGiftFlag = true;
       targetProfileIdValue = targetProfileId;
@@ -106,11 +106,11 @@ export async function POST(req: NextRequest) {
 
       const hours = Number(boostHours || 2);
       if (hours === 2) {
-        amountCents = 990; // R$ 9,90 (era R$ 15,00)
+        amountCents = 1490; // R$ 14,90
       } else if (hours === 6) {
-        amountCents = 1990; // R$ 19,90 (era R$ 35,00)
+        amountCents = 2990; // R$ 29,90
       } else if (hours === 12) {
-        amountCents = 2990; // R$ 29,90 (era R$ 60,00)
+        amountCents = 4990; // R$ 49,90
       } else {
         return NextResponse.json({ error: 'Duração de Boost inválida.' }, { status: 400 });
       }
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       tierValue = `boost_${hours}h`;
       description = `Servicos de Publicidade Digital - ID ${user.id}`;
     }
-    // 3. Caso: Assinatura de Planos (Gold 7d / 15d / 30d / Pro)
+    // 3. Caso: Assinatura de Planos (Gold 7d / 15d / 30d)
     else {
       const validTiers = ['pro', 'gold', 'gold_7d', 'gold_15d', 'gold_30d'];
       if (!tier || !validTiers.includes(tier)) {
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Você é um dos 100 primeiros parceiros! Seu plano de salas é 100% gratuito.' }, { status: 400 });
         }
 
-        amountCents = 12900; // R$ 129,00 (era R$ 450,00)
+        amountCents = 24900; // R$ 249,00
         tierValue = tier;
         description = `Hospedagem de Classificado Online - ID ${user.id}`;
       } else {
@@ -156,14 +156,14 @@ export async function POST(req: NextRequest) {
         const isPromoEligible = !providerRankError && providerRank !== null && providerRank <= 100;
 
         const baseAmounts: Record<string, number> = {
-          pro: 9900,       // R$ 99,00 (era R$ 299,00)
-          gold: 18900,     // R$ 189,00 (era R$ 800,00)
-          gold_7d: 6900,   // R$ 69,00 (era R$ 250,00)
-          gold_15d: 11900,  // R$ 119,00 (era R$ 450,00)
-          gold_30d: 18900   // R$ 189,00 (era R$ 800,00)
+          pro: 29900,
+          gold: 29900,
+          gold_7d: 9900,    // R$ 99,00
+          gold_15d: 17900,  // R$ 179,00
+          gold_30d: 29900   // R$ 299,00
         };
 
-        const baseAmount = baseAmounts[tier as string] || 80000;
+        const baseAmount = baseAmounts[tier as string] || 29900;
 
         // Aplicar 30% de desconto para as 100 primeiras
         amountCents = isPromoEligible ? Math.round(baseAmount * 0.7) : baseAmount;
