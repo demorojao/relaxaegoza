@@ -174,6 +174,9 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
 
   const displayName = (showAdInfo && profile.ad_title) ? profile.ad_title : profile.name;
   const displayPrice = (showAdInfo && profile.ad_price !== undefined && profile.ad_price !== null) ? profile.ad_price : profile.price_per_hour;
+  const locationText = profile.neighborhood && profile.city 
+    ? `${profile.neighborhood}, ${profile.city}` 
+    : (profile.city || profile.neighborhood || (profile as any).location || '');
   
   // Compilar lista completa de fotos do anúncio ou do perfil
   const photosList: string[] = useMemo(() => {
@@ -411,9 +414,9 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
 
             {/* Linha 2: Localização + Com Local */}
             <div className="flex items-center justify-between text-[11px] text-gray-200">
-              <div className="flex items-center gap-1 truncate font-medium">
-                <MapPin className="w-3 h-3 text-red-400 shrink-0" />
-                <span className="truncate">{profile.neighborhood ? `${profile.neighborhood}, ${profile.city}` : profile.city}</span>
+              <div className="flex items-center gap-1.5 truncate font-medium">
+                <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                <span className="truncate text-gray-200">{locationText || 'Atendimento presencial'}</span>
               </div>
 
               {(profile.is_space_verified || profile.category === 'massage' || profile.category === 'both') && (

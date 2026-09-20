@@ -94,13 +94,8 @@ export default function VitrineClient({
         );
       }
 
-      // Tier Efetivo
-      let effectiveTier = p.subscription_tier || 'free';
-      if (effectiveTier !== 'free' && p.subscription_expires_at) {
-        if (new Date(p.subscription_expires_at).getTime() < nowTime) {
-          effectiveTier = 'free';
-        }
-      }
+      // Tier Efetivo via helper unificado (trata gold_7d, gold_15d, gold_30d, etc.)
+      const effectiveTier = getEffectiveTier(p);
       const tierScore = effectiveTier === 'gold' ? 3 : effectiveTier === 'pro' ? 2 : 1;
 
       // Boost
@@ -190,8 +185,7 @@ export default function VitrineClient({
 
         profiles.forEach(p => {
           // Drops é benefício exclusivo do Plano Gold ativo
-          const isSubActive = !p.subscription_expires_at || new Date(p.subscription_expires_at) >= new Date();
-          const isGold = p.subscription_tier === 'gold' && isSubActive;
+          const isGold = getEffectiveTier(p) === 'gold';
 
           photosMap[p.id] = [];
           if (!isGold) return;
