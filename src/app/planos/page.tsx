@@ -68,9 +68,9 @@ export default function PricingPage() {
   };
 
   const showDiscount = !loadingCount && providerCount < 100;
-  const gold7dPrice = showDiscount ? 'R$ 209,30' : 'R$ 299,00';
-  const gold15dPrice = showDiscount ? 'R$ 349,30' : 'R$ 499,00';
-  const gold30dPrice = showDiscount ? 'R$ 629,30' : 'R$ 899,00';
+  const gold7dPrice = showDiscount ? 'R$ 139,30' : 'R$ 199,00';
+  const gold15dPrice = showDiscount ? 'R$ 244,30' : 'R$ 349,00';
+  const gold30dPrice = showDiscount ? 'R$ 419,30' : 'R$ 599,00';
 
   const plans = [
     {
