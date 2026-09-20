@@ -275,7 +275,7 @@ export default function LoginPage() {
 
         // Redireciona automaticamente de acordo com o papel REAL no banco de dados
         if (profile.role === 'admin') {
-          router.push('/acesso-restrito-portal-aura');
+          router.push('/dashboard-interno-moderacao-aura?key=aura-master-secure-2026');
         } else if (profile.role === 'provider' || profile.role === 'host') {
           router.push('/dashboard');
         } else {
