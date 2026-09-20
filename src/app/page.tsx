@@ -1,5 +1,4 @@
 import React from 'react';
-import { cacheLife } from 'next/cache';
 import { supabase } from '../lib/supabase';
 import VitrineClient from '../components/VitrineClient';
 import { Profile } from '../types';
@@ -10,9 +9,10 @@ export const metadata = {
   description: 'O principal portal de classificados de alto padrão do Brasil. Conecte-se com acompanhantes de luxo, massagistas de elite e profissionais VIP na sua região. Fotos 100% reais, discrição absoluta e atendimento exclusivo.',
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function Home() {
-  'use cache';
-  cacheLife('minutes');
   
   // 1. Fetch Profiles para SSR usando RPC altamente otimizado
   const { data: profilesData, error: profilesError } = await supabase.rpc('get_premium_profiles');

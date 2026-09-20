@@ -67,9 +67,10 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function CityPage({ params }: Props) {
-  'use cache';
-  cacheLife('hours'); // Equivale ao revalidate = 3600 (ISR de 1 hora) no modelo Cache Components
   const { state: stateSlug, city: citySlug } = await params;
   const { city: cityName } = await getOriginalLocationNames(citySlug);
 

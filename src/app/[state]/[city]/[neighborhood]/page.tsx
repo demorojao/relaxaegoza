@@ -68,9 +68,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function NeighborhoodPage({ params }: Props) {
-  'use cache';
-  cacheLife('hours'); // Equivale ao revalidate = 3600 (ISR de 1 hora) no modelo Cache Components
   const { state: stateSlug, city: citySlug, neighborhood: neighborhoodSlug } = await params;
   const { city: cityName, neighborhood: neighborhoodName } = await getOriginalLocationNames(citySlug, neighborhoodSlug);
 

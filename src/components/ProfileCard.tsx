@@ -247,12 +247,12 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
         isInteractive
         variant={isGold ? 'glass-gold' : isPro ? 'glass-wine' : 'glass'}
         className={cn(
-          "flex flex-col w-full h-full rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 border border-white/10 group shadow-xl bg-black/40",
+          "flex flex-col w-full h-full rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 group shadow-xl bg-black/40",
           isGold 
-            ? 'border-2 border-amber-400 gold-ring-active shadow-[0_0_25px_rgba(234,179,8,0.4)]' 
+            ? 'border-2 border-amber-400 gold-ring-active shadow-[0_0_25px_rgba(251,191,36,0.6)]' 
             : isAvailable 
               ? 'border-2 border-emerald-500/80 neon-ring-active' 
-              : ''
+              : 'border border-white/10'
         )}
       >
         {/* Container da Imagem com Carrossel e Deslize (Swipe) */}
@@ -389,7 +389,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
               <div className="flex items-center gap-1.5 min-w-0">
                 <h3 className={cn(
                   "text-sm sm:text-base font-extrabold tracking-tight truncate drop-shadow-md",
-                  isGold ? "text-amber-300 font-bold" : "text-white"
+                  isGold ? "!text-amber-300 font-bold" : "text-white"
                 )}>
                   {displayName}
                 </h3>
