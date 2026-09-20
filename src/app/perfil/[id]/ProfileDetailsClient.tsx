@@ -42,7 +42,7 @@ import {
   Camera,
   Image as ImageIcon
 } from 'lucide-react';
-import { formatWhatsAppLink, cleanDescription, getEffectiveTier } from '@/lib/utils';
+import { formatWhatsAppLink, cleanDescription, getEffectiveTier, cn } from '@/lib/utils';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { getCDNUrl } from '@/lib/mediaHelper';
 import dynamic from 'next/dynamic';
@@ -970,9 +970,14 @@ export default function ProfileDetailsClient({
       <div className="flex flex-col md:flex-row gap-8 items-start">
       {/* Avatar Principal com Carrossel e Deslize (Swipe) */}
       <div 
-        className={`w-full md:w-1/3 aspect-4/5 sm:aspect-3/4 max-h-90 md:max-h-none rounded-2xl overflow-hidden shadow-2xl relative shrink-0 border-2 protected-media touch-pan-y group ${
-          isAvailable ? 'border-emerald-500 neon-ring-active' : getEffectiveTier(profile) === 'gold' ? 'border-gold-primary' : 'border-white/5'
-        }`}
+        className={cn(
+          "w-full md:w-1/3 aspect-4/5 sm:aspect-3/4 max-h-90 md:max-h-none rounded-2xl overflow-hidden shadow-2xl relative shrink-0 border-2 protected-media touch-pan-y group transition-all duration-300",
+          getEffectiveTier(profile) === 'gold' 
+            ? 'border-2 border-amber-400 gold-ring-active shadow-[0_0_30px_rgba(251,191,36,0.6)]' 
+            : isAvailable 
+              ? 'border-2 border-emerald-500/80 neon-ring-active' 
+              : 'border-white/10'
+        )}
         onTouchStart={handleHeroTouchStart}
         onTouchEnd={handleHeroTouchEnd}
       >
@@ -1054,12 +1059,18 @@ export default function ProfileDetailsClient({
       <div className="flex-1 w-full space-y-6">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight flex items-center gap-2">
-              {profile.name}
+            <h1 className={cn(
+              "text-4xl md:text-5xl font-extrabold tracking-tight flex items-center gap-2 flex-wrap",
+              getEffectiveTier(profile) === 'gold' ? "text-amber-300" : "text-white"
+            )}>
+              <span>{profile.name}</span>
               {getEffectiveTier(profile) === 'gold' && (
-                <span className="text-2xl animate-bounce" title="Gold VIP">👑</span>
+                <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-[0_0_15px_rgba(251,191,36,0.6)] border border-amber-200">
+                  <Sparkles className="w-3.5 h-3.5 fill-black text-black shrink-0" />
+                  VIP GOLD
+                </span>
               )}
-              , <span className="font-light text-gray-400">{profile.age}</span>
+              {profile.age && <span className="font-light text-gray-400">, {profile.age}</span>}
             </h1>
             
             {profile.verification_status === 'verified' && (

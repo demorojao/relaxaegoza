@@ -82,14 +82,22 @@ export function cleanDescription(text: string | null | undefined): string {
  */
 export function getEffectiveTier(profile: { subscription_tier?: string | null; subscription_expires_at?: string | null } | null | undefined): 'free' | 'pro' | 'gold' {
   if (!profile) return 'free';
-  const rawTier = (profile.subscription_tier || 'free').toLowerCase();
+  const rawTier = (profile.subscription_tier || 'free').toString().trim().toLowerCase();
   const tier = rawTier === 'pro' ? 'pro' : (rawTier === 'gold' || rawTier.startsWith('gold')) ? 'gold' : 'free';
   if (tier === 'free') return 'free';
 
   if (profile.subscription_expires_at) {
-    const expiresAt = new Date(profile.subscription_expires_at).getTime();
-    if (isNaN(expiresAt) || expiresAt < Date.now()) {
-      return 'free';
+    try {
+      let dateStr = String(profile.subscription_expires_at).trim();
+      if (dateStr.includes(' ') && !dateStr.includes('T')) {
+        dateStr = dateStr.replace(' ', 'T');
+      }
+      const expiresAt = new Date(dateStr).getTime();
+      if (!isNaN(expiresAt) && expiresAt < Date.now()) {
+        return 'free';
+      }
+    } catch (e) {
+      // Se houver falha de parse na data em navegação web/mobile, preserva o tier ativo
     }
   }
 

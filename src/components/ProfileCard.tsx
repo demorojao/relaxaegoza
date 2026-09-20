@@ -323,7 +323,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
           {/* Overlay Degradê Escuro Suave na Base da Foto */}
           <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-10" />
 
-          {/* Badges Minimalistas no Topo da Foto (100% Limpo e Despoluído) */}
+          {/* Badges Minimalistas no Topo da Foto */}
           <div className="absolute top-2.5 left-2.5 right-2.5 flex justify-between items-center z-20 pointer-events-none">
             {/* Tag Disponibilidade / Status */}
             <div className="bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-white text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-lg">
@@ -334,9 +334,9 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
             {/* Selos & Favoritar */}
             <div className="flex items-center gap-1 pointer-events-auto">
               {isGold && (
-                <span className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md flex items-center gap-0.5">
-                  <Sparkles className="w-2.5 h-2.5 fill-black" />
-                  <span>GOLD</span>
+                <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-[0_0_12px_rgba(251,191,36,0.6)] flex items-center gap-1 border border-amber-200">
+                  <Sparkles className="w-3 h-3 fill-black text-black shrink-0" />
+                  <span>VIP GOLD</span>
                 </span>
               )}
 
@@ -383,9 +383,19 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
           <Link href={`/perfil/${profile.id}`} className="absolute bottom-2.5 left-3 right-3 z-20 space-y-1 text-white block">
             {/* Linha 1: Nome + Valor */}
             <div className="flex items-center justify-between gap-1">
-              <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight truncate drop-shadow-md">
-                {displayName}
-              </h3>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <h3 className={cn(
+                  "text-sm sm:text-base font-extrabold tracking-tight truncate drop-shadow-md",
+                  isGold ? "text-amber-300 font-bold" : "text-white"
+                )}>
+                  {displayName}
+                </h3>
+                {isGold && (
+                  <span className="text-[9px] font-black text-amber-950 bg-gradient-to-r from-amber-300 to-yellow-400 px-1.5 py-0.5 rounded shrink-0 shadow-sm uppercase tracking-wider">
+                    GOLD
+                  </span>
+                )}
+              </div>
 
               <div className="shrink-0 text-xs sm:text-sm font-extrabold text-amber-300 flex items-center gap-1 drop-shadow-md">
                 {(!displayPrice || Number(displayPrice) < 300) ? (
