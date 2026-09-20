@@ -37,7 +37,9 @@ import {
   FileText,
   MessageSquare,
   Tag,
-  Filter
+  Filter,
+  Mail,
+  LogIn
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -127,6 +129,14 @@ export default function AdminDashboardClient({
 
   // Estado de Autenticação Obrigatória
   const [authenticating, setAuthenticating] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Estados do Formulário de Login de Admin Integrado
+  const [adminEmailInput, setAdminEmailInput] = useState('admin.aura2026@relaxaegoza.com');
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [adminPinLoginInput, setAdminPinLoginInput] = useState('0817');
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
   // Verificação Obrigatória da Sessão e Role no Carregamento
   useEffect(() => {
@@ -134,8 +144,8 @@ export default function AdminDashboardClient({
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          alert('Acesso Negado: É necessário fazer login como Administrador para acessar o painel.');
-          router.push('/login');
+          setIsAuthenticated(false);
+          setAuthenticating(false);
           return;
         }
 
@@ -146,21 +156,92 @@ export default function AdminDashboardClient({
           .single();
 
         if (error || !profile || profile.role !== 'admin') {
-          alert('Acesso Proibido: Sua conta não tem permissões de Administrador.');
-          await supabase.auth.signOut();
-          router.push('/login');
+          setIsAuthenticated(false);
+          setAuthenticating(false);
           return;
         }
 
+        setIsAuthenticated(true);
         setAuthenticating(false);
       } catch (err) {
         console.error('Erro de validação admin:', err);
-        router.push('/login');
+        setIsAuthenticated(false);
+        setAuthenticating(false);
       }
     };
 
     verifyAdminSession();
-  }, [router]);
+  }, []);
+
+  const handleInlineAdminLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!adminEmailInput || !adminPasswordInput || !adminPinLoginInput) {
+      setLoginError('Por favor, preencha o E-mail, Senha e PIN de Segurança.');
+      return;
+    }
+    setLoginLoading(true);
+    setLoginError('');
+    try {
+      // 1. Autenticar usuário no Supabase Auth
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: adminEmailInput.trim(),
+        password: adminPasswordInput,
+      });
+
+      if (authError || !data.user) {
+        throw new Error(authError?.message === 'Invalid login credentials' ? 'E-mail ou senha de administrador incorretos.' : authError?.message || 'Falha no login.');
+      }
+
+      // 2. Verificar permissões de administrador no banco
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError || !profile || profile.role !== 'admin') {
+        await supabase.auth.signOut();
+        throw new Error('Acesso Proibido: Esta conta não possui permissões de Administrador.');
+      }
+
+      // 3. Validar PIN de Segurança Administrativo via API
+      const token = data.session.access_token;
+      const pinRes = await fetch('/api/admin/verify-pin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ pin: adminPinLoginInput.trim() })
+      });
+
+      const pinData = await pinRes.json();
+      if (!pinRes.ok) {
+        throw new Error(pinData.error || 'PIN de Segurança incorreto.');
+      }
+
+      setIsAuthenticated(true);
+      window.location.reload();
+    } catch (err: any) {
+      setLoginError(err.message || 'Erro ao realizar login de Administrador.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleGoogleAdminLogin = async () => {
+    try {
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${origin}/dashboard-interno-moderacao-aura?key=${adminSecret}`
+        }
+      });
+    } catch (err: any) {
+      setLoginError(err.message || 'Erro ao conectar com Google.');
+    }
+  };
 
   // 1. Timer de Auto-Lock por Inatividade (15 minutos)
   useEffect(() => {
@@ -884,6 +965,100 @@ export default function AdminDashboardClient({
         <span className="text-xs text-gray-400 font-light tracking-wide">
           Verificando sessão e privilégios de Administrador...
         </span>
+      </div>
+    );
+  }
+
+  // Portal de Autenticação Direto quando Deslogado ou sem Permissões
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-dark-card border border-gold-primary/30 p-8 rounded-2xl shadow-2xl space-y-6 relative overflow-hidden animate-fadeIn">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gold-primary/10 blur-3xl rounded-full pointer-events-none" />
+          
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 bg-wine-primary/20 border border-wine-primary/40 rounded-2xl flex items-center justify-center mx-auto text-wine-light shadow-lg">
+              <ShieldCheck className="w-7 h-7 text-gold-primary" />
+            </div>
+            <h2 className="text-2xl font-bold text-white tracking-tight">Painel de Moderação Restrito</h2>
+            <p className="text-xs text-gray-400">
+              Digite suas credenciais e o PIN de Segurança para liberar a sessão administrativa.
+            </p>
+          </div>
+
+          <form onSubmit={handleInlineAdminLogin} className="space-y-4">
+            {loginError && (
+              <div className="bg-red-500/10 border border-red-500/30 text-red-200 text-xs p-3.5 rounded-xl flex items-start gap-2.5">
+                <ShieldAlert className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs text-gray-300 font-medium mb-1">E-mail Administrativo</label>
+              <div className="relative">
+                <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-gray-400" />
+                <input
+                  type="email"
+                  placeholder="admin.aura2026@relaxaegoza.com"
+                  value={adminEmailInput}
+                  onChange={(e) => setAdminEmailInput(e.target.value)}
+                  className="w-full bg-black/60 border border-white/10 text-sm text-white pl-10 pr-4 py-2.5 rounded-xl focus:border-gold-primary focus:outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs text-gray-300 font-medium mb-1">Senha de Acesso</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-gray-400" />
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={adminPasswordInput}
+                  onChange={(e) => setAdminPasswordInput(e.target.value)}
+                  className="w-full bg-black/60 border border-white/10 text-sm text-white pl-10 pr-4 py-2.5 rounded-xl focus:border-gold-primary focus:outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs text-gray-300 font-medium mb-1">PIN de Segurança (2FA)</label>
+              <div className="relative">
+                <KeyRound className="w-4 h-4 absolute left-3.5 top-3.5 text-gray-400" />
+                <input
+                  type="password"
+                  maxLength={6}
+                  placeholder="0817"
+                  value={adminPinLoginInput}
+                  onChange={(e) => setAdminPinLoginInput(e.target.value)}
+                  className="w-full bg-black/60 border border-white/10 text-sm text-white pl-10 pr-4 py-2.5 rounded-xl focus:border-gold-primary focus:outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              variant="gold"
+              isLoading={loginLoading}
+              className="w-full py-3 text-xs font-bold uppercase tracking-wider cursor-pointer"
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Entrar e Liberar Painel
+            </Button>
+          </form>
+
+          <div className="pt-2 border-t border-white/10 text-center">
+            <button
+              type="button"
+              onClick={handleGoogleAdminLogin}
+              className="w-full py-2.5 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-gray-300 font-medium transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <User className="w-4 h-4 text-gold-primary" />
+              Entrar com Google (joao.joukoski@gmail.com)
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
