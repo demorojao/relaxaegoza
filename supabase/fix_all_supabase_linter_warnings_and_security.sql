@@ -93,7 +93,38 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 CREATE OR REPLACE FUNCTION public.protect_profile_system_fields()
 RETURNS trigger AS $$
 BEGIN
-  RETURN public.protect_sensitive_profile_fields();
+  IF (current_setting('role', true) <> 'service_role') THEN
+    IF (OLD.subscription_tier IS DISTINCT FROM NEW.subscription_tier) THEN
+      NEW.subscription_tier := OLD.subscription_tier;
+    END IF;
+
+    IF (OLD.role IS DISTINCT FROM NEW.role) THEN
+      NEW.role := OLD.role;
+    END IF;
+
+    IF (OLD.is_space_verified IS DISTINCT FROM NEW.is_space_verified) THEN
+      NEW.is_space_verified := OLD.is_space_verified;
+    END IF;
+
+    IF (OLD.boost_expires_at IS DISTINCT FROM NEW.boost_expires_at) THEN
+      NEW.boost_expires_at := OLD.boost_expires_at;
+    END IF;
+
+    IF (OLD.verification_status IS DISTINCT FROM NEW.verification_status) THEN
+      IF (NEW.verification_status <> 'pending') THEN
+        NEW.verification_status := OLD.verification_status;
+      END IF;
+    END IF;
+
+    IF (OLD.verification_status = 'verified' AND (
+        OLD.name IS DISTINCT FROM NEW.name OR 
+        OLD.age IS DISTINCT FROM NEW.age OR 
+        OLD.avatar_url IS DISTINCT FROM NEW.avatar_url
+    )) THEN
+      NEW.verification_status := 'pending';
+    END IF;
+  END IF;
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
