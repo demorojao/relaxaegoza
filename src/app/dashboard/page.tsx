@@ -798,7 +798,7 @@ export default function DashboardMetrics() {
               <button 
                 onClick={handleBuyBoost}
                 disabled={boostingCheckout}
-                title="Ativar Destaque (R$ 15)"
+                title="Ativar Destaque (R$ 9,90)"
                 className="px-6 py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-gold-primary/25 disabled:opacity-50 flex items-center gap-2 hover:scale-[1.02]"
               >
                 {boostingCheckout ? (
@@ -808,7 +808,7 @@ export default function DashboardMetrics() {
                   </>
                 ) : (
                   <>
-                    Ativar Destaque (R$ 15)
+                    Ativar Destaque (R$ 9,90)
                   </>
                 )}
               </button>
