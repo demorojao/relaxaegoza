@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Profissional de destino nao encontrada.' }, { status: 404 });
       }
 
-      amountCents = 3500; // R$ 35,00
+      amountCents = 7500; // R$ 75,00
       isBoostFlag = true;
       isGiftFlag = true;
       targetProfileIdValue = targetProfileId;
@@ -106,11 +106,11 @@ export async function POST(req: NextRequest) {
 
       const hours = Number(boostHours || 2);
       if (hours === 2) {
-        amountCents = 1490; // R$ 14,90
-      } else if (hours === 6) {
         amountCents = 2990; // R$ 29,90
+      } else if (hours === 6) {
+        amountCents = 5990; // R$ 59,90
       } else if (hours === 12) {
-        amountCents = 4990; // R$ 49,90
+        amountCents = 9990; // R$ 99,90
       } else {
         return NextResponse.json({ error: 'Duração de Boost inválida.' }, { status: 400 });
       }
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Você é um dos 100 primeiros parceiros! Seu plano de salas é 100% gratuito.' }, { status: 400 });
         }
 
-        amountCents = 24900; // R$ 249,00
+        amountCents = 49900; // R$ 499,00
         tierValue = tier;
         description = `Hospedagem de Classificado Online - ID ${user.id}`;
       } else {
@@ -156,14 +156,14 @@ export async function POST(req: NextRequest) {
         const isPromoEligible = !providerRankError && providerRank !== null && providerRank <= 100;
 
         const baseAmounts: Record<string, number> = {
-          pro: 29900,
-          gold: 29900,
-          gold_7d: 9900,    // R$ 99,00
-          gold_15d: 17900,  // R$ 179,00
-          gold_30d: 29900   // R$ 299,00
+          pro: 59900,
+          gold: 59900,
+          gold_7d: 19900,   // R$ 199,00
+          gold_15d: 34900,  // R$ 349,00
+          gold_30d: 59900   // R$ 599,00
         };
 
-        const baseAmount = baseAmounts[tier as string] || 29900;
+        const baseAmount = baseAmounts[tier as string] || 59900;
 
         // Aplicar 30% de desconto para as 100 primeiras
         amountCents = isPromoEligible ? Math.round(baseAmount * 0.7) : baseAmount;

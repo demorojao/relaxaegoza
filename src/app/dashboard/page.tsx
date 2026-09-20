@@ -769,7 +769,7 @@ export default function DashboardMetrics() {
             </span>
             <h3 className="text-lg font-bold text-white tracking-wide">Fique no Topo dos Resultados por 2h</h3>
             <p className="text-xs text-gray-400 leading-relaxed font-light font-sans">
-              Destaque seu anúncio acima de todas as outras profissionais da sua categoria (Gold) na sua cidade e bairro por 2 horas inteiras por apenas **R$ 14,90**.
+              Destaque seu anúncio acima de todas as outras profissionais da sua categoria (Gold) na sua cidade e bairro por 2 horas inteiras por apenas **R$ 29,90**.
             </p>
           </div>
 
@@ -798,7 +798,7 @@ export default function DashboardMetrics() {
               <button 
                 onClick={handleBuyBoost}
                 disabled={boostingCheckout}
-                title="Ativar Destaque (R$ 14,90)"
+                title="Ativar Destaque (R$ 29,90)"
                 className="px-6 py-3 rounded-xl bg-gold-primary hover:bg-gold-light text-dark-bg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-gold-primary/25 disabled:opacity-50 flex items-center gap-2 hover:scale-[1.02]"
               >
                 {boostingCheckout ? (
@@ -808,7 +808,7 @@ export default function DashboardMetrics() {
                   </>
                 ) : (
                   <>
-                    Ativar Destaque (R$ 14,90)
+                    Ativar Destaque (R$ 29,90)
                   </>
                 )}
               </button>
