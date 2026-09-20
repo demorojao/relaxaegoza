@@ -434,11 +434,18 @@ export async function POST(req: NextRequest) {
       }
 
       const payload = { ...updateFields };
-      if (payload.subscription_tier && !payload.subscription_expires_at) {
+      let daysGranted = 30;
+
+      if (payload.subscription_days !== undefined) {
+        daysGranted = Number(payload.subscription_days) || 30;
+        delete payload.subscription_days;
+      }
+
+      if (payload.subscription_tier) {
         if (payload.subscription_tier === 'free') {
           payload.subscription_expires_at = null;
         } else {
-          payload.subscription_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          payload.subscription_expires_at = new Date(Date.now() + daysGranted * 24 * 60 * 60 * 1000).toISOString();
         }
       }
 
@@ -449,13 +456,18 @@ export async function POST(req: NextRequest) {
 
       if (updateError) throw updateError;
 
-      // Se alterou o plano, envia notificação
+      // Se alterou o plano, envia notificação personalizada com prazo de validade
       if (updateFields.subscription_tier) {
         try {
+          const tierName = updateFields.subscription_tier === 'gold' ? 'GOLD (Ouro)' : updateFields.subscription_tier === 'pro' ? 'PRO (Prata)' : 'BRONZE (Grátis)';
+          const expirationText = payload.subscription_expires_at 
+            ? ` Validade: ${daysGranted} dias (vence em ${new Date(payload.subscription_expires_at).toLocaleDateString('pt-BR')}).` 
+            : '';
+
           await supabaseService.from('profile_notifications').insert({
             profile_id: profileId,
-            title: '⭐ Plano Atualizado!',
-            content: `O seu plano de assinatura foi alterado para ${updateFields.subscription_tier.toUpperCase()} pela equipe de moderação.`,
+            title: '⭐ Plano Atualizado pela Administração!',
+            content: `O seu plano de assinatura foi alterado para ${tierName}.${expirationText}`,
             type: 'system_update',
             is_read: false
           });

@@ -2460,12 +2460,17 @@ export default function AdminDashboardClient({
                           {isClient ? 'Cliente' : 'Provedor'}
                         </span>
                         {p.subscription_tier && p.subscription_tier !== 'free' && (
-                          <span className={`text-[8px] px-1.5 py-0.2 rounded font-bold uppercase border ${
+                          <span className={`text-[8px] px-1.5 py-0.2 rounded font-bold uppercase border flex items-center gap-1 ${
                             p.subscription_tier === 'gold' 
                               ? 'bg-gold-primary/20 border-gold-primary/35 text-gold-light' 
                               : 'bg-purple-500/20 border-purple-500/35 text-purple-300'
                           }`}>
-                            {p.subscription_tier}
+                            Plano {p.subscription_tier.toUpperCase()}
+                            {p.subscription_expires_at ? (
+                              <span className="text-[8px] text-gray-300 font-mono normal-case">
+                                ({Math.max(0, Math.ceil((new Date(p.subscription_expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}d rest. — até {new Date(p.subscription_expires_at).toLocaleDateString('pt-BR')})
+                              </span>
+                            ) : ''}
                           </span>
                         )}
                         {hasActiveBoost && (
@@ -2542,6 +2547,7 @@ export default function AdminDashboardClient({
                           setExpandedProfileId(p.id);
                           setEditFields({
                             subscription_tier: p.subscription_tier || 'free',
+                            subscription_days: 30,
                             verification_status: p.verification_status || 'none',
                             is_space_verified: p.is_space_verified || false,
                             price_per_hour: p.price_per_hour || 0,
@@ -2642,6 +2648,31 @@ export default function AdminDashboardClient({
                             <option value="gold">Ouro (Gold)</option>
                           </select>
                         </div>
+
+                        {/* Subscription Duration */}
+                        {editFields.subscription_tier && editFields.subscription_tier !== 'free' && (
+                          <div className="space-y-1.5">
+                            <label htmlFor="subscription_days" className="text-[10px] text-gold-primary font-bold uppercase block">Duração do Plano (Dias de Validade)</label>
+                            <select
+                              id="subscription_days"
+                              title="Duração em Dias"
+                              value={editFields.subscription_days || 30}
+                              onChange={(e) => setEditFields({ ...editFields, subscription_days: Number(e.target.value) })}
+                              className="w-full bg-dark-bg/85 border border-gold-primary/40 text-xs text-gold-light font-medium rounded-lg px-3 py-2.5 focus:border-gold-primary focus:outline-none transition-colors"
+                            >
+                              <option value={7}>7 Dias (1 Semana)</option>
+                              <option value={15}>15 Dias</option>
+                              <option value={30}>30 Dias (1 Mês - Padrão)</option>
+                              <option value={60}>60 Dias (2 Meses)</option>
+                              <option value={90}>90 Dias (3 Meses)</option>
+                              <option value={180}>180 Dias (6 Meses)</option>
+                              <option value={365}>365 Dias (1 Ano)</option>
+                            </select>
+                            <span className="text-[9px] text-gray-400 block font-mono">
+                              🗓️ Vencimento: {new Date(Date.now() + (Number(editFields.subscription_days) || 30) * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                        )}
 
                         {/* Verification Status */}
                         <div className="space-y-1.5">
