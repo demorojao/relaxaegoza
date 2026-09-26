@@ -196,20 +196,24 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
 
         if (mediaData) setMedias(mediaData);
 
-        // 2. Check if logged user has active subscription
+        // 2. Check if logged user is the owner provider OR has active subscription
         if (currentUser?.id) {
-          const { data: subData } = await supabase
-            .from('premium_subscriptions')
-            .select('expires_at, status')
-            .eq('client_id', currentUser.id)
-            .eq('provider_id', providerId)
-            .eq('status', 'active')
-            .gt('expires_at', new Date().toISOString())
-            .maybeSingle();
-
-          if (subData) {
+          if (currentUser.id === providerId) {
             setIsSubscribed(true);
-            setSubExpiresAt(subData.expires_at);
+          } else {
+            const { data: subData } = await supabase
+              .from('premium_subscriptions')
+              .select('expires_at, status')
+              .eq('client_id', currentUser.id)
+              .eq('provider_id', providerId)
+              .eq('status', 'active')
+              .gt('expires_at', new Date().toISOString())
+              .maybeSingle();
+
+            if (subData) {
+              setIsSubscribed(true);
+              setSubExpiresAt(subData.expires_at);
+            }
           }
         }
       } catch (err) {
