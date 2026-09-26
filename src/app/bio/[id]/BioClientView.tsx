@@ -127,18 +127,7 @@ export default function BioClientView({ profile, ad, mediaCount = 0 }: BioClient
             Agendar no WhatsApp
           </a>
 
-          {/* Secondary CTA: Clube VIP Exclusivo */}
-          <Link href={`/perfil/${profile.id}`}>
-            <div className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-gold-primary/20 via-black/80 to-gold-primary/10 border border-gold-primary/40 hover:border-gold-primary text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-between shadow-lg cursor-pointer group hover:scale-[1.01]">
-              <span className="flex items-center gap-2 text-gold-light">
-                <Crown className="w-4 h-4 text-gold-primary animate-pulse" />
-                Clube VIP & Conteúdo Exclusivo
-              </span>
-              <span className="text-[10px] bg-gold-primary text-dark-bg px-2 py-0.5 rounded-full font-extrabold">
-                {mediaCount} Mídias
-              </span>
-            </div>
-          </Link>
+          {/* Secondary CTA ocultado temporariamente */}
 
           {/* Full Profile View */}
           <Link href={`/perfil/${profile.id}`}>
@@ -165,7 +154,7 @@ export default function BioClientView({ profile, ad, mediaCount = 0 }: BioClient
 
       {/* Footer Powered By */}
       <footer className="py-6 text-center text-[10px] text-gray-600 font-light relative z-10">
-        © {new Date().getFullYear()} Cartão VIP Digital • Atendimento Exclusivo
+        © {new Date().getFullYear()} Cartão Digital Oficial • Atendimento Exclusivo
       </footer>
     </div>
   );

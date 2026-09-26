@@ -123,7 +123,7 @@ export default function PricingPage() {
       features: [
         'Destaque Máximo Gold durante 1 mês inteiro',
         '4 Boosts de 6h grátis (1 por semana) inclusos 🚀',
-        'Galeria Ilimitada & Conteúdo Exclusivo VIP',
+        'Galeria Ilimitada de Fotos & Vídeos HD',
         'Estatísticas avançadas de tráfego e visualizações 📊',
         'Selo de Destaque Premium no mapa interativo',
         'Economia máxima em relação ao plano semanal',

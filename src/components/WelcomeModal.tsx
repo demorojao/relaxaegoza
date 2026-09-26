@@ -128,7 +128,7 @@ export default function WelcomeModal() {
             onClick={handleClose}
             className="w-full py-3.5 px-6 rounded-2xl bg-linear-to-r from-gold-primary via-gold-light to-gold-dark text-dark-bg font-bold text-xs uppercase tracking-wider shadow-[0_4px_20px_rgba(212,175,55,0.25)] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
           >
-            <span>Explorar Experiência VIP</span>
+            <span>Explorar Catálogo Oficial</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
