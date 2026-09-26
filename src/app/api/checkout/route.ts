@@ -165,14 +165,46 @@ export async function POST(req: NextRequest) {
 
         const baseAmount = baseAmounts[tier as string] || 59900;
 
-        // Aplicar 30% de desconto para as 100 primeiras
-        amountCents = isPromoEligible ? Math.round(baseAmount * 0.7) : baseAmount;
+        // As 100 primeiras anunciantes ganham o 1º mês (30 dias) 100% GRÁTIS
+        amountCents = isPromoEligible ? 0 : baseAmount;
         tierValue = tier;
-        description = `Servicos de Publicidade Digital - Ref: ${tier.toUpperCase()}`;
+        description = isPromoEligible 
+          ? `Promo Lançamento 100 Primeiras - 1º Mês Grátis - ${tier.toUpperCase()}`
+          : `Servicos de Publicidade Digital - Ref: ${tier.toUpperCase()}`;
       }
     }
 
-    // 4. Criação da cobrança Pix na PushinPay
+    // 4. Se o valor for R$ 0,00 (Promoção 100 primeiras grátis), aprovar e cumprir imediatamente sem Pix
+    if (amountCents === 0) {
+      const { data: promoPaymentRecord, error: promoError } = await supabaseService
+        .from('payments')
+        .insert({
+          user_id: user?.id || null,
+          txid: `promo_100_free_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          amount_cents: 0,
+          status: 'paid',
+          tier: tierValue,
+          is_boost: isBoostFlag,
+          is_gift: isGiftFlag,
+          target_profile_id: targetProfileIdValue,
+          pix_copia_e_cola: 'PROMO_100_PRIMEIRAS_GRATIS',
+          pix_qr_code: 'PROMO_100_PRIMEIRAS_GRATIS'
+        })
+        .select('*')
+        .single();
+
+      if (promoError || !promoPaymentRecord) {
+        console.error('Insert promo payment error:', promoError);
+        return NextResponse.json({ error: 'Erro ao registrar promoção de lançamento.' }, { status: 500 });
+      }
+
+      const { fulfillPayment } = await import('@/lib/paymentFulfillment');
+      await fulfillPayment(promoPaymentRecord);
+
+      return NextResponse.json({ url: '/dashboard?checkout_status=success' });
+    }
+
+    // 5. Criação da cobrança Pix na PushinPay (quando não for gratuito)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || 'https://relaxeegoze.com.br';
     const webhookUrl = `${baseUrl}/api/webhooks/pushinpay`;
 
@@ -181,7 +213,7 @@ export async function POST(req: NextRequest) {
       webhookUrl,
     });
 
-    // 5. Inserir registro na tabela 'payments' usando a service role (bypassa RLS)
+    // Inserir registro na tabela 'payments' usando a service role (bypassa RLS)
     const { data: paymentRecord, error: insertError } = await supabaseService
       .from('payments')
       .insert({
