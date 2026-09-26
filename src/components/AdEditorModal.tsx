@@ -242,15 +242,31 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
       if (error) throw error;
 
       if (profile) {
-        await supabase
-          .from('profiles')
-          .update({
-            instagram: instagram.trim(),
-            telegram: telegram.trim(),
-            x_twitter: xTwitter.trim(),
-            tiktok: tiktok.trim()
-          })
-          .eq('id', profile.id);
+        let socialPayload: any = {
+          instagram: instagram.trim(),
+          telegram: telegram.trim(),
+          x_twitter: xTwitter.trim(),
+          tiktok: tiktok.trim()
+        };
+
+        for (let attempt = 0; attempt < 5; attempt++) {
+          if (Object.keys(socialPayload).length === 0) break;
+          const { error: socialErr } = await supabase
+            .from('profiles')
+            .update(socialPayload)
+            .eq('id', profile.id);
+
+          if (!socialErr) break;
+
+          const errMsg = socialErr.message || '';
+          const match = errMsg.match(/Could not find the ['"]([^'"]+)['"] column/i);
+          if (match && match[1]) {
+            console.warn(`Coluna '${match[1]}' não encontrada no Supabase. Removendo do payload.`);
+            delete socialPayload[match[1]];
+          } else {
+            break;
+          }
+        }
 
         await triggerRevalidate(profile.city, profile.neighborhood);
       }

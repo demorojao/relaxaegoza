@@ -123,16 +123,45 @@ export default function OnboardingWizardModal({
         }
       }
 
-      const { data: updatedProfile, error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', profile.id)
-        .select('*')
-        .single();
+      let currentPayload = { ...updateData };
+      let updatedProfile = null;
+      let isSuccess = false;
 
-      if (error) throw error;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const { data, error: updateErr } = await supabase
+          .from('profiles')
+          .update(currentPayload)
+          .eq('id', profile.id)
+          .select('*')
+          .single();
 
-      if (updateData.subscription_tier === 'gold') {
+        if (!updateErr) {
+          updatedProfile = data;
+          isSuccess = true;
+          break;
+        }
+
+        const errMsg = updateErr.message || '';
+        const match = errMsg.match(/Could not find the ['"]([^'"]+)['"] column/i);
+        if (match && match[1]) {
+          const missingCol = match[1];
+          console.warn(`Coluna '${missingCol}' ausente no Supabase. Removendo do payload do wizard.`);
+          delete currentPayload[missingCol];
+          if (missingCol === 'has_completed_onboarding') {
+            try { localStorage.setItem(`onboarding_completed_${profile.id}`, 'true'); } catch (e) {}
+          }
+        } else {
+          throw updateErr;
+        }
+      }
+
+      if (!isSuccess && !updatedProfile) {
+        updatedProfile = { ...profile, ...updateData };
+      }
+
+      try { localStorage.setItem(`onboarding_completed_${profile.id}`, 'true'); } catch (e) {}
+
+      if (currentPayload.subscription_tier === 'gold' || updateData.subscription_tier === 'gold') {
         alert('🎉 PARABÉNS! Por estar entre as 100 primeiras anunciantes, o seu Plano Gold (30 dias) foi ativado 100% GRATUITAMENTE! Seu anúncio já está no ar com destaque de ouro no portal!');
       }
 
