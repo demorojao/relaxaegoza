@@ -91,6 +91,9 @@ export default function NotificationsPage() {
       setNotifications(prev => 
         prev.map(n => n.id === id ? { ...n, is_read: true } : n)
       );
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('notifications_updated'));
+      }
     } catch (err) {
       console.error('Erro ao marcar notificação como lida:', err);
     }
@@ -103,9 +106,6 @@ export default function NotificationsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
-      if (unreadIds.length === 0) return;
-
       const { error } = await supabase
         .from('profile_notifications')
         .update({ is_read: true })
@@ -116,6 +116,9 @@ export default function NotificationsPage() {
 
       // Atualizar estado local
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('notifications_updated'));
+      }
     } catch (err) {
       console.error('Erro ao marcar todas as notificações:', err);
     } finally {
@@ -134,6 +137,9 @@ export default function NotificationsPage() {
       if (error) throw error;
 
       setNotifications(prev => prev.filter(n => n.id !== id));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('notifications_updated'));
+      }
     } catch (err) {
       console.error('Erro ao excluir notificação:', err);
     }
@@ -255,16 +261,16 @@ export default function NotificationsPage() {
                 </p>
               </div>
 
-              {/* Delete Button (visible on hover) */}
+              {/* Delete Button */}
               <button
                 onClick={(e) => {
                   e.stopPropagation(); // Evitar disparar o clique de leitura
                   handleDeleteNotification(notif.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-500 hover:text-red-400 rounded-lg hover:bg-white/5 cursor-pointer shrink-0 self-center"
+                className="p-2.5 text-gray-400 hover:text-red-400 rounded-xl hover:bg-white/10 transition-colors cursor-pointer shrink-0 self-center"
                 title="Excluir notificação"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="w-4 h-4 text-red-400/80 hover:text-red-400" />
               </button>
             </div>
           ))}

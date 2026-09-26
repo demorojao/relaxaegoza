@@ -79,12 +79,23 @@ export default function DashboardLayout({
     fetchUnreadCount();
     setupRealtime();
 
+    const handleCustomUpdate = () => {
+      fetchUnreadCount();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('notifications_updated', handleCustomUpdate);
+    }
+
     return () => {
       if (channel) {
         supabase.removeChannel(channel);
       }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('notifications_updated', handleCustomUpdate);
+      }
     };
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     async function fetchRole() {
