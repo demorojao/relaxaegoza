@@ -493,7 +493,7 @@ export default function ProfileDetailsClient({
         window.history.replaceState({}, document.title, cleanUrl);
       }
 
-      // Rolagem automática e destaque reforçado para o Clube VIP se vier de link direto VIP ou hash
+      // Rolagem automática fluida e sem travamentos para o Clube VIP
       const scrollToVip = () => {
         const hash = window.location.hash;
         const tabParam = params.get('tab');
@@ -501,16 +501,16 @@ export default function ProfileDetailsClient({
         if (hash === '#clube-vip-section' || hash === '#vip' || tabParam === 'vip' || vipParam === '1' || vipParam === 'true') {
           const el = document.getElementById('clube-vip-section');
           if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-2', 'ring-gold-primary', 'shadow-[0_0_40px_rgba(197,168,128,0.5)]');
+            const yOffset = -70;
+            const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+            el.classList.add('ring-2', 'ring-gold-primary');
           }
         }
       };
 
-      scrollToVip();
-      setTimeout(scrollToVip, 150);
-      setTimeout(scrollToVip, 500);
-      setTimeout(scrollToVip, 900);
+      const timer = setTimeout(scrollToVip, 300);
+      return () => clearTimeout(timer);
     }
   }, []);
 
