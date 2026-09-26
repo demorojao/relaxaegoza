@@ -154,11 +154,7 @@ export default function DashboardLayout({
       icon: Zap,
       path: '/dashboard/boost'
     },
-    {
-      name: 'Conteúdo Exclusivo',
-      icon: Lock,
-      path: '/dashboard/premium'
-    },
+    // Conteudo Exclusivo ocultado temporariamente
     {
       name: 'Planos de Anúncio',
       icon: CreditCard,
