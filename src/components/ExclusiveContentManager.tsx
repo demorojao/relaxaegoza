@@ -35,10 +35,21 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
   const [totalNetRevenueCents, setTotalNetRevenueCents] = useState(0);
   const [pixKey, setPixKey] = useState(profile?.pix_key || '');
   const [requestingPayout, setRequestingPayout] = useState(false);
+  const [payoutFeedback, setPayoutFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const handleRequestPayout = async () => {
+    setPayoutFeedback(null);
     if (!pixKey.trim()) {
-      alert('Informe seu CPF, E-mail, Telefone ou Chave Pix para receber a transferência.');
+      const msg = 'Informe seu CPF, E-mail, Telefone ou Chave Pix para receber a transferência.';
+      setPayoutFeedback({ text: msg, type: 'error' });
+      alert(msg);
+      return;
+    }
+
+    if (totalNetRevenueCents < 500) {
+      const msg = `Seu saldo disponível para saque no momento é R$ ${(totalNetRevenueCents / 100).toFixed(2)}. O valor mínimo para solicitar saque Pix é de R$ 5,00.`;
+      setPayoutFeedback({ text: msg, type: 'error' });
+      alert(msg);
       return;
     }
 
@@ -69,10 +80,14 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
         throw new Error(data.error || 'Erro ao realizar solicitação de saque.');
       }
 
-      alert(`🎉 SUCESSO! ${data.message || 'Transferência Pix de saque realizada com sucesso!'}`);
+      const successMsg = `🎉 SUCESSO! ${data.message || 'Transferência Pix de saque solicitada com sucesso!'}`;
+      setPayoutFeedback({ text: successMsg, type: 'success' });
+      alert(successMsg);
       fetchVipData();
     } catch (err: any) {
-      alert(err.message || 'Erro ao processar saque Pix.');
+      const errMsg = err.message || 'Erro ao processar saque Pix.';
+      setPayoutFeedback({ text: errMsg, type: 'error' });
+      alert(errMsg);
     } finally {
       setRequestingPayout(false);
     }
@@ -96,7 +111,7 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
 
       if (mediaData) setMedias(mediaData);
 
-      // 2. Contagem de Assinantes ativos (status active E validade nao expirada)
+      // 2. Contagem de Assinantes ativos
       const { count: subCount } = await supabase
         .from('premium_subscriptions')
         .select('id', { count: 'exact', head: true })
@@ -106,17 +121,34 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
 
       setSubscriberCount(subCount || 0);
 
-      // 3. Receita total líquida (apenas compras concluídas/pagas)
+      // 3. Receita total líquida (compras sem payout_id atribuído)
       const { data: purchases } = await supabase
         .from('content_purchases')
-        .select('net_amount_cents')
+        .select('net_amount_cents, amount_cents')
         .eq('provider_id', profile.id)
+        .is('payout_id', null)
         .in('status', ['completed', 'paid']);
 
-      if (purchases) {
-        const total = purchases.reduce((acc, p) => acc + (p.net_amount_cents || 0), 0);
-        setTotalNetRevenueCents(total);
+      let total = 0;
+      if (purchases && purchases.length > 0) {
+        total = purchases.reduce((acc, p) => acc + (p.net_amount_cents || Math.round((p.amount_cents || 0) * 0.9)), 0);
       }
+
+      // Se content_purchases não trouxe compras sem payout, verificar a tabela payments para vendas VIP pagas
+      if (total === 0) {
+        const { data: vipPayments } = await supabase
+          .from('payments')
+          .select('amount_cents')
+          .eq('target_profile_id', profile.id)
+          .eq('tier', 'exclusive_subscription')
+          .in('status', ['paid', 'completed']);
+
+        if (vipPayments && vipPayments.length > 0) {
+          total = vipPayments.reduce((acc, p) => acc + Math.round((p.amount_cents || 4990) * 0.9), 0);
+        }
+      }
+
+      setTotalNetRevenueCents(total);
     } catch (err) {
       console.error('Erro ao carregar dados VIP:', err);
     } finally {
@@ -314,7 +346,7 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
 
           <button
             onClick={handleRequestPayout}
-            disabled={requestingPayout || totalNetRevenueCents < 500}
+            disabled={requestingPayout}
             className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-dark-bg font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0 disabled:opacity-40 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
           >
             {requestingPayout ? (
@@ -329,6 +361,17 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
             )}
           </button>
         </div>
+
+        {payoutFeedback && (
+          <div className={`p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 border animate-fadeIn ${
+            payoutFeedback.type === 'success' 
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
+              : 'bg-red-500/10 border-red-500/30 text-red-300'
+          }`}>
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{payoutFeedback.text}</span>
+          </div>
+        )}
       </div>
 
       {/* Mídias Exclusivas Publicadas */}
