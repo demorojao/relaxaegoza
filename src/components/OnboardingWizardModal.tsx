@@ -107,6 +107,22 @@ export default function OnboardingWizardModal({
         updateData.avatar_url = avatarUrl;
       }
 
+      // Se for anunciante e estiver entre as 100 primeiras, conceder o Plano Gold por 30 dias gratuitamente
+      if (profile.role === 'provider' && (!profile.subscription_tier || profile.subscription_tier === 'free')) {
+        const { count: providerRank } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'provider')
+          .lte('created_at', profile.created_at);
+
+        if (providerRank !== null && providerRank <= 100) {
+          const expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + 30);
+          updateData.subscription_tier = 'gold';
+          updateData.subscription_expires_at = expiresAt.toISOString();
+        }
+      }
+
       const { data: updatedProfile, error } = await supabase
         .from('profiles')
         .update(updateData)
@@ -115,6 +131,10 @@ export default function OnboardingWizardModal({
         .single();
 
       if (error) throw error;
+
+      if (updateData.subscription_tier === 'gold') {
+        alert('🎉 PARABÉNS! Por estar entre as 100 primeiras anunciantes, o seu Plano Gold (30 dias) foi ativado 100% GRATUITAMENTE! Seu anúncio já está no ar com destaque de ouro no portal!');
+      }
 
       onComplete(updatedProfile || { ...profile, ...updateData });
       onClose();
