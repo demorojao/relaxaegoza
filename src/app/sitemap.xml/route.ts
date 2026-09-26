@@ -3,7 +3,7 @@ import { getSupabaseServiceClient } from '@/lib/supabaseServer';
 import { slugify, getStateFromCity } from '@/lib/slugify';
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxegoze.com';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.relaxegoze.com';
 
   const staticPages = [
     { url: `${baseUrl}`, priority: '1.0', changefreq: 'daily' },
