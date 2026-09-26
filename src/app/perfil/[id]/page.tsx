@@ -10,14 +10,13 @@ import ProfileDetailsClient from './ProfileDetailsClient';
 import Logo from '@/components/Logo';
 import { getCDNUrl } from '@/lib/mediaHelper';
 
+export const dynamic = 'force-dynamic';
+
 interface Props {
   params: Promise<{ id: string }>;
 }
 
 async function getCachedProfile(id: string) {
-  'use cache';
-  cacheLife('days');
-  cacheTag(`profile-${id}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
     .from('profiles')
@@ -31,9 +30,6 @@ async function getCachedProfile(id: string) {
 }
 
 async function getCachedPhotos(profileId: string) {
-  'use cache';
-  cacheLife({ stale: 5, revalidate: 10, expire: 60 });
-  cacheTag(`profile-${profileId}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
     .from('profile_photos')
@@ -43,9 +39,6 @@ async function getCachedPhotos(profileId: string) {
 }
 
 async function getCachedReviews(providerId: string) {
-  'use cache';
-  cacheLife('days');
-  cacheTag(`profile-${providerId}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
     .from('reviews')
@@ -58,9 +51,6 @@ async function getCachedReviews(providerId: string) {
 }
 
 async function getCachedAd(profileId: string) {
-  'use cache';
-  cacheLife('days');
-  cacheTag(`profile-${profileId}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
     .from('ads')
@@ -80,6 +70,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxeegoze.com.br';
+
   const title = `${profile.name}, ${profile.age} anos - Portal Relaxe & Goze`;
   const location = profile.neighborhood ? `${profile.neighborhood}, ${profile.city}` : profile.city;
   const description = `${profile.name} (${profile.age} anos) - Atendimento exclusivo e de alto padrão em ${location}. Confira fotos reais, vídeos, comodidades e agende pelo WhatsApp.`;
@@ -90,16 +82,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Garantir que a URL da imagem seja absoluta para leitura pelo WhatsApp
   const finalImageUrl = cdnAvatarUrl.startsWith('http') 
     ? cdnAvatarUrl 
-    : `https://relaxaegoza.com.br${cdnAvatarUrl.startsWith('/') ? '' : '/'}${cdnAvatarUrl}`;
+    : `${baseUrl}${cdnAvatarUrl.startsWith('/') ? '' : '/'}${cdnAvatarUrl}`;
 
   return {
     title,
     description,
-    metadataBase: new URL('https://relaxaegoza.com.br'),
+    metadataBase: new URL(baseUrl),
     openGraph: {
       title,
       description,
-      url: `https://relaxaegoza.com.br/perfil/${id}`,
+      url: `${baseUrl}/perfil/${id}`,
       siteName: 'Relaxe & Goze - Portal de Elite',
       locale: 'pt_BR',
       type: 'profile',

@@ -128,7 +128,7 @@ export async function fulfillPayment(paymentRecordOrTxid: string | number | any)
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     if (user_id && target_profile_id) {
-      await supabaseService
+      const { error: upsertError } = await supabaseService
         .from('premium_subscriptions')
         .upsert({
           client_id: user_id,
@@ -137,6 +137,37 @@ export async function fulfillPayment(paymentRecordOrTxid: string | number | any)
           price_cents: payment.amount_cents || 4990,
           expires_at: expiresAt.toISOString()
         }, { onConflict: 'client_id,provider_id' });
+
+      if (upsertError) {
+        console.warn('Upsert premium_subscriptions failed, executing manual select-then-upsert fallback:', upsertError.message);
+        const { data: existingSub } = await supabaseService
+          .from('premium_subscriptions')
+          .select('id')
+          .eq('client_id', user_id)
+          .eq('provider_id', target_profile_id)
+          .maybeSingle();
+
+        if (existingSub) {
+          await supabaseService
+            .from('premium_subscriptions')
+            .update({
+              status: 'active',
+              price_cents: payment.amount_cents || 4990,
+              expires_at: expiresAt.toISOString()
+            })
+            .eq('id', existingSub.id);
+        } else {
+          await supabaseService
+            .from('premium_subscriptions')
+            .insert({
+              client_id: user_id,
+              provider_id: target_profile_id,
+              status: 'active',
+              price_cents: payment.amount_cents || 4990,
+              expires_at: expiresAt.toISOString()
+            });
+        }
+      }
 
       await supabaseService
         .from('content_purchases')

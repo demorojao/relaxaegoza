@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props) {
   const { state: stateSlug, city: citySlug } = await params;
   const { city: cityName } = await getOriginalLocationNames(citySlug);
   const stateFormated = stateSlug.toUpperCase();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxe e goze.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxeegoze.com.br';
 
   const title = `Acompanhantes de Luxo e Massagistas de Elite em ${cityName} - ${stateFormated} | Relaxe & Goze`;
   const description = `Conecte-se com acompanhantes de luxo, massagistas de elite e profissionais VIP em ${cityName} (${stateFormated}). Perfis de alto padrão com fotos reais verificadas por selfie e WhatsApp direto.`;
@@ -68,7 +68,6 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export default async function CityPage({ params }: Props) {
   const { state: stateSlug, city: citySlug } = await params;

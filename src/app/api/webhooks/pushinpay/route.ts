@@ -4,10 +4,14 @@ import { fulfillPayment } from '@/lib/paymentFulfillment';
 export async function POST(req: NextRequest) {
   try {
     const expectedToken = process.env.PUSHINPAY_WEBHOOK_SECRET || process.env.PUSHINPAY_TOKEN;
-    const receivedToken = req.headers.get('x-pushinpay-token');
+    const receivedToken = 
+      req.headers.get('x-pushinpay-token') || 
+      req.headers.get('x-webhook-token') || 
+      req.nextUrl.searchParams.get('token') ||
+      req.headers.get('authorization')?.replace('Bearer ', '');
 
     if (expectedToken) {
-      if (!receivedToken || receivedToken !== expectedToken) {
+      if (!receivedToken || (receivedToken !== expectedToken && receivedToken !== process.env.PUSHINPAY_WEBHOOK_SECRET && receivedToken !== process.env.PUSHINPAY_TOKEN)) {
         console.warn('Webhook PushinPay: token de validação inválido ou ausente.');
         return new Response('Unauthorized', { status: 401 });
       }

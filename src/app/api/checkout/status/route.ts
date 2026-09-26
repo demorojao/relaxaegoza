@@ -33,7 +33,8 @@ export async function GET(req: NextRequest) {
     // Se o banco indicar 'pending', consultar status na PushinPay para resposta instantânea
     if (currentStatus === 'pending' && payment.txid) {
       const pushinData = await getPushinPayPixStatus(payment.txid);
-      if (pushinData && pushinData.status === 'paid') {
+      const pushinStatus = (pushinData?.status || '').toString().toLowerCase();
+      if (pushinData && (pushinStatus === 'paid' || pushinStatus === 'approved' || pushinStatus === 'completed')) {
         await fulfillPayment(payment);
         currentStatus = 'paid';
       }

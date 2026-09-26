@@ -3,8 +3,6 @@ import { getSupabaseServerClient } from './supabaseServer';
 import { slugify, formatLocationName } from './slugify';
 
 export async function getOriginalLocationNames(citySlug: string, neighborhoodSlug?: string) {
-  'use cache';
-  cacheLife('minutes');
   const supabase = getSupabaseServerClient();
   
   const { data, error } = await supabase.rpc('resolve_location_names', {

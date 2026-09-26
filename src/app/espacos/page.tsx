@@ -11,9 +11,9 @@ export const metadata: Metadata = {
   description: 'Marketplace exclusivo de salas de massagem, consultórios privativos e locais de atendimento para aluguel por hora ou período. Espaços auditados e equipados.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function EspacosPage() {
-  'use cache';
-  cacheLife('minutes');
   const supabase = getSupabaseServiceClient();
 
   const { data: rooms } = await supabase

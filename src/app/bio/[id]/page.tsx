@@ -4,6 +4,8 @@ import { cacheLife, cacheTag } from 'next/cache';
 import { getSupabaseServerClient } from '@/lib/supabaseServer';
 import BioClientView from './BioClientView';
 
+export const dynamic = 'force-dynamic';
+
 interface BioPageProps {
   params: Promise<{
     id: string;
@@ -11,9 +13,6 @@ interface BioPageProps {
 }
 
 async function getCachedBioProfile(id: string) {
-  'use cache';
-  cacheLife('hours');
-  cacheTag(`profile-${id}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
     .from('profiles')
@@ -24,9 +23,6 @@ async function getCachedBioProfile(id: string) {
 }
 
 async function getCachedBioAd(userId: string) {
-  'use cache';
-  cacheLife('hours');
-  cacheTag(`profile-${userId}`);
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
     .from('ads')
@@ -37,9 +33,6 @@ async function getCachedBioAd(userId: string) {
 }
 
 async function getCachedBioMediaCount(profileId: string) {
-  'use cache';
-  cacheLife('hours');
-  cacheTag(`profile-${profileId}`);
   const supabase = getSupabaseServerClient();
   const { count } = await supabase
     .from('premium_media')

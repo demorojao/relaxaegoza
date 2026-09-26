@@ -44,6 +44,11 @@ export interface Profile {
   ad_videos?: string[];
   photos?: any[];
   has_vip_content?: boolean;
+  instagram?: string;
+  telegram?: string;
+  x_twitter?: string;
+  tiktok?: string;
+  has_completed_onboarding?: boolean;
 }
 
 export interface Story {

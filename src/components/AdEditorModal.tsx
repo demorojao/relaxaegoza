@@ -30,6 +30,12 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [adId, setAdId] = useState<string | null>(null);
   
+  // Social states
+  const [instagram, setInstagram] = useState('');
+  const [telegram, setTelegram] = useState('');
+  const [xTwitter, setXTwitter] = useState('');
+  const [tiktok, setTiktok] = useState('');
+  
   // Boost states
   const [boostTimeLeft, setBoostTimeLeft] = useState<string | null>(null);
   const [boostingCheckout, setBoostingCheckout] = useState(false);
@@ -236,6 +242,16 @@ export default function AdEditorModal({ isOpen, onClose, profile, onSaveSuccess 
       if (error) throw error;
 
       if (profile) {
+        await supabase
+          .from('profiles')
+          .update({
+            instagram: instagram.trim(),
+            telegram: telegram.trim(),
+            x_twitter: xTwitter.trim(),
+            tiktok: tiktok.trim()
+          })
+          .eq('id', profile.id);
+
         await triggerRevalidate(profile.city, profile.neighborhood);
       }
 

@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const neighborhoodFormated = neighborhood.replace('-', ' ').replace(/(^\w|\s\w)/g, m => m.toUpperCase());
   const cityFormated = city.replace('-', ' ').replace(/(^\w|\s\w)/g, m => m.toUpperCase());
   const stateFormated = state.toUpperCase();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxe e goze.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxeegoze.com.br';
 
   return {
     title: `Acompanhantes de Luxo e Massagistas de Elite no ${neighborhoodFormated} - ${cityFormated} ${stateFormated} | Relaxe & Goze`,
@@ -69,7 +69,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export default async function NeighborhoodPage({ params }: Props) {
   const { state: stateSlug, city: citySlug, neighborhood: neighborhoodSlug } = await params;

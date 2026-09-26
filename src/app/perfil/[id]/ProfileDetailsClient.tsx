@@ -40,9 +40,11 @@ import {
   Check,
   Grid,
   Camera,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Send,
+  Globe
 } from 'lucide-react';
-import { formatWhatsAppLink, cleanDescription, getEffectiveTier, cn } from '@/lib/utils';
+import { formatWhatsAppLink, cleanDescription, getEffectiveTier, cn, copyToClipboard } from '@/lib/utils';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { getCDNUrl } from '@/lib/mediaHelper';
 import dynamic from 'next/dynamic';
@@ -491,13 +493,16 @@ export default function ProfileDetailsClient({
         window.history.replaceState({}, document.title, cleanUrl);
       }
 
-      // Rolagem automática reforçada para o Clube VIP se vier do botão 'Ver Conteúdo VIP'
+      // Rolagem automática e destaque reforçado para o Clube VIP se vier de link direto VIP ou hash
       const scrollToVip = () => {
         const hash = window.location.hash;
-        if (hash === '#clube-vip-section' || hash === '#vip') {
+        const tabParam = params.get('tab');
+        const vipParam = params.get('vip');
+        if (hash === '#clube-vip-section' || hash === '#vip' || tabParam === 'vip' || vipParam === '1' || vipParam === 'true') {
           const el = document.getElementById('clube-vip-section');
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-2', 'ring-gold-primary', 'shadow-[0_0_40px_rgba(197,168,128,0.5)]');
           }
         }
       };
@@ -678,7 +683,7 @@ export default function ProfileDetailsClient({
         // Fallback para área de transferência se cancelar o dialog
       }
     }
-    navigator.clipboard.writeText(shareUrl);
+    await copyToClipboard(shareUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
   };
@@ -1177,6 +1182,57 @@ export default function ProfileDetailsClient({
                 <Crown className="w-3.5 h-3.5 text-gold-primary" /> Clube VIP Exclusivo
               </span>
             </div>
+
+            {/* Redes Sociais Oficiais */}
+            {(profile.instagram || profile.telegram || profile.x_twitter || profile.tiktok) && (
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400 mr-1">Redes Oficiais:</span>
+                {profile.instagram && (
+                  <a
+                    href={profile.instagram.startsWith('http') ? profile.instagram : `https://instagram.com/${profile.instagram.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-pink-500/10 border border-pink-500/30 text-pink-300 hover:text-white hover:bg-pink-500/20 text-xs font-semibold transition-all"
+                  >
+                    <Camera className="w-3.5 h-3.5 text-pink-400" />
+                    <span>Instagram</span>
+                  </a>
+                )}
+                {profile.telegram && (
+                  <a
+                    href={profile.telegram.startsWith('http') ? profile.telegram : `https://t.me/${profile.telegram.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-300 hover:text-white hover:bg-sky-500/20 text-xs font-semibold transition-all"
+                  >
+                    <Send className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Telegram</span>
+                  </a>
+                )}
+                {profile.x_twitter && (
+                  <a
+                    href={profile.x_twitter.startsWith('http') ? profile.x_twitter : `https://x.com/${profile.x_twitter.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/15 text-gray-300 hover:text-white hover:bg-white/10 text-xs font-semibold transition-all"
+                  >
+                    <Globe className="w-3.5 h-3.5 text-gray-300" />
+                    <span>X (Twitter)</span>
+                  </a>
+                )}
+                {profile.tiktok && (
+                  <a
+                    href={profile.tiktok.startsWith('http') ? profile.tiktok : `https://tiktok.com/@${profile.tiktok.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 hover:text-white hover:bg-red-500/20 text-xs font-semibold transition-all"
+                  >
+                    <Video className="w-3.5 h-3.5 text-red-400" />
+                    <span>TikTok</span>
+                  </a>
+                )}
+              </div>
+            )}
 
             {/* Opções de Atendimento (Público-alvo) */}
             {profile.target_audience && profile.target_audience.length > 0 && (

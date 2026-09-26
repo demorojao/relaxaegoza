@@ -27,39 +27,58 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import HostDashboardView from '@/components/HostDashboardView';
 import AdEditorModal from '@/components/AdEditorModal';
+import OnboardingWizardModal from '@/components/OnboardingWizardModal';
 import ExclusiveContentManager from '@/components/ExclusiveContentManager';
 import FinancialGoalsCalculator from '@/components/FinancialGoalsCalculator';
 import { triggerRevalidate } from '@/lib/revalidate';
 import { uploadToR2 } from '@/lib/r2Client';
-import { getEffectiveTier } from '@/lib/utils';
+import { getEffectiveTier, copyToClipboard } from '@/lib/utils';
 
 export default function DashboardMetrics() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const handleCopyProfileLink = () => {
+  const handleCopyProfileLink = async () => {
     if (!profile?.id) return;
     const profileUrl = `${window.location.origin}/perfil/${profile.id}`;
-    navigator.clipboard.writeText(profileUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
+    const ok = await copyToClipboard(profileUrl);
+    if (ok) {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
   };
 
   const [copiedBioLink, setCopiedBioLink] = useState(false);
 
-  const handleCopyBioLink = () => {
+  const handleCopyBioLink = async () => {
     if (!profile?.id) return;
     const bioUrl = `${window.location.origin}/bio/${profile.id}`;
-    navigator.clipboard.writeText(bioUrl);
-    setCopiedBioLink(true);
-    setTimeout(() => setCopiedBioLink(false), 2500);
+    const ok = await copyToClipboard(bioUrl);
+    if (ok) {
+      setCopiedBioLink(true);
+      setTimeout(() => setCopiedBioLink(false), 2500);
+    }
   };
+
+  const [copiedVipLink, setCopiedVipLink] = useState(false);
+
+  const handleCopyVipLink = async () => {
+    if (!profile?.id) return;
+    const vipUrl = `${window.location.origin}/perfil/${profile.id}?tab=vip`;
+    const ok = await copyToClipboard(vipUrl);
+    if (ok) {
+      setCopiedVipLink(true);
+      setTimeout(() => setCopiedVipLink(false), 2500);
+    }
+  };
+
   const [profile, setProfile] = useState<any>(null);
   const [isAvailable, setIsAvailable] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [checkoutStatus, setCheckoutStatus] = useState<string | null>(null);
   const [isAdModalOpen, setIsAdModalOpen] = useState(false);
+  const [isOnboardingWizardOpen, setIsOnboardingWizardOpen] = useState(false);
   const [boostingCheckout, setBoostingCheckout] = useState(false);
   const [boostTimeLeft, setBoostTimeLeft] = useState<string | null>(null);
   const [ad, setAd] = useState<any>(null);
@@ -220,6 +239,11 @@ export default function DashboardMetrics() {
       }
       setProfile(data);
       setIsAvailable(data.is_available_now || false);
+
+      // Se for a primeira vez da profissional, abrir o Wizard Flutuante de Configuração
+      if (!data.has_completed_onboarding) {
+        setIsOnboardingWizardOpen(true);
+      }
 
       // Buscar anúncio ativo do usuário
       const { data: adData } = await supabase
@@ -696,6 +720,35 @@ export default function DashboardMetrics() {
               )}
             </button>
 
+            {/* Copiar Link Direto para Venda de Fotos VIP */}
+            <button
+              onClick={handleCopyVipLink}
+              title="Copiar Link Direto da Seção VIP para vender fotos/vídeos exclusivos no Instagram / WhatsApp"
+              className="flex-1 md:flex-none px-3.5 py-2 rounded-xl bg-gold-primary/20 hover:bg-gold-primary/30 border border-gold-primary/40 text-xs font-bold text-gold-light hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm animate-pulse"
+            >
+              {copiedVipLink ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-emerald-400 font-semibold">Link VIP Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-gold-primary" />
+                  <span>Copiar Link Venda VIP 👑</span>
+                </>
+              )}
+            </button>
+
+            {/* Wizard Flutuante de Perfil */}
+            <button
+              onClick={() => setIsOnboardingWizardOpen(true)}
+              title="Abrir o assistente flutuante de configuração inicial do perfil"
+              className="flex-1 md:flex-none px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs font-medium text-gray-200 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-gold-primary" />
+              <span>Wizard de Perfil</span>
+            </button>
+
             {/* Ver Perfil Público */}
             {profile?.id && (
               <a
@@ -1001,6 +1054,17 @@ export default function DashboardMetrics() {
             onClose={() => setIsAdModalOpen(false)}
             profile={profile}
             onSaveSuccess={fetchProfile}
+          />
+
+          <OnboardingWizardModal
+            isOpen={isOnboardingWizardOpen}
+            onClose={() => setIsOnboardingWizardOpen(false)}
+            profile={profile}
+            onComplete={(updatedProfile) => {
+              setProfile(updatedProfile);
+              setIsOnboardingWizardOpen(false);
+              fetchProfile();
+            }}
           />
         </>
       )}
