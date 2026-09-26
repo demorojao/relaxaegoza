@@ -48,7 +48,8 @@ export default function OnboardingWizardModal({
   const [neighborhood, setNeighborhood] = useState(profile.neighborhood || 'Jardins');
 
   // Step 2: Valores & Contato
-  const [pricePerHour, setPricePerHour] = useState(profile.price_per_hour || 250);
+  const [isConsultPrice, setIsConsultPrice] = useState<boolean>(!profile.price_per_hour || profile.price_per_hour === 0);
+  const [pricePerHour, setPricePerHour] = useState(profile.price_per_hour || 300);
   const [whatsapp, setWhatsapp] = useState(profile.whatsapp || '');
   const [bio, setBio] = useState(profile.bio || '');
 
@@ -93,7 +94,7 @@ export default function OnboardingWizardModal({
         gender,
         city: city.trim() || 'São Paulo',
         neighborhood: neighborhood.trim() || 'Jardins',
-        price_per_hour: Number(pricePerHour) || 0,
+        price_per_hour: isConsultPrice ? 0 : Number(pricePerHour) || 0,
         whatsapp: whatsapp.replace(/\D/g, ''),
         bio: bio.trim(),
         instagram: instagram.trim(),
@@ -313,14 +314,36 @@ export default function OnboardingWizardModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] text-gray-300 font-medium">Valor por Hora (R$)</label>
-                  <input
-                    type="number"
-                    value={pricePerHour}
-                    onChange={(e) => setPricePerHour(Number(e.target.value))}
-                    placeholder="250"
-                    className="w-full bg-black/60 border border-white/15 focus:border-gold-primary rounded-xl px-3.5 py-2.5 text-xs text-white outline-none transition-colors font-semibold"
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] text-gray-300 font-medium">Valor por Hora (R$)</label>
+                    <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-gold-light font-bold">
+                      <input
+                        type="checkbox"
+                        checked={isConsultPrice}
+                        onChange={(e) => {
+                          setIsConsultPrice(e.target.checked);
+                          if (e.target.checked) setPricePerHour(0);
+                        }}
+                        className="rounded border-white/20 text-gold-primary focus:ring-0 accent-gold-primary"
+                      />
+                      <span>Sob consulta</span>
+                    </label>
+                  </div>
+
+                  {!isConsultPrice ? (
+                    <input
+                      type="number"
+                      value={pricePerHour || ''}
+                      onChange={(e) => setPricePerHour(Number(e.target.value))}
+                      placeholder="300"
+                      className="w-full bg-black/60 border border-white/15 focus:border-gold-primary rounded-xl px-3.5 py-2.5 text-xs text-white outline-none transition-colors font-semibold"
+                    />
+                  ) : (
+                    <div className="w-full bg-black/40 border border-gold-primary/30 rounded-xl px-3.5 py-2.5 text-xs text-gold-light font-bold flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-gold-primary shrink-0" />
+                      <span>Valor sob consulta no WhatsApp</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
