@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServer';
 import { slugify, getStateFromCity } from '@/lib/slugify';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.relaxegoze.com';
