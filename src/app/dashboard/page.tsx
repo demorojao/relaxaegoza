@@ -720,24 +720,7 @@ export default function DashboardMetrics() {
               )}
             </button>
 
-            {/* Copiar Link Direto para Venda de Fotos VIP */}
-            <button
-              onClick={handleCopyVipLink}
-              title="Copiar Link Direto da Seção VIP para vender fotos/vídeos exclusivos no Instagram / WhatsApp"
-              className="flex-1 md:flex-none px-3.5 py-2 rounded-xl bg-gold-primary/20 hover:bg-gold-primary/30 border border-gold-primary/40 text-xs font-bold text-gold-light hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm animate-pulse"
-            >
-              {copiedVipLink ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400 font-semibold">Link VIP Copiado!</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5 text-gold-primary" />
-                  <span>Copiar Link Venda VIP 👑</span>
-                </>
-              )}
-            </button>
+            {/* Link Venda VIP ocultado temporariamente */}
 
             {/* Wizard Flutuante de Perfil */}
             <button
@@ -870,10 +853,7 @@ export default function DashboardMetrics() {
         </div>
       </div>
 
-      {/* Módulo de Clube VIP e Mídias Exclusivas */}
-      {profile && profile.role === 'provider' && (
-        <ExclusiveContentManager profile={profile} onSave={fetchProfile} />
-      )}
+      {/* Módulo de Clube VIP ocultado temporariamente */}
 
       {/* Seção de Estatísticas e Tráfego */}
       <div className="relative">

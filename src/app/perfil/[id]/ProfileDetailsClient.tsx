@@ -171,6 +171,7 @@ function formatScheduleGrouped(hours: Record<string, { active: boolean; start?: 
 // Componente de Conteúdo Exclusivo para o perfil público
 // Componente de Conteúdo Exclusivo (Clube VIP) para o perfil público
 function PremiumSection({ providerId, providerName, subscriptionPriceCents, currentUser, whatsapp }: { providerId: string; providerName: string; subscriptionPriceCents?: number; currentUser?: any; whatsapp?: string }) {
+  return null; // Ocultado temporariamente a pedido do usuário
   const [medias, setMedias] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [isSubscribed, setIsSubscribed] = React.useState(false);
@@ -178,9 +179,8 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
   const [subscribing, setSubscribing] = React.useState(false);
   const [activeMediaPreview, setActiveMediaPreview] = React.useState<{ url: string; type: 'photo' | 'video' } | null>(null);
 
-  const priceFormatted = subscriptionPriceCents 
-    ? `R$ ${(subscriptionPriceCents / 100).toFixed(2)}/mês` 
-    : 'R$ 49,90/mês';
+  const priceVal = subscriptionPriceCents || 4990;
+  const priceFormatted = `R$ ${(priceVal / 100).toFixed(2)}/mês`;
 
   React.useEffect(() => {
     const fetchPremiumAndSub = async () => {
@@ -295,7 +295,7 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
 
         {isSubscribed && subExpiresAt && (
           <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1.5 shrink-0 self-start sm:self-center">
-            <Unlock className="w-3.5 h-3.5" /> Assinatura Ativa até {new Date(subExpiresAt).toLocaleDateString('pt-BR')}
+            <Unlock className="w-3.5 h-3.5" /> Assinatura Ativa até {new Date(subExpiresAt!).toLocaleDateString('pt-BR')}
           </span>
         )}
       </div>
@@ -439,9 +439,9 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
             <X className="w-6 h-6" />
           </button>
           <div className="max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-gold-primary/30 shadow-2xl relative flex items-center justify-center">
-            {activeMediaPreview.type === 'video' ? (
+            {activeMediaPreview?.type === 'video' ? (
               <video 
-                src={activeMediaPreview.url} 
+                src={activeMediaPreview?.url} 
                 controls 
                 autoPlay 
                 controlsList="nodownload"
@@ -450,7 +450,7 @@ function PremiumSection({ providerId, providerName, subscriptionPriceCents, curr
               />
             ) : (
               <img 
-                src={activeMediaPreview.url} 
+                src={activeMediaPreview?.url || ''} 
                 alt="Mídia Ampliada" 
                 className="max-w-full max-h-[85vh] object-contain rounded-xl select-none"
                 onContextMenu={(e) => e.preventDefault()}
@@ -1175,16 +1175,7 @@ export default function ProfileDetailsClient({
                   <Building2 className="w-3.5 h-3.5" /> Espaço Auditado
                 </span>
               )}
-              <span 
-                onClick={() => {
-                  const el = document.getElementById('clube-vip-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                title="Clique para ver o Clube VIP e Conteúdos Exclusivos"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gold-primary/20 border border-gold-primary/40 text-gold-light text-[10px] font-bold uppercase tracking-wider shadow-sm animate-pulse cursor-pointer hover:bg-gold-primary/30 transition-all"
-              >
-                <Crown className="w-3.5 h-3.5 text-gold-primary" /> Clube VIP Exclusivo
-              </span>
+              {/* Clube VIP ocultado temporariamente */}
             </div>
 
             {/* Redes Sociais Oficiais */}

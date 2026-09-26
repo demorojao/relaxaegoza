@@ -436,15 +436,7 @@ export default function ProfileCard({ profile, showAdInfo = true, isFavorite = f
             <span className="line-clamp-2">{cleanDesc || "Atendimento exclusivo com agendamento direto pelo WhatsApp."}</span>
           </Link>
 
-          {/* Botão de Conteúdo VIP / FatalFans (Exibido para Gold VIP ou perfis com mídias VIP ativas) */}
-          {hasVipShow && (
-            <Link href={`/perfil/${profile.id}#clube-vip-section`}>
-              <div className="w-full py-2 px-3 bg-gradient-to-r from-wine-primary via-wine-dark to-wine-primary hover:from-wine-light hover:to-wine-primary text-white text-xs font-extrabold uppercase tracking-wide flex items-center justify-center gap-1.5 border-t border-white/10 transition-all cursor-pointer">
-                <span className="text-sm">🦋</span>
-                <span>Ver Conteúdo VIP</span>
-              </div>
-            </Link>
-          )}
+          {/* Conteúdo VIP ocultado temporariamente */}
 
           {/* Linha Divisória de Botões 50/50: Ver Telefone (Verde) | Ver Mais (Branco) */}
           <div className="flex items-stretch w-full border-t border-white/10">
