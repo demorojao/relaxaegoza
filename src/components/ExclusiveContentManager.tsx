@@ -33,6 +33,50 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
   // Estatísticas de Assinantes & Finanças VIP
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [totalNetRevenueCents, setTotalNetRevenueCents] = useState(0);
+  const [pixKey, setPixKey] = useState(profile?.pix_key || '');
+  const [requestingPayout, setRequestingPayout] = useState(false);
+
+  const handleRequestPayout = async () => {
+    if (!pixKey.trim()) {
+      alert('Informe seu CPF, E-mail, Telefone ou Chave Pix para receber a transferência.');
+      return;
+    }
+
+    setRequestingPayout(true);
+    try {
+      if (pixKey.trim() !== profile?.pix_key) {
+        await supabase
+          .from('profiles')
+          .update({ pix_key: pixKey.trim() })
+          .eq('id', profile.id);
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/payouts', {
+        method: 'POST',
+        headers,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao realizar solicitação de saque.');
+      }
+
+      alert(`🎉 SUCESSO! ${data.message || 'Transferência Pix de saque realizada com sucesso!'}`);
+      fetchVipData();
+    } catch (err: any) {
+      alert(err.message || 'Erro ao processar saque Pix.');
+    } finally {
+      setRequestingPayout(false);
+    }
+  };
 
   useEffect(() => {
     if (profile?.id) {
@@ -238,6 +282,53 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
         <p className="text-[11px] text-gray-500 font-light">
           Este é o valor mensal que os clientes pagarão via Pix para desbloquear todas as fotos e vídeos do seu canal VIP.
         </p>
+      </div>
+
+      {/* Solicitar Saque Pix dos Ganhos VIP */}
+      <div className="bg-gradient-to-r from-emerald-500/10 via-black/40 to-transparent border border-emerald-500/30 p-5 rounded-2xl space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div>
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <DollarSign className="w-4.5 h-4.5 text-emerald-400" />
+              Saque Pix dos Ganhos VIP
+            </h3>
+            <p className="text-[11px] text-gray-400 font-light mt-0.5">
+              Solicite a transferência imediata dos seus ganhos para a sua chave Pix (Mínimo R$ 5,00).
+            </p>
+          </div>
+          <span className="text-sm font-extrabold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/30 shrink-0">
+            Saldo Disponível: R$ {(totalNetRevenueCents / 100).toFixed(2)}
+          </span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="relative w-full flex-1">
+            <input
+              type="text"
+              value={pixKey}
+              onChange={(e) => setPixKey(e.target.value)}
+              placeholder="Digite seu CPF, E-mail, Telefone ou Chave Pix"
+              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-medium focus:outline-none focus:border-emerald-500/60"
+            />
+          </div>
+
+          <button
+            onClick={handleRequestPayout}
+            disabled={requestingPayout || totalNetRevenueCents < 500}
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-dark-bg font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0 disabled:opacity-40 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+          >
+            {requestingPayout ? (
+              <>
+                <div className="w-4 h-4 border-2 border-dark-bg/30 border-t-dark-bg rounded-full animate-spin" />
+                Transferindo...
+              </>
+            ) : (
+              <>
+                <DollarSign className="w-4 h-4" /> Solicitar Saque Pix Agora
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mídias Exclusivas Publicadas */}

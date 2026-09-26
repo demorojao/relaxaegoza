@@ -3,7 +3,7 @@ import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabas
 import { requestPushinPayPixCashOut } from '@/lib/pushinpay';
 import { isValidCPF } from '@/lib/utils';
 
-const MIN_PAYOUT_CENTS = 5000; // R$ 50,00 valor mínimo por saque para evitar bloqueio da conta gateway
+const MIN_PAYOUT_CENTS = 500; // R$ 5,00 valor mínimo por saque Pix
 
 export async function POST(req: NextRequest) {
   try {
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
 
     if (totalNetCents < MIN_PAYOUT_CENTS) {
       return NextResponse.json({
-        error: `O valor mínimo para solicitação de saque PIX é de R$ 50,00. Seu saldo disponível atual é R$ ${(totalNetCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`
+        error: `O valor mínimo para solicitação de saque PIX é de R$ 5,00. Seu saldo disponível atual é R$ ${(totalNetCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`
       }, { status: 400 });
     }
 
