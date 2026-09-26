@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props) {
   const { state: stateSlug, city: citySlug } = await params;
   const { city: cityName } = await getOriginalLocationNames(citySlug);
   const stateFormated = stateSlug.toUpperCase();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relaxeegoze.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.relaxegoze.com';
 
   const title = `Acompanhantes de Luxo e Massagistas de Elite em ${cityName} - ${stateFormated} | Relaxe & Goze`;
   const description = `Conecte-se com acompanhantes de luxo, massagistas de elite e profissionais VIP em ${cityName} (${stateFormated}). Perfis de alto padrão com fotos reais verificadas por selfie e WhatsApp direto.`;
@@ -110,6 +110,31 @@ export default async function CityPage({ params }: Props) {
   const verifiedCount = cityProfiles.filter(p => p.verification_status === 'verified').length;
   const spaceVerifiedCount = cityProfiles.filter(p => p.is_space_verified).length;
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.relaxegoze.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": stateSlug.toUpperCase(),
+        "item": `https://www.relaxegoze.com/${stateSlug}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": cityName,
+        "item": `https://www.relaxegoze.com/${stateSlug}/${citySlug}`
+      }
+    ]
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -127,6 +152,10 @@ export default async function CityPage({ params }: Props) {
   return (
     <main className="min-h-screen w-full bg-dark-bg text-gray-100 pb-24 selection:bg-gold-primary selection:text-dark-bg relative overflow-hidden">
       {/* Schema.org JSON-LD microdata */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c') }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
