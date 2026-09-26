@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Criação da cobrança Pix na PushinPay (quando não for gratuito)
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || 'https://relaxeegoze.com.br';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || 'https://relaxegoze.com';
     const webhookUrl = `${baseUrl}/api/webhooks/pushinpay`;
 
     const pixData = await createPushinPayPixCharge({
