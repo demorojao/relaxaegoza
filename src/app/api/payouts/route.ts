@@ -170,26 +170,24 @@ export async function POST(req: NextRequest) {
       });
 
     } catch (cashOutError: any) {
-      console.error('Erro na transferência PushinPay:', cashOutError);
+      console.warn('Transferência automática PushinPay restrita a CNPJ. Registrando solicitação para repasse manual:', cashOutError.message);
 
-      // Reverter vínculo das compras para que o saldo continue disponível
-      await supabaseService
-        .from('content_purchases')
-        .update({ payout_id: null })
-        .in('id', purchaseIds);
-
-      // Marcar payout como failed
+      // Atualizar o registro de saque para 'pending_manual_transfer' para que o administrador faça o Pix
       await supabaseService
         .from('payouts')
         .update({
-          status: 'failed',
-          error_message: cashOutError.message || 'Falha no servidor da PushinPay',
+          status: 'pending_manual_transfer',
+          error_message: 'Aguardando transferência manual do administrador (Restrição CNPJ Gateway)',
         })
         .eq('id', payoutRecord.id);
 
       return NextResponse.json({
-        error: `Falha ao processar transferência PIX: ${cashOutError.message || 'Tente novamente em instantes.'}`
-      }, { status: 500 });
+        success: true,
+        isManual: true,
+        message: `Solicitação de saque de R$ ${(totalNetCents / 100).toFixed(2)} recebida! O repasse via Pix será concluído pelo nosso suporte financeiro para a sua chave Pix (${cleanPixKey}) em instantes.`,
+        payoutId: payoutRecord.id,
+        netAmount: totalNetCents / 100,
+      });
     }
 
   } catch (err: any) {
