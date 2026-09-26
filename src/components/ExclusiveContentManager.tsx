@@ -36,20 +36,19 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
   const [pixKey, setPixKey] = useState(profile?.pix_key || '');
   const [requestingPayout, setRequestingPayout] = useState(false);
   const [payoutFeedback, setPayoutFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [payoutsHistory, setPayoutsHistory] = useState<any[]>([]);
 
   const handleRequestPayout = async () => {
     setPayoutFeedback(null);
     if (!pixKey.trim()) {
       const msg = 'Informe seu CPF, E-mail, Telefone ou Chave Pix para receber a transferência.';
       setPayoutFeedback({ text: msg, type: 'error' });
-      alert(msg);
       return;
     }
 
     if (totalNetRevenueCents < 500) {
       const msg = `Seu saldo disponível para saque no momento é R$ ${(totalNetRevenueCents / 100).toFixed(2)}. O valor mínimo para solicitar saque Pix é de R$ 5,00.`;
       setPayoutFeedback({ text: msg, type: 'error' });
-      alert(msg);
       return;
     }
 
@@ -80,14 +79,12 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
         throw new Error(data.error || 'Erro ao realizar solicitação de saque.');
       }
 
-      const successMsg = `🎉 SUCESSO! ${data.message || 'Transferência Pix de saque solicitada com sucesso!'}`;
+      const successMsg = `🎉 SUCESSO! ${data.message || 'Solicitação de saque Pix registrada com sucesso!'}`;
       setPayoutFeedback({ text: successMsg, type: 'success' });
-      alert(successMsg);
       fetchVipData();
     } catch (err: any) {
       const errMsg = err.message || 'Erro ao processar saque Pix.';
       setPayoutFeedback({ text: errMsg, type: 'error' });
-      alert(errMsg);
     } finally {
       setRequestingPayout(false);
     }
@@ -149,6 +146,15 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
       }
 
       setTotalNetRevenueCents(total);
+
+      // 4. Histórico de saques
+      const { data: payouts } = await supabase
+        .from('payouts')
+        .select('*')
+        .eq('provider_id', profile.id)
+        .order('created_at', { ascending: false });
+
+      if (payouts) setPayoutsHistory(payouts);
     } catch (err) {
       console.error('Erro ao carregar dados VIP:', err);
     } finally {
@@ -363,13 +369,46 @@ export default function ExclusiveContentManager({ profile, onSave }: ExclusiveCo
         </div>
 
         {payoutFeedback && (
-          <div className={`p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 border animate-fadeIn ${
+          <div className={`p-4 rounded-xl text-xs font-semibold flex items-start gap-2 border animate-fadeIn ${
             payoutFeedback.type === 'success' 
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
-              : 'bg-red-500/10 border-red-500/30 text-red-300'
+              ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' 
+              : 'bg-red-500/20 border-red-500/50 text-red-300'
           }`}>
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{payoutFeedback.text}</span>
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            <span className="leading-relaxed">{payoutFeedback.text}</span>
+          </div>
+        )}
+
+        {/* Histórico de Saques do Provedor */}
+        {payoutsHistory.length > 0 && (
+          <div className="pt-3 border-t border-white/10 space-y-2">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+              Histórico de Solicitações de Saque
+            </span>
+            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              {payoutsHistory.map((p) => {
+                const isDone = p.status === 'completed';
+                const isPending = p.status === 'pending_manual_transfer' || p.status === 'processing' || p.status === 'pending';
+                const statusLabel = isDone ? 'Repassado (Concluído)' : isPending ? 'Aguardando Repasse Pix' : 'Erro no Saque';
+                const statusColor = isDone ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : isPending ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30';
+                
+                return (
+                  <div key={p.id} className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-white/5 text-xs">
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-white block">
+                        R$ {((p.net_amount_cents || p.amount_cents) / 100).toFixed(2)}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-light block">
+                        Chave: {p.pix_key} • {new Date(p.created_at).toLocaleDateString('pt-BR')} às {new Date(p.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold shrink-0 ${statusColor}`}>
+                      {statusLabel}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

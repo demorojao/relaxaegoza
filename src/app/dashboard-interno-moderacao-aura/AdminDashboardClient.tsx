@@ -49,6 +49,7 @@ interface AdminDashboardClientProps {
   initialRooms: any[];
   initialPhotos: any[];
   initialBannedIps: any[];
+  initialPayouts?: any[];
   adminSecret: string;
 }
 
@@ -57,12 +58,37 @@ export default function AdminDashboardClient({
   initialRooms,
   initialPhotos,
   initialBannedIps,
+  initialPayouts = [],
   adminSecret
 }: AdminDashboardClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'pending' | 'rooms' | 'all' | 'photos' | 'banned' | 'reports' | 'broadcast' | 'audit' | 'support'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'rooms' | 'all' | 'photos' | 'banned' | 'reports' | 'broadcast' | 'audit' | 'support' | 'payouts'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'provider' | 'client' | 'host'>('all');
+
+  // Estados de Saques & Repasses
+  const [payouts, setPayouts] = useState<any[]>(initialPayouts);
+  const [updatingPayoutId, setUpdatingPayoutId] = useState<string | null>(null);
+
+  const handleApprovePayout = async (payoutId: string) => {
+    if (!confirm('Confirmar que a transferência PIX foi realizada para esta profissional?')) return;
+    setUpdatingPayoutId(payoutId);
+    try {
+      const res = await fetch('/api/admin/payouts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payoutId, status: 'completed' })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao atualizar saque.');
+      setPayouts(prev => prev.map(p => p.id === payoutId ? { ...p, status: 'completed', processed_at: new Date().toISOString() } : p));
+      alert('Saque marcado como REPASSADO / CONCLUÍDO com sucesso!');
+    } catch (err: any) {
+      alert(err.message || 'Erro ao atualizar status do saque.');
+    } finally {
+      setUpdatingPayoutId(null);
+    }
+  };
 
   // Estados de Logs de Auditoria e Chamados de Suporte
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -1276,6 +1302,17 @@ export default function AdminDashboardClient({
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               Logs de Auditoria ({auditLogs.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('payouts')}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg tracking-wide transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'payouts' 
+                  ? 'bg-emerald-400 text-dark-bg font-bold shadow' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <DollarSign className="w-3.5 h-3.5" />
+              Saques & Repasses ({payouts.filter(p => p.status === 'pending_manual_transfer' || p.status === 'processing').length})
             </button>
           </div>
 
@@ -2514,6 +2551,115 @@ export default function AdminDashboardClient({
                       <span className="block font-mono">IP: {log.ip_address || 'Servidor'}</span>
                       <span className="block mt-0.5">{formatDateTime(log.created_at)}</span>
                     </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      ) : activeTab === 'payouts' ? (
+        /* Aba de Saques & Repasses PIX */
+        <Card variant="glass" className="p-6 md:p-8 space-y-6 border-gold-primary/30 bg-black/40">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                <DollarSign className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white tracking-wide">Gerenciamento de Saques & Repasses PIX</h2>
+                <p className="text-xs text-gray-400 font-light">
+                  Visualize as solicitações de saque das profissionais, copie a Chave PIX e confirme o repasse com 1 clique.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {payouts.length === 0 ? (
+            <div className="text-center py-12 bg-black/20 rounded-xl border border-white/5 text-gray-500 text-xs">
+              Nenhuma solicitação de saque registrada no momento.
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-[700px] overflow-y-auto pr-1">
+              {payouts.map((payout) => {
+                const providerName = payout.provider?.name || 'Profissional';
+                const isDone = payout.status === 'completed';
+                const isPending = payout.status === 'pending_manual_transfer' || payout.status === 'processing' || payout.status === 'pending';
+                const netVal = ((payout.net_amount_cents || payout.amount_cents) / 100).toFixed(2);
+                const grossVal = ((payout.amount_cents || 0) / 100).toFixed(2);
+
+                return (
+                  <div
+                    key={payout.id}
+                    className={`p-5 rounded-2xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                      isPending 
+                        ? 'bg-gradient-to-r from-amber-500/10 via-black/50 to-transparent border-amber-500/40 shadow-lg shadow-amber-500/5' 
+                        : 'bg-black/40 border-white/10'
+                    }`}
+                  >
+                    <div className="space-y-1.5 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase border ${
+                          isDone 
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
+                            : isPending 
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' 
+                            : 'bg-red-500/20 text-red-300 border-red-500/30'
+                        }`}>
+                          {isDone ? 'REPASSE CONCLUÍDO' : isPending ? 'AGUARDANDO REPASSE PIX' : 'ERRO / CANCELADO'}
+                        </span>
+                        <span className="text-sm font-extrabold text-white">{providerName}</span>
+                        <span className="text-xs text-gray-400">({payout.provider?.email || 'Sem e-mail'})</span>
+                      </div>
+
+                      <div className="flex items-center gap-6 text-xs text-gray-300 flex-wrap pt-1">
+                        <div>
+                          <span className="text-gray-500 text-[10px] uppercase font-bold block">Valor Líquido (A Repassar)</span>
+                          <strong className="text-lg text-emerald-400 font-extrabold">R$ {netVal}</strong>
+                          <span className="text-[10px] text-gray-500 ml-1.5">(Bruto R$ {grossVal})</span>
+                        </div>
+
+                        <div className="bg-black/60 px-3.5 py-2 rounded-xl border border-white/10 flex items-center gap-2.5">
+                          <div>
+                            <span className="text-gray-500 text-[9px] uppercase font-bold block">Chave PIX da Profissional</span>
+                            <strong className="text-xs text-gold-light font-mono">{payout.pix_key}</strong>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyId(payout.pix_key)}
+                            className="p-1.5 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white transition-colors cursor-pointer"
+                            title="Copiar Chave PIX"
+                          >
+                            <Copy className="w-4 h-4 text-gold-primary" />
+                          </button>
+                          {copiedId === payout.pix_key && (
+                            <span className="text-[10px] text-emerald-400 font-bold">Copiado!</span>
+                          )}
+                        </div>
+
+                        <div className="text-[11px] text-gray-400 font-light">
+                          Solicitado em: {formatDateTime(payout.created_at)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {isPending && (
+                      <div className="shrink-0 pt-2 md:pt-0">
+                        <Button
+                          type="button"
+                          disabled={updatingPayoutId === payout.id}
+                          onClick={() => handleApprovePayout(payout.id)}
+                          className="bg-emerald-500 hover:bg-emerald-400 text-dark-bg font-extrabold text-xs uppercase px-5 py-2.5 rounded-xl shadow-lg cursor-pointer flex items-center gap-2"
+                        >
+                          {updatingPayoutId === payout.id ? (
+                            'Atualizando...'
+                          ) : (
+                            <>
+                              <Check className="w-4 h-4" /> Confirmar Repasse Realizado
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 );
               })}

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.replace('Bearer ', '');
-      const { data: { user: authUser } } = await supabase.auth.getUser(token);
+      const { data: { user: authUser } } = await supabaseService.auth.getUser(token);
       user = authUser;
     }
 
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     if (!profile.pix_key || !profile.pix_key.trim()) {
       return NextResponse.json({
-        error: 'Você precisa cadastrar seu CPF como chave PIX antes de solicitar o saque.'
+        error: 'Você precisa cadastrar seu CPF, E-mail ou Telefone como chave PIX antes de solicitar o saque.'
       }, { status: 400 });
     }
 
@@ -92,7 +92,6 @@ export async function POST(req: NextRequest) {
           const amountCents = p.amount_cents || 4990;
           const netCents = Math.round(amountCents * 0.9);
 
-          // Inserir registro na content_purchases para contabilidade perfeita
           await supabaseService
             .from('content_purchases')
             .insert({
@@ -106,7 +105,6 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Refazer a busca das compras criadas
         const { data: syncedPurchases } = await supabaseService
           .from('content_purchases')
           .select('id, amount, net_amount, amount_cents, net_amount_cents, status')
@@ -122,7 +120,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Você não possui saldo disponível para saque no momento.' }, { status: 400 });
     }
 
-    // Calcular valores acumulados em centavos (evitando erros de ponto flutuante)
+    // Calcular valores acumulados em centavos
     let totalGrossCents = 0;
     let totalNetCents = 0;
 
@@ -139,7 +137,7 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // 3. Registrar o payout no estado 'processing'
+    // 3. Registrar o payout no estado 'pending_manual_transfer'
     const { data: payoutRecord, error: insertError } = await supabaseService
       .from('payouts')
       .insert({
@@ -147,17 +145,17 @@ export async function POST(req: NextRequest) {
         amount_cents: totalGrossCents,
         net_amount_cents: totalNetCents,
         pix_key: cleanPixKey,
-        status: 'processing',
+        status: 'pending_manual_transfer',
       })
       .select()
       .single();
 
     if (insertError || !payoutRecord) {
       console.error('Erro ao registrar solicitação de payout:', insertError);
-      return NextResponse.json({ error: 'Erro ao iniciar o processo de saque no banco de dados.' }, { status: 500 });
+      return NextResponse.json({ error: 'Erro ao iniciar a solicitação de saque no banco de dados.' }, { status: 500 });
     }
 
-    // Vincular as compras ao payout de forma atômica (apenas se payout_id ainda for null)
+    // Vincular as compras ao payout de forma atômica
     const purchaseIds = purchases.map((p: any) => p.id);
     const { data: updatedPurchases, error: lockError } = await supabaseService
       .from('content_purchases')
@@ -182,14 +180,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Já existe uma solicitação de saque simultânea em processamento para algumas destas vendas.' }, { status: 400 });
     }
 
-    // 4. Executar transferência PIX via PushinPay
+    // 4. Tentativa de repasse automático via PushinPay (com fallback Gracioso para Repasse Manual)
     try {
       const pushinpayRes = await requestPushinPayPixCashOut({
         value: totalNetCents,
         pix_key: cleanPixKey,
       });
 
-      // Atualizar payout para completed
       await supabaseService
         .from('payouts')
         .update({
@@ -209,21 +206,12 @@ export async function POST(req: NextRequest) {
       });
 
     } catch (cashOutError: any) {
-      console.warn('Transferência automática PushinPay restrita a CNPJ. Registrando solicitação para repasse manual:', cashOutError.message);
-
-      // Atualizar o registro de saque para 'pending_manual_transfer' para que o administrador faça o Pix
-      await supabaseService
-        .from('payouts')
-        .update({
-          status: 'pending_manual_transfer',
-          error_message: 'Aguardando transferência manual do administrador (Restrição CNPJ Gateway)',
-        })
-        .eq('id', payoutRecord.id);
+      console.log('PushinPay exige repasse manual para chave de terceiro. Registrado com sucesso:', cashOutError.message);
 
       return NextResponse.json({
         success: true,
         isManual: true,
-        message: `Solicitação de saque de R$ ${(totalNetCents / 100).toFixed(2)} recebida! O repasse via Pix será concluído pelo nosso suporte financeiro para a sua chave Pix (${cleanPixKey}) em instantes.`,
+        message: `Solicitação de saque de R$ ${(totalNetCents / 100).toFixed(2)} registrada com sucesso! Nosso setor financeiro efetuará a transferência via Pix para a sua chave (${cleanPixKey}) em instantes.`,
         payoutId: payoutRecord.id,
         netAmount: totalNetCents / 100,
       });
@@ -244,7 +232,7 @@ export async function GET(req: NextRequest) {
     const authHeader = req.headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.replace('Bearer ', '');
-      const { data: { user: authUser } } = await supabase.auth.getUser(token);
+      const { data: { user: authUser } } = await supabaseService.auth.getUser(token);
       user = authUser;
     }
 

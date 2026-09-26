@@ -48,12 +48,19 @@ async function AdminDashboardPageContent({ searchParams }: PageProps) {
     .select('*')
     .order('created_at', { ascending: false });
 
+  // Buscar todas as solicitações de saques
+  const { data: payouts } = await supabase
+    .from('payouts')
+    .select('*, provider:profiles(id, name, pix_key, email)')
+    .order('created_at', { ascending: false });
+
   return (
     <AdminDashboardClient 
       initialProfiles={profiles || []} 
       initialRooms={rooms || []}
       initialPhotos={photos || []}
       initialBannedIps={bannedIps || []}
+      initialPayouts={payouts || []}
       adminSecret={secret}
     />
   );
