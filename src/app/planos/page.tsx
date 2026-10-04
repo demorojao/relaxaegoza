@@ -139,8 +139,8 @@ export default function PricingPage() {
         </div>
       )}
 
-      {/* Grid containing plans */}
-      <div className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch relative z-10 mb-16">
+      {/* Plans stacked vertically */}
+      <div className="max-w-2xl mx-auto w-full flex flex-col gap-10 relative z-10 mb-16">
         {plans.map((plan) => {
           return (
             <div 
