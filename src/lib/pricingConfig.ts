@@ -124,6 +124,14 @@ export const HOST_PLAN_CONFIG = {
   maxFreeHosts: 100
 };
 
+export const PUSHINPAY_CONFIG = {
+  apiUrl: 'https://api.pushinpay.com.br/api',
+  minPixAmountCents: 50, // Mínimo de R$ 0,50 para gerar Pix na PushinPay
+  minCashOutAmountCents: 500, // Mínimo de R$ 5,00 para saque Pix na PushinPay
+  token: (process.env.PUSHINPAY_TOKEN || '68789|ucgYVKkINYBhrDbIu3R94HYntnKkfYdzR6sahzQic053fc9d').trim(),
+  webhookSecret: (process.env.PUSHINPAY_WEBHOOK_SECRET || 'aura_pushinpay_2026_secret').trim(),
+};
+
 export const BOOST_PACKAGES_CONFIG = [
   { hours: 2, priceCents: 2990, formattedPrice: 'R$ 29,90', label: '2 horas', description: 'Impulso rápido para o horário de pico', icon: '⚡', highlight: false },
   { hours: 6, priceCents: 5990, formattedPrice: 'R$ 59,90', label: '6 horas', description: 'Meio dia no topo da vitrine', icon: '🔥', highlight: true },

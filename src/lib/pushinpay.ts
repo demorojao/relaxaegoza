@@ -1,4 +1,6 @@
-const PUSHINPAY_API_URL = 'https://api.pushinpay.com.br/api';
+import { PUSHINPAY_CONFIG } from '@/lib/pricingConfig';
+
+const PUSHINPAY_API_URL = PUSHINPAY_CONFIG.apiUrl;
 
 export interface CreatePixPayload {
   amountCents: number;
@@ -14,6 +16,14 @@ export interface PushinPayPixResponse {
   end_to_end_id?: string | null;
   payer_name?: string | null;
   payer_national_registration?: string | null;
+}
+
+function getPushinPayToken(): string {
+  const token = (process.env.PUSHINPAY_TOKEN || PUSHINPAY_CONFIG.token || '').trim();
+  if (!token) {
+    throw new Error('PUSHINPAY_TOKEN não configurado no servidor');
+  }
+  return token;
 }
 
 async function fetchWithRetry(url: string, options: RequestInit, retries = 3, delayMs = 1000): Promise<Response> {
@@ -52,13 +62,10 @@ export async function createPushinPayPixCharge({
   amountCents,
   webhookUrl,
 }: CreatePixPayload): Promise<PushinPayPixResponse> {
-  const token = (process.env.PUSHINPAY_TOKEN || '').trim();
-  if (!token) {
-    throw new Error('PUSHINPAY_TOKEN não configurado no servidor');
-  }
+  const token = getPushinPayToken();
 
-  if (amountCents < 50) {
-    throw new Error('O valor mínimo para geração de PIX na PushinPay é de 50 centavos (R$ 0,50).');
+  if (amountCents < PUSHINPAY_CONFIG.minPixAmountCents) {
+    throw new Error(`O valor mínimo para geração de PIX na PushinPay é de ${PUSHINPAY_CONFIG.minPixAmountCents} centavos.`);
   }
 
   const payload: any = {
@@ -94,8 +101,13 @@ export async function createPushinPayPixCharge({
  * @param txId ID da transação gerada na PushinPay
  */
 export async function getPushinPayPixStatus(txId: string): Promise<PushinPayPixResponse | null> {
-  const token = (process.env.PUSHINPAY_TOKEN || '').trim();
-  if (!token || !txId) return null;
+  let token = '';
+  try {
+    token = getPushinPayToken();
+  } catch (e) {
+    return null;
+  }
+  if (!txId) return null;
 
   try {
     const response = await fetch(`${PUSHINPAY_API_URL}/transactions/${txId}`, {
@@ -141,13 +153,10 @@ export async function requestPushinPayPixCashOut({
   value,
   pix_key,
 }: PushinPayCashOutPayload): Promise<PushinPayCashOutResponse> {
-  const token = (process.env.PUSHINPAY_TOKEN || '').trim();
-  if (!token) {
-    throw new Error('PUSHINPAY_TOKEN não configurado no servidor');
-  }
+  const token = getPushinPayToken();
 
-  if (value < 500) {
-    throw new Error('O valor mínimo para transferência PIX de saque é de R$ 5,00 (500 centavos).');
+  if (value < PUSHINPAY_CONFIG.minCashOutAmountCents) {
+    throw new Error(`O valor mínimo para transferência PIX de saque é de ${PUSHINPAY_CONFIG.minCashOutAmountCents} centavos.`);
   }
 
   if (!pix_key || pix_key.trim().length < 4) {
