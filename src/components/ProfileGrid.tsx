@@ -35,7 +35,7 @@ export default function ProfileGrid({
             exit={{ opacity: 0 }}
             className="w-full"
           >
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-6 w-full [&>*]:w-[calc(50%-0.375rem)] sm:[&>*]:w-[calc(50%-0.75rem)] lg:[&>*]:w-[calc(33.333%-1rem)] xl:[&>*]:w-[calc(25%-1.125rem)]">
               {Array.from({ length: 8 }).map((_, i) => (
                 <ProfileCardSkeleton key={i} />
               ))}
@@ -50,7 +50,7 @@ export default function ProfileGrid({
             className="w-full"
           >
             <div className={showAdInfo 
-              ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6" 
+              ? "flex flex-wrap justify-center gap-3 sm:gap-6 w-full [&>*]:w-[calc(50%-0.375rem)] sm:[&>*]:w-[calc(50%-0.75rem)] lg:[&>*]:w-[calc(33.333%-1rem)] xl:[&>*]:w-[calc(25%-1.125rem)]" 
               : "flex flex-col space-y-3 max-w-4xl mx-auto w-full"
             }>
               {profiles.map(profile => (
