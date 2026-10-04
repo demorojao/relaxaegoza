@@ -67,19 +67,19 @@ export default function PricingPage() {
     }
   };
 
-  const showDiscount = !loadingCount && providerCount < 100;
-  const gold7dPrice = showDiscount ? 'R$ 90,30' : 'R$ 129,00';
-  const gold14dPrice = showDiscount ? 'R$ 160,30' : 'R$ 229,00';
-  const gold30dPrice = showDiscount ? 'R$ 279,30' : 'R$ 399,00';
+  const showFreeMonth = !loadingCount && providerCount < 100;
+  const gold7dPrice = 'R$ 129,00';
+  const gold14dPrice = 'R$ 229,00';
+  const gold30dPrice = showFreeMonth ? 'R$ 0,00' : 'R$ 399,00';
 
   const plans = [
     {
       name: 'Gold (7 Dias)',
       price: gold7dPrice,
-      originalPrice: showDiscount ? 'R$ 129,00' : undefined,
+      originalPrice: undefined,
       tierKey: 'gold_7d',
       period: '/ 7 dias',
-      dailyEquivalent: showDiscount ? 'Apenas R$ 12,90 / dia' : 'Apenas R$ 18,42 / dia',
+      dailyEquivalent: 'Apenas R$ 18,42 / dia',
       description: 'Perfeito para testar a vitrine e garantir um impulso rápido no topo com investimento mínimo.',
       features: [
         'Destaque Máximo Gold na busca e vitrine principal da cidade',
@@ -94,15 +94,15 @@ export default function PricingPage() {
       highlight: false,
       buttonText: 'Assinar Gold (7 Dias)',
       accentColor: 'border-gold-primary/40 bg-gold-primary/[0.02] hover:border-gold-primary/70',
-      badge: showDiscount ? '30% DE DESCONTO DE LANÇAMENTO' : 'Ideal para Experimentar'
+      badge: 'Ideal para Experimentar'
     },
     {
       name: 'Gold (14 Dias)',
       price: gold14dPrice,
-      originalPrice: showDiscount ? 'R$ 229,00' : undefined,
+      originalPrice: undefined,
       tierKey: 'gold_14d',
       period: '/ 14 dias (Quinzenal)',
-      dailyEquivalent: showDiscount ? 'Apenas R$ 11,45 / dia' : 'Apenas R$ 16,35 / dia',
+      dailyEquivalent: 'Apenas R$ 16,35 / dia',
       description: 'O plano perfeito para quinzenas movimentadas com alto fluxo de chamadas e mensagens.',
       features: [
         'Destaque Máximo Gold na busca e vitrine principal da cidade',
@@ -118,16 +118,16 @@ export default function PricingPage() {
       highlight: false,
       buttonText: 'Assinar Gold (14 Dias)',
       accentColor: 'border-gold-primary/60 bg-gold-primary/[0.03] hover:border-gold-primary/80',
-      badge: showDiscount ? '30% DE DESCONTO' : 'Quinzenal Vantajoso'
+      badge: 'Quinzenal Vantajoso'
     },
     {
       name: 'Gold (30 Dias)',
       price: gold30dPrice,
-      originalPrice: showDiscount ? 'R$ 399,00' : undefined,
+      originalPrice: showFreeMonth ? 'R$ 399,00' : undefined,
       tierKey: 'gold_30d',
-      period: '/ 30 dias (1 mês)',
-      dailyEquivalent: showDiscount ? 'Apenas R$ 9,31 / dia' : 'Apenas R$ 13,30 / dia',
-      description: 'O plano Campeão de Vendas! Presença digital contínua no topo com a máxima economia diária.',
+      period: showFreeMonth ? '/ 1º Mês Grátis (30 dias)' : '/ 30 dias (1 mês)',
+      dailyEquivalent: showFreeMonth ? '100% GRÁTIS no Primeiro Mês 🎉' : 'Apenas R$ 13,30 / dia',
+      description: 'O plano Campeão de Vendas! Presença digital contínua no topo com a máxima visibilidade e zero custo no 1º mês.',
       features: [
         'Destaque Máximo Gold Absoluto no topo da busca durante 1 mês inteiro',
         '4 Boosts de 6h GRÁTIS (1 por semana) inclusos (R$ 239,60 em bônus) 🚀',
@@ -139,9 +139,9 @@ export default function PricingPage() {
         'Assessoria VIP dedicada de posicionamento de anúncio'
       ],
       highlight: true,
-      buttonText: 'Assinar Gold (30 Dias)',
-      accentColor: 'border-gold-primary shadow-[0_15px_40px_-15px_rgba(197,168,128,0.3)] bg-gradient-to-b from-gold-primary/[0.08] to-gold-primary/[0.02]',
-      badge: showDiscount ? '30% OFF • MELHOR CUSTO-BENEFÍCIO ⭐' : 'Mais Vendido ⭐'
+      buttonText: showFreeMonth ? 'Resgatar 1º Mês 100% Grátis 🎁' : 'Assinar Gold (30 Dias)',
+      accentColor: 'border-gold-primary shadow-[0_15px_40px_-15px_rgba(197,168,128,0.35)] bg-gradient-to-b from-gold-primary/[0.12] via-gold-primary/[0.04] to-transparent',
+      badge: showFreeMonth ? '🎁 1º MÊS 100% GRÁTIS ⭐' : 'Mais Vendido ⭐'
     }
   ];
 
@@ -172,21 +172,21 @@ export default function PricingPage() {
       </div>
 
       {/* Promo Banner */}
-      {showDiscount && (
-        <div className="max-w-4xl mx-auto w-full mb-12 bg-gradient-to-r from-gold-primary/10 via-gold-primary/[0.03] to-transparent border border-gold-primary/20 rounded-2xl p-4.5 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn relative z-10 text-left">
+      {showFreeMonth && (
+        <div className="max-w-4xl mx-auto w-full mb-12 bg-gradient-to-r from-gold-primary/15 via-gold-primary/[0.05] to-transparent border border-gold-primary/30 rounded-2xl p-4.5 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn relative z-10 text-left shadow-[0_4px_20px_rgba(197,168,128,0.15)]">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gold-primary/10 rounded-xl text-gold-primary shrink-0 animate-pulse">
+            <div className="p-2.5 bg-gold-primary/15 rounded-xl text-gold-primary shrink-0 animate-pulse">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-bold block text-white text-sm">Desconto de Lançamento Ativo!</span>
-              <p className="text-xs text-gray-400 font-light mt-0.5 leading-relaxed">
-                As 100 primeiras anunciantes ganham **30% de desconto automático** na assinatura de qualquer plano. ({providerCount}/100 vagas ocupadas)
+              <span className="font-bold block text-white text-sm">🔥 Oferta Especial de Lançamento!</span>
+              <p className="text-xs text-gray-300 font-light mt-0.5 leading-relaxed">
+                As 100 primeiras anunciantes ganham o <strong>1º Mês (30 dias) 100% GRÁTIS</strong> no Plano Gold Premium! ({providerCount}/100 vagas ocupadas)
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-bold text-gold-primary bg-gold-primary/10 border border-gold-primary/20 px-3 py-1 rounded-full uppercase tracking-wider shrink-0">
-            30% OFF aplicado
+          <span className="text-[10px] font-bold text-gold-primary bg-gold-primary/15 border border-gold-primary/30 px-3.5 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
+            🎁 1º MÊS GRÁTIS ATIVO
           </span>
         </div>
       )}

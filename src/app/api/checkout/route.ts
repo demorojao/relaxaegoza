@@ -166,12 +166,13 @@ export async function POST(req: NextRequest) {
 
         const baseAmount = baseAmounts[tier as string] || 39900;
 
-        // As 100 primeiras anunciantes ganham 30% de desconto de lançamento
-        amountCents = isPromoEligible ? Math.round(baseAmount * 0.7) : baseAmount;
+        // As 100 primeiras anunciantes ganham o 1º Mês 100% GRÁTIS nos planos de 30 dias (Mensal)
+        const isMonthlyTier = ['pro', 'gold', 'gold_30d'].includes(tier as string);
+        amountCents = (isPromoEligible && isMonthlyTier) ? 0 : baseAmount;
         tierValue = tier;
-        description = isPromoEligible 
-          ? `Publicidade Digital (Promo 30% OFF) - Ref: ${tier.toUpperCase()}`
-          : `Publicidade Digital - Ref: ${tier.toUpperCase()}`;
+        description = (isPromoEligible && isMonthlyTier)
+          ? `Promo Lançamento 100 Primeiras - 1º Mês Grátis - ${tier.toUpperCase()}`
+          : `Servicos de Publicidade Digital - Ref: ${tier.toUpperCase()}`;
       }
     }
 
