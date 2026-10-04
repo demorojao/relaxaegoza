@@ -3,6 +3,8 @@ import { getSupabaseServerClient, getSupabaseServiceClient } from '@/lib/supabas
 import { createPushinPayPixCharge } from '@/lib/pushinpay';
 import { getEffectiveTier } from '@/lib/utils';
 
+import { calculateTierPriceCents, HOST_PLAN_CONFIG } from '@/lib/pricingConfig';
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -136,13 +138,13 @@ export async function POST(req: NextRequest) {
           .eq('role', 'host')
           .lte('created_at', profile.created_at);
 
-        const isFreeLaunch = !hostRankError && hostRank !== null && hostRank <= 100;
+        const isFreeLaunch = !hostRankError && hostRank !== null && hostRank <= HOST_PLAN_CONFIG.maxFreeHosts;
 
         if (isFreeLaunch) {
           return NextResponse.json({ error: 'Você é um dos 100 primeiros parceiros! Seu plano de salas é 100% gratuito.' }, { status: 400 });
         }
 
-        amountCents = 49900; // R$ 499,00
+        amountCents = HOST_PLAN_CONFIG.basePriceCents;
         tierValue = tier;
         description = `Hospedagem de Classificado Online - ID ${user.id}`;
       } else {
@@ -153,24 +155,13 @@ export async function POST(req: NextRequest) {
           .eq('role', 'provider')
           .lte('created_at', profile.created_at);
 
-        const isPromoEligible = !providerRankError && providerRank !== null && providerRank <= 100;
+        const rank = (providerRankError || providerRank === null) ? 99999 : providerRank;
 
-        const baseAmounts: Record<string, number> = {
-          pro: 39900,
-          gold: 39900,
-          gold_7d: 12900,   // R$ 129,00
-          gold_14d: 22900,  // R$ 229,00
-          gold_15d: 22900,  // R$ 229,00
-          gold_30d: 39900   // R$ 399,00
-        };
+        const { amountCents: calculatedCents, isFreePromo } = calculateTierPriceCents(tier, rank);
 
-        const baseAmount = baseAmounts[tier as string] || 39900;
-
-        // As 100 primeiras anunciantes ganham o 1º Mês 100% GRÁTIS nos planos de 30 dias (Mensal)
-        const isMonthlyTier = ['pro', 'gold', 'gold_30d'].includes(tier as string);
-        amountCents = (isPromoEligible && isMonthlyTier) ? 0 : baseAmount;
+        amountCents = calculatedCents;
         tierValue = tier;
-        description = (isPromoEligible && isMonthlyTier)
+        description = isFreePromo 
           ? `Promo Lançamento 100 Primeiras - 1º Mês Grátis - ${tier.toUpperCase()}`
           : `Servicos de Publicidade Digital - Ref: ${tier.toUpperCase()}`;
       }

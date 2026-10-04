@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Check, Shield, Star, Award, Sparkles, ArrowLeft, ArrowRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
+import { PLANS_CONFIG, LAUNCH_PROMO } from '../../lib/pricingConfig';
+
 export default function PricingPage() {
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
   const [providerCount, setProviderCount] = useState<number>(0);
@@ -67,83 +69,29 @@ export default function PricingPage() {
     }
   };
 
-  const showFreeMonth = !loadingCount && providerCount < 100;
-  const gold7dPrice = 'R$ 129,00';
-  const gold14dPrice = 'R$ 229,00';
-  const gold30dPrice = showFreeMonth ? 'R$ 0,00' : 'R$ 399,00';
+  const showFreeMonth = LAUNCH_PROMO.active && !loadingCount && providerCount < LAUNCH_PROMO.maxProviderRank;
 
-  const plans = [
-    {
-      name: 'Gold (7 Dias)',
-      price: gold7dPrice,
-      originalPrice: undefined,
-      tierKey: 'gold_7d',
-      period: '/ 7 dias',
-      dailyEquivalent: 'Apenas R$ 18,42 / dia',
-      description: 'Perfeito para testar a vitrine e garantir um impulso rápido no topo com investimento mínimo.',
-      features: [
-        'Destaque Máximo Gold na busca e vitrine principal da cidade',
-        '1 Boost de 6h GRÁTIS incluso para horários de pico (R$ 59,90 de bônus) 🚀',
-        'Galeria HD de Fotos & Vídeos (Estilo Fatal Model / Alta Qualidade)',
-        'Selo Gold VIP Reluzente com Anel Neon na foto de perfil',
-        'Exclusividade de publicar Vídeos nos Stories Efêmeros 🎥',
-        'Botão "Disponível Agora" com efeito neon ativo',
-        'Marca D\'água personalizada nas fotos para proteção contra print/plágio',
-        'Atendimento e Suporte prioritário via WhatsApp'
-      ],
-      highlight: false,
-      buttonText: 'Assinar Gold (7 Dias)',
-      accentColor: 'border-gold-primary/40 bg-gold-primary/[0.02] hover:border-gold-primary/70',
-      badge: 'Ideal para Experimentar'
-    },
-    {
-      name: 'Gold (14 Dias)',
-      price: gold14dPrice,
-      originalPrice: undefined,
-      tierKey: 'gold_14d',
-      period: '/ 14 dias (Quinzenal)',
-      dailyEquivalent: 'Apenas R$ 16,35 / dia',
-      description: 'O plano perfeito para quinzenas movimentadas com alto fluxo de chamadas e mensagens.',
-      features: [
-        'Destaque Máximo Gold na busca e vitrine principal da cidade',
-        '2 Boosts de 6h GRÁTIS inclusos no período (R$ 119,80 em bônus) 🚀',
-        'Galeria Ilimitada de Fotos & Vídeos HD com Alta Resolução',
-        'Exclusividade de publicar Vídeos nos Stories Efêmeros 🎥',
-        'Calculadora de Metas Financeiras & Progresso Diário 📊',
-        'Botão "Disponível Agora" com borda neon vibrante',
-        'Selo de Perfil Validado e Autêntico no portal',
-        'Proteção de Mídia e Marca D\'água Anti-Cópia',
-        'Suporte Prioritário VIP 24/7'
-      ],
-      highlight: false,
-      buttonText: 'Assinar Gold (14 Dias)',
-      accentColor: 'border-gold-primary/60 bg-gold-primary/[0.03] hover:border-gold-primary/80',
-      badge: 'Quinzenal Vantajoso'
-    },
-    {
-      name: 'Gold (30 Dias)',
-      price: gold30dPrice,
-      originalPrice: showFreeMonth ? 'R$ 399,00' : undefined,
-      tierKey: 'gold_30d',
-      period: showFreeMonth ? '/ 1º Mês Grátis (30 dias)' : '/ 30 dias (1 mês)',
-      dailyEquivalent: showFreeMonth ? '100% GRÁTIS no Primeiro Mês 🎉' : 'Apenas R$ 13,30 / dia',
-      description: 'O plano Campeão de Vendas! Presença digital contínua no topo com a máxima visibilidade e zero custo no 1º mês.',
-      features: [
-        'Destaque Máximo Gold Absoluto no topo da busca durante 1 mês inteiro',
-        '4 Boosts de 6h GRÁTIS (1 por semana) inclusos (R$ 239,60 em bônus) 🚀',
-        'Destaque Premium com Pin Dourado Neon no Mapa Interativo 📍',
-        'Galeria Ilimitada de Fotos & Vídeos HD sem restrição',
-        'Estatísticas avançadas de tráfego, cliques e visualizações no WhatsApp 📊',
-        'Exclusividade de Vídeos em HD nos Stories Efêmeros 🎥',
-        'Maior economia em relação aos planos semanal e quinzenal',
-        'Assessoria VIP dedicada de posicionamento de anúncio'
-      ],
-      highlight: true,
-      buttonText: showFreeMonth ? 'Resgatar 1º Mês 100% Grátis 🎁' : 'Assinar Gold (30 Dias)',
-      accentColor: 'border-gold-primary shadow-[0_15px_40px_-15px_rgba(197,168,128,0.35)] bg-gradient-to-b from-gold-primary/[0.12] via-gold-primary/[0.04] to-transparent',
-      badge: showFreeMonth ? '🎁 1º MÊS 100% GRÁTIS ⭐' : 'Mais Vendido ⭐'
-    }
-  ];
+  const plans = Object.values(PLANS_CONFIG).map((p) => {
+    const isMonthly = p.days === 30;
+    const isFreeThisPlan = showFreeMonth && isMonthly && LAUNCH_PROMO.type === 'free_first_month';
+
+    return {
+      name: p.name,
+      price: isFreeThisPlan ? 'R$ 0,00' : p.formattedBasePrice,
+      originalPrice: isFreeThisPlan ? p.formattedBasePrice : undefined,
+      tierKey: p.key,
+      period: isFreeThisPlan ? '/ 1º Mês Grátis (30 dias)' : p.periodLabel,
+      dailyEquivalent: isFreeThisPlan ? '100% GRÁTIS no Primeiro Mês 🎉' : p.dailyEquivalent,
+      description: isFreeThisPlan 
+        ? `${p.description} Aproveite zero custo no 1º mês!`
+        : p.description,
+      features: p.features,
+      highlight: p.highlight,
+      buttonText: isFreeThisPlan ? 'Resgatar 1º Mês 100% Grátis 🎁' : p.buttonText,
+      accentColor: p.accentColor,
+      badge: isFreeThisPlan ? '🎁 1º MÊS 100% GRÁTIS ⭐' : p.badge
+    };
+  });
 
   return (
     <div className="min-h-screen bg-dark-bg text-gray-100 py-16 px-4 md:px-8 relative overflow-hidden flex flex-col justify-between selection:bg-gold-primary selection:text-dark-bg">
@@ -179,14 +127,14 @@ export default function PricingPage() {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-bold block text-white text-sm">🔥 Oferta Especial de Lançamento!</span>
+              <span className="font-bold block text-white text-sm">{LAUNCH_PROMO.bannerTitle}</span>
               <p className="text-xs text-gray-300 font-light mt-0.5 leading-relaxed">
-                As 100 primeiras anunciantes ganham o <strong>1º Mês (30 dias) 100% GRÁTIS</strong> no Plano Gold Premium! ({providerCount}/100 vagas ocupadas)
+                {LAUNCH_PROMO.bannerDescription(providerCount)}
               </p>
             </div>
           </div>
           <span className="text-[10px] font-bold text-gold-primary bg-gold-primary/15 border border-gold-primary/30 px-3.5 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
-            🎁 1º MÊS GRÁTIS ATIVO
+            {LAUNCH_PROMO.bannerBadge}
           </span>
         </div>
       )}
