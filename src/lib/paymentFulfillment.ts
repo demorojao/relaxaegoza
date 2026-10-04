@@ -186,6 +186,7 @@ export async function fulfillPayment(paymentRecordOrTxid: string | number | any)
   } else if (tier && (['pro', 'gold'].includes(tier) || tier.startsWith('gold_'))) {
     let days = 30;
     if (tier === 'gold_7d') days = 7;
+    else if (tier === 'gold_14d') days = 14;
     else if (tier === 'gold_15d') days = 15;
     else if (tier === 'gold_30d' || tier === 'gold') days = 30;
 

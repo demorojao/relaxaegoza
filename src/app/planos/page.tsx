@@ -68,71 +68,80 @@ export default function PricingPage() {
   };
 
   const showDiscount = !loadingCount && providerCount < 100;
-  const gold7dPrice = showDiscount ? 'R$ 139,30' : 'R$ 199,00';
-  const gold15dPrice = showDiscount ? 'R$ 244,30' : 'R$ 349,00';
-  const gold30dPrice = showDiscount ? 'R$ 419,30' : 'R$ 599,00';
+  const gold7dPrice = showDiscount ? 'R$ 90,30' : 'R$ 129,00';
+  const gold14dPrice = showDiscount ? 'R$ 160,30' : 'R$ 229,00';
+  const gold30dPrice = showDiscount ? 'R$ 279,30' : 'R$ 399,00';
 
   const plans = [
     {
       name: 'Gold (7 Dias)',
       price: gold7dPrice,
+      originalPrice: showDiscount ? 'R$ 129,00' : undefined,
       tierKey: 'gold_7d',
       period: '/ 7 dias',
-      description: 'Ideal para um impulso rápido de 1 semana no topo da vitrine com destaque máximo.',
+      dailyEquivalent: showDiscount ? 'Apenas R$ 12,90 / dia' : 'Apenas R$ 18,42 / dia',
+      description: 'Perfeito para testar a vitrine e garantir um impulso rápido no topo com investimento mínimo.',
       features: [
-        'Destaque Máximo Gold na busca e vitrine da cidade',
-        '1 Boost de 6h grátis incluso para horário de pico 🚀',
-        'Abas de Fotos e Vídeos em alta definição (Estilo Fatal Model)',
-        'Selo Gold VIP com anel neon em destaque',
-        'Exclusividade de Vídeo nos Stories Efêmeros 🎥',
-        'Botão "Disponível Agora" com indicador de status',
-        'Atendimento prioritário via WhatsApp'
+        'Destaque Máximo Gold na busca e vitrine principal da cidade',
+        '1 Boost de 6h GRÁTIS incluso para horários de pico (R$ 59,90 de bônus) 🚀',
+        'Galeria HD de Fotos & Vídeos (Estilo Fatal Model / Alta Qualidade)',
+        'Selo Gold VIP Reluzente com Anel Neon na foto de perfil',
+        'Exclusividade de publicar Vídeos nos Stories Efêmeros 🎥',
+        'Botão "Disponível Agora" com efeito neon ativo',
+        'Marca D\'água personalizada nas fotos para proteção contra print/plágio',
+        'Atendimento e Suporte prioritário via WhatsApp'
       ],
       highlight: false,
       buttonText: 'Assinar Gold (7 Dias)',
       accentColor: 'border-gold-primary/40 bg-gold-primary/[0.02] hover:border-gold-primary/70',
-      badge: showDiscount ? '30% DE DESCONTO' : 'Ideal para Testar'
+      badge: showDiscount ? '30% DE DESCONTO DE LANÇAMENTO' : 'Ideal para Experimentar'
     },
     {
-      name: 'Gold (15 Dias)',
-      price: gold15dPrice,
-      tierKey: 'gold_15d',
-      period: '/ 15 dias',
-      description: 'O plano perfeito para quinzenas de alto fluxo de agendamentos e contatos no WhatsApp.',
+      name: 'Gold (14 Dias)',
+      price: gold14dPrice,
+      originalPrice: showDiscount ? 'R$ 229,00' : undefined,
+      tierKey: 'gold_14d',
+      period: '/ 14 dias (Quinzenal)',
+      dailyEquivalent: showDiscount ? 'Apenas R$ 11,45 / dia' : 'Apenas R$ 16,35 / dia',
+      description: 'O plano perfeito para quinzenas movimentadas com alto fluxo de chamadas e mensagens.',
       features: [
-        'Destaque Máximo Gold na busca e vitrine da cidade',
-        '2 Boosts de 6h grátis inclusos no período 🚀',
-        'Galeria Ilimitada de Fotos & Vídeos HD',
-        'Exclusividade de Vídeo nos Stories Efêmeros 🎥',
-        'Calculadora de Metas Financeiras & Progresso 📊',
-        'Botão "Disponível Agora" ativo (Borda Neon)',
-        'Selo de Espaço Validado via Vídeo (Online)',
-        'Suporte dedicado'
+        'Destaque Máximo Gold na busca e vitrine principal da cidade',
+        '2 Boosts de 6h GRÁTIS inclusos no período (R$ 119,80 em bônus) 🚀',
+        'Galeria Ilimitada de Fotos & Vídeos HD com Alta Resolução',
+        'Exclusividade de publicar Vídeos nos Stories Efêmeros 🎥',
+        'Calculadora de Metas Financeiras & Progresso Diário 📊',
+        'Botão "Disponível Agora" com borda neon vibrante',
+        'Selo de Perfil Validado e Autêntico no portal',
+        'Proteção de Mídia e Marca D\'água Anti-Cópia',
+        'Suporte Prioritário VIP 24/7'
       ],
-      highlight: true,
-      buttonText: 'Assinar Gold (15 Dias)',
-      accentColor: 'border-gold-primary/80 bg-gold-primary/[0.04] shadow-[0_15px_40px_-15px_rgba(197,168,128,0.25)]',
-      badge: showDiscount ? '30% DE DESCONTO' : 'Mais Vendido ⭐'
+      highlight: false,
+      buttonText: 'Assinar Gold (14 Dias)',
+      accentColor: 'border-gold-primary/60 bg-gold-primary/[0.03] hover:border-gold-primary/80',
+      badge: showDiscount ? '30% DE DESCONTO' : 'Quinzenal Vantajoso'
     },
     {
       name: 'Gold (30 Dias)',
       price: gold30dPrice,
+      originalPrice: showDiscount ? 'R$ 399,00' : undefined,
       tierKey: 'gold_30d',
       period: '/ 30 dias (1 mês)',
-      description: 'Presença digital contínua pelo mês inteiro com o menor custo diário.',
+      dailyEquivalent: showDiscount ? 'Apenas R$ 9,31 / dia' : 'Apenas R$ 13,30 / dia',
+      description: 'O plano Campeão de Vendas! Presença digital contínua no topo com a máxima economia diária.',
       features: [
-        'Destaque Máximo Gold durante 1 mês inteiro',
-        '4 Boosts de 6h grátis (1 por semana) inclusos 🚀',
-        'Galeria Ilimitada de Fotos & Vídeos HD',
-        'Estatísticas avançadas de tráfego e visualizações 📊',
-        'Selo de Destaque Premium no mapa interativo',
-        'Economia máxima em relação ao plano semanal',
-        'Atendimento e assessoria de marketing dedicados'
+        'Destaque Máximo Gold Absoluto no topo da busca durante 1 mês inteiro',
+        '4 Boosts de 6h GRÁTIS (1 por semana) inclusos (R$ 239,60 em bônus) 🚀',
+        'Destaque Premium com Pin Dourado Neon no Mapa Interativo 📍',
+        'Galeria Ilimitada de Fotos & Vídeos HD sem restrição',
+        'Estatísticas avançadas de tráfego, cliques e visualizações no WhatsApp 📊',
+        'Exclusividade de Vídeos em HD nos Stories Efêmeros 🎥',
+        'Maior economia em relação aos planos semanal e quinzenal',
+        'Assessoria VIP dedicada de posicionamento de anúncio'
       ],
-      highlight: false,
+      highlight: true,
       buttonText: 'Assinar Gold (30 Dias)',
-      accentColor: 'border-amber-500/60 bg-amber-500/[0.03] hover:border-amber-400',
-      badge: showDiscount ? '30% DE DESCONTO' : 'Melhor Custo-Benefício'
+      accentColor: 'border-gold-primary shadow-[0_15px_40px_-15px_rgba(197,168,128,0.3)] bg-gradient-to-b from-gold-primary/[0.08] to-gold-primary/[0.02]',
+      badge: showDiscount ? '30% OFF • MELHOR CUSTO-BENEFÍCIO ⭐' : 'Mais Vendido ⭐'
     }
   ];
 
@@ -213,9 +222,19 @@ export default function PricingPage() {
                 </p>
 
                 {/* Price */}
-                <div className="flex items-baseline mb-8">
-                  <span className="text-3xl md:text-4xl font-semibold tracking-tight text-white">{plan.price}</span>
-                  {plan.period && <span className="text-sm text-gray-400 font-light ml-1">{plan.period}</span>}
+                <div className="mb-8">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">{plan.price}</span>
+                    {plan.originalPrice && (
+                      <span className="text-sm text-gray-500 line-through font-light">{plan.originalPrice}</span>
+                    )}
+                    {plan.period && <span className="text-xs text-gray-400 font-light">{plan.period}</span>}
+                  </div>
+                  {plan.dailyEquivalent && (
+                    <div className="mt-2 inline-block text-[11px] font-semibold text-gold-light bg-gold-primary/10 border border-gold-primary/20 px-2.5 py-1 rounded-full">
+                      ✨ {plan.dailyEquivalent}
+                    </div>
+                  )}
                 </div>
 
                 {/* Features divider */}

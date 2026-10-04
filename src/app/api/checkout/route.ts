@@ -119,9 +119,9 @@ export async function POST(req: NextRequest) {
       tierValue = `boost_${hours}h`;
       description = `Servicos de Publicidade Digital - ID ${user.id}`;
     }
-    // 3. Caso: Assinatura de Planos (Gold 7d / 15d / 30d)
+    // 3. Caso: Assinatura de Planos (Gold 7d / 14d / 15d / 30d)
     else {
-      const validTiers = ['pro', 'gold', 'gold_7d', 'gold_15d', 'gold_30d'];
+      const validTiers = ['pro', 'gold', 'gold_7d', 'gold_14d', 'gold_15d', 'gold_30d'];
       if (!tier || !validTiers.includes(tier)) {
         return NextResponse.json({ error: 'Plano inválido.' }, { status: 400 });
       }
@@ -156,21 +156,22 @@ export async function POST(req: NextRequest) {
         const isPromoEligible = !providerRankError && providerRank !== null && providerRank <= 100;
 
         const baseAmounts: Record<string, number> = {
-          pro: 59900,
-          gold: 59900,
-          gold_7d: 19900,   // R$ 199,00
-          gold_15d: 34900,  // R$ 349,00
-          gold_30d: 59900   // R$ 599,00
+          pro: 39900,
+          gold: 39900,
+          gold_7d: 12900,   // R$ 129,00
+          gold_14d: 22900,  // R$ 229,00
+          gold_15d: 22900,  // R$ 229,00
+          gold_30d: 39900   // R$ 399,00
         };
 
-        const baseAmount = baseAmounts[tier as string] || 59900;
+        const baseAmount = baseAmounts[tier as string] || 39900;
 
-        // As 100 primeiras anunciantes ganham o 1º mês (30 dias) 100% GRÁTIS
-        amountCents = isPromoEligible ? 0 : baseAmount;
+        // As 100 primeiras anunciantes ganham 30% de desconto de lançamento
+        amountCents = isPromoEligible ? Math.round(baseAmount * 0.7) : baseAmount;
         tierValue = tier;
         description = isPromoEligible 
-          ? `Promo Lançamento 100 Primeiras - 1º Mês Grátis - ${tier.toUpperCase()}`
-          : `Servicos de Publicidade Digital - Ref: ${tier.toUpperCase()}`;
+          ? `Publicidade Digital (Promo 30% OFF) - Ref: ${tier.toUpperCase()}`
+          : `Publicidade Digital - Ref: ${tier.toUpperCase()}`;
       }
     }
 
