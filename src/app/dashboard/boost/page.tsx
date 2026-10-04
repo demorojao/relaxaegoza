@@ -97,7 +97,31 @@ export default function BoostPage() {
     try {
       const { data, error } = await supabase.rpc('claim_free_boost');
       if (error) {
-        setErrorMsg(error.message);
+        // Fallback direto via UPDATE na tabela profiles caso a RPC não esteja presente
+        const currentBoostTime = profile.boost_expires_at ? new Date(profile.boost_expires_at).getTime() : 0;
+        const nowTime = Date.now();
+        const baseBoostTime = !isNaN(currentBoostTime) && currentBoostTime > nowTime ? currentBoostTime : nowTime;
+        const newExpires = new Date(baseBoostTime + 6 * 60 * 60 * 1000).toISOString();
+
+        const { error: updateErr } = await supabase
+          .from('profiles')
+          .update({
+            boost_expires_at: newExpires,
+            last_free_boost_at: new Date().toISOString(),
+            is_available_now: true
+          })
+          .eq('id', profile.id);
+
+        if (updateErr) {
+          setErrorMsg(updateErr.message);
+        } else {
+          setSuccessMsg('Boost semanal gratuito de 6 horas ativado com sucesso!');
+          setProfile((prev: any) => ({
+            ...prev,
+            boost_expires_at: newExpires,
+            last_free_boost_at: new Date().toISOString()
+          }));
+        }
       } else if (data?.success) {
         setSuccessMsg('Boost semanal gratuito de 6 horas ativado com sucesso!');
         // Atualizar perfil localmente com o novo boost

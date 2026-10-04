@@ -132,28 +132,32 @@ export async function POST(req: NextRequest) {
 
       if (isHost) {
         // Verificar rank do host por data de criação
+        const createdAt = profile.created_at || new Date().toISOString();
         const { count: hostRank, error: hostRankError } = await supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
           .eq('role', 'host')
-          .lte('created_at', profile.created_at);
+          .lte('created_at', createdAt);
 
         const isFreeLaunch = !hostRankError && hostRank !== null && hostRank <= HOST_PLAN_CONFIG.maxFreeHosts;
 
         if (isFreeLaunch) {
-          return NextResponse.json({ error: 'Você é um dos 100 primeiros parceiros! Seu plano de salas é 100% gratuito.' }, { status: 400 });
+          amountCents = 0;
+          tierValue = tier;
+          description = `Promo Lançamento 100 Primeiros Hosts - Grátis`;
+        } else {
+          amountCents = HOST_PLAN_CONFIG.basePriceCents;
+          tierValue = tier;
+          description = `Hospedagem de Classificado Online - ID ${user.id}`;
         }
-
-        amountCents = HOST_PLAN_CONFIG.basePriceCents;
-        tierValue = tier;
-        description = `Hospedagem de Classificado Online - ID ${user.id}`;
       } else {
         // Provedora (garota)
+        const createdAt = profile.created_at || new Date().toISOString();
         const { count: providerRank, error: providerRankError } = await supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
           .eq('role', 'provider')
-          .lte('created_at', profile.created_at);
+          .lte('created_at', createdAt);
 
         const rank = (providerRankError || providerRank === null) ? 99999 : providerRank;
 
